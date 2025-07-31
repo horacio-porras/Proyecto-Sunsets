@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Empleado - Sunset's Tabarca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-orange-600 text-white shadow-lg">
+        <nav class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="../index.html" class="text-2xl font-bold">Sunset's Tabarca</a>
+                    <span class="text-sm bg-orange-700 px-2 py-1 rounded">Empleado</span>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button onclick="toggleUserMenu()" class="flex items-center space-x-2 hover:bg-orange-700 px-3 py-2 rounded transition">
+                            <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=32" alt="Empleado" class="w-8 h-8 rounded-full">
+                            <span>Chef Marco</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                            <a href="#profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mi Perfil</a>
+                            <a href="#schedule" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mi Horario</a>
+                            <hr class="my-1">
+                            <a href="../index.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold mb-2">¡Bienvenido, Chef Marco!</h1>
+            <p class="text-orange-100">Gestiona tus pedidos asignados y mantén actualizada tu información</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-clock text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">8</h3>
+                        <p class="text-gray-600">Horas Trabajadas</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-utensils text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">12</h3>
+                        <p class="text-gray-600">Pedidos Completados</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-fire text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">3</h3>
+                        <p class="text-gray-600">Pedidos Pendientes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-star text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">4.9</h3>
+                        <p class="text-gray-600">Rating Promedio</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Assigned Orders -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Mis Pedidos Asignados</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-clock text-yellow-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12346</h4>
+                                        <p class="text-sm text-gray-600">Pizza Margherita, Pasta Carbonara</p>
+                                        <p class="text-sm text-gray-600">Cliente: Juan Pérez • 15 min restantes</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
+                                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Pasta</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡18,500</p>
+                                    <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">En Preparación</span>
+                                    <div class="mt-2">
+                                        <button onclick="updateOrderStatus('12346', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12349</h4>
+                                        <p class="text-sm text-gray-600">Pizza Pepperoni, Tiramisú</p>
+                                        <p class="text-sm text-gray-600">Cliente: Ana García • 8 min restantes</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
+                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Postre</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡13,700</p>
+                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">En Preparación</span>
+                                    <div class="mt-2">
+                                        <button onclick="updateOrderStatus('12349', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12350</h4>
+                                        <p class="text-sm text-gray-600">Pizza Vegetariana</p>
+                                        <p class="text-sm text-gray-600">Cliente: Carlos Ruiz • Completado</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Pizza</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡8,900</p>
+                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="#orders" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos mis pedidos</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Check -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Verificación de Inventario</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold mb-3">Ingredientes Críticos</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Mozzarella Fresca</span>
+                                        <span class="text-sm text-red-600 font-semibold">2kg</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Harina de Trigo</span>
+                                        <span class="text-sm text-yellow-600 font-semibold">15kg</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Tomates Frescos</span>
+                                        <span class="text-sm text-green-600 font-semibold">8kg</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold mb-3">Herramientas</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Hornos</span>
+                                        <span class="text-sm text-green-600 font-semibold">3/3</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Batidoras</span>
+                                        <span class="text-sm text-green-600 font-semibold">2/2</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Cuchillos</span>
+                                        <span class="text-sm text-green-600 font-semibold">5/5</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="#inventory" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition">Reportar Problema</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Mi Horario de Hoy</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-clock text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Turno Mañana</h4>
+                                        <p class="text-sm text-gray-600">8:00 AM - 4:00 PM</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-gray-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Descanso</h4>
+                                        <p class="text-sm text-gray-600">12:00 PM - 1:00 PM</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">Pendiente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="text-center mb-6">
+                        <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=120" alt="Chef Marco" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-xl font-semibold">Chef Marco Rossi</h3>
+                        <p class="text-gray-600">Chef Ejecutivo</p>
+                        <p class="text-sm text-gray-500">Empleado desde 2010</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <span class="text-sm">marco.rossi@sunsets-tabarca.com</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-gray-400"></i>
+                            <span class="text-sm">+506 8888-9999</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                            <span class="text-sm">San José, Costa Rica</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <a href="#edit-profile" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
+                            Editar Perfil
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Performance Stats -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Mi Rendimiento</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Pedidos por Hora</span>
+                                <span class="text-sm font-semibold">6.5</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Tiempo Promedio</span>
+                                <span class="text-sm font-semibold">12 min</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Satisfacción</span>
+                                <span class="text-sm font-semibold">4.9/5</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-600 h-2 rounded-full" style="width: 98%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Acciones Rápidas</h3>
+                    
+                    <div class="space-y-3">
+                        <a href="#orders" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-list text-orange-600"></i>
+                            <span>Ver Pedidos</span>
+                        </a>
+                        
+                        <a href="#inventory" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-boxes text-orange-600"></i>
+                            <span>Verificar Inventario</span>
+                        </a>
+                        
+                        <a href="#schedule" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-calendar text-orange-600"></i>
+                            <span>Mi Horario</span>
+                        </a>
+                        
+                        <a href="#reports" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-chart-line text-orange-600"></i>
+                            <span>Mi Rendimiento</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Notifications -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Notificaciones</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                            <div>
+                                <p class="text-sm font-semibold">Nuevo Pedido Asignado</p>
+                                <p class="text-xs text-gray-600">Orden #12351 - Pizza Hawaiana</p>
+                                <p class="text-xs text-gray-500">Hace 5 minutos</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                            <div>
+                                <p class="text-sm font-semibold">Stock Bajo</p>
+                                <p class="text-xs text-gray-600">Mozzarella fresca casi agotada</p>
+                                <p class="text-xs text-gray-500">Hace 15 minutos</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <p class="text-sm font-semibold">Pedido Completado</p>
+                                <p class="text-xs text-gray-600">Orden #12350 entregada exitosamente</p>
+                                <p class="text-xs text-gray-500">Hace 30 minutos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Chat -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Chat del Equipo</h3>
+                    
+                    <div class="space-y-3 max-h-48 overflow-y-auto">
+                        <div class="flex items-start space-x-2">
+                            <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=32" alt="Ana" class="w-6 h-6 rounded-full">
+                            <div class="bg-gray-100 rounded-lg p-2 max-w-xs">
+                                <p class="text-xs font-semibold">Ana Martínez</p>
+                                <p class="text-xs">¿Alguien tiene más harina?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-2">
+                            <img src="https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=32" alt="Carlos" class="w-6 h-6 rounded-full">
+                            <div class="bg-gray-100 rounded-lg p-2 max-w-xs">
+                                <p class="text-xs font-semibold">Carlos Jiménez</p>
+                                <p class="text-xs">Sí, en el almacén hay 15kg</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex space-x-2">
+                        <input type="text" placeholder="Escribe un mensaje..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <button class="bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-300">&copy; 2024 Sunset's Tabarca. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function updateOrderStatus(orderId, status) {
+            // Simulate order status update
+            alert(`Orden #${orderId} marcada como ${status === 'ready' ? 'lista' : status}`);
+            
+            // Update the UI
+            const orderElement = document.querySelector(`[data-order="${orderId}"]`);
+            if (orderElement) {
+                const statusElement = orderElement.querySelector('.status-badge');
+                statusElement.textContent = 'Listo';
+                statusElement.className = 'text-sm bg-green-100 text-green-800 px-2 py-1 rounded status-badge';
+            }
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const userButton = event.target.closest('button');
+            
+            if (!userButton && !userMenu.contains(event.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html> 
