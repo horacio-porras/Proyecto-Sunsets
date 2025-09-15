@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - Sunset's Tarbaca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+        <!-- Header -->
+    <header class="bg-gray-800 text-white shadow-lg">
+        <nav class="bg-gray-900 px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                                                <a href="index.html" class="flex items-center space-x-4">
+                                <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto">
+                                                            <div class="flex flex-col">
+                                <span class="text-2xl font-bold">Sunset's Tarbaca</span>
+                                <span class="text-sm bg-gradient-to-r from-orange-500 to-red-500 px-2 py-1 rounded text-center">Pizzería & Restaurante</span>
+                            </div>
+                    </a>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-orange-400 transition">Inicio</a>
+                    <a href="menu.html" class="hover:text-orange-400 transition">Menú</a>
+                    <a href="reservaciones.html" class="hover:text-orange-400 transition">Reservaciones</a>
+                    <a href="about.html" class="hover:text-orange-400 transition">Nosotros</a>
+                    <a href="contacto.html" class="hover:text-orange-400 transition border-b-2 border-white">Contacto</a>
+                </div>
+
+                <!-- User Actions -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="login.html" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition">Iniciar Sesión</a>
+                    <a href="registro.html" class="bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition">Registrarse</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="md:hidden hidden mt-4 pb-4">
+                <div class="flex flex-col space-y-3">
+                    <a href="index.html" class="hover:text-orange-400 transition">Inicio</a>
+                    <a href="menu.html" class="hover:text-orange-400 transition">Menú</a>
+                    <a href="reservaciones.html" class="hover:text-orange-400 transition">Reservaciones</a>
+                    <a href="about.html" class="hover:text-orange-400 transition">Nosotros</a>
+                    <a href="contacto.html" class="hover:text-orange-400 transition border-b-2 border-white">Contacto</a>
+                    <div class="pt-2 border-t border-gray-600">
+                        <a href="login.html" class="block bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition text-center">Iniciar Sesión</a>
+                        <a href="registro.html" class="block bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition text-center mt-2">Registrarse</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contact Header -->
+    <section class="bg-gray-800 text-white py-16">
+                    <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Contáctanos</h1>
+            <p class="text-xl mb-8">Estamos aquí para ayudarte. ¡No dudes en contactarnos!</p>
+        </div>
+    </section>
+
+    <!-- Contact Information -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- Contact Form -->
+                    <div>
+                        <h2 class="text-3xl font-bold mb-8">Envíanos un Mensaje</h2>
+                        <form class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
+                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Apellido *</label>
+                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu apellido">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
+                                <input type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Asunto *</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                    <option value="">Selecciona un asunto</option>
+                                    <option value="reservacion">Reservación</option>
+                                    <option value="pedido">Pedido a Domicilio</option>
+                                    <option value="evento">Evento Especial</option>
+                                    <option value="sugerencia">Sugerencia</option>
+                                    <option value="reclamo">Reclamo</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mensaje *</label>
+                                <textarea required rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Escribe tu mensaje aquí..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold">
+                                Enviar Mensaje
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div>
+                        <h2 class="text-3xl font-bold mb-8">Información de Contacto</h2>
+                        
+                        <!-- Address -->
+                        <div class="mb-8">
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-orange-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-map-marker-alt text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-2">Dirección</h3>
+                                    <p class="text-gray-600">
+                                        Tarbaca, San José, Costa Rica<br>
+                                        A 20 metros del cruce de Acosta - la Fila, sobre carretera hacia Acosta.<br>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="mb-8">
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-orange-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-phone text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-2">Teléfono</h3>
+                                    <p class="text-gray-600">
+                                        <a href="tel:+50661714020" class="hover:text-orange-600 transition">+506 6171-4020</a><br>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-8">
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-orange-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-envelope text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-2">Correo Electrónico</h3>
+                                    <p class="text-gray-600">
+                                        <a href="mailto:info@sunsets-tarbaca.com" class="hover:text-orange-600 transition">info@sunsets-tarbaca.com</a><br>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hours -->
+                        <div class="mb-8">
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-orange-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-2">Horarios</h3>
+                                    <div class="text-gray-600 space-y-1">
+                                        <p><strong>Miércoles - Domingo:</strong> 12:00 PM - 08:00 PM</p>
+                                        <p class="text-sm text-orange-600">* Horarios especiales en días festivos</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Síguenos en Redes Sociales</h3>
+                            <div class="flex space-x-4">
+                                <a href="#" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="https://www.instagram.com/sunsets_tarbaca/?hl=es" class="bg-pink-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-pink-700 transition">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" class="bg-blue-400 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-500 transition">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-red-700 transition">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-12">Nuestra Ubicación</h2>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <!-- Placeholder for Google Maps -->
+                    <div class="w-full h-96 bg-gray-200 flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-map-marked-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600">Mapa interactivo de Google Maps</p>
+                            <p class="text-sm text-gray-500">Tarbaca, San José, Costa Rica</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-12">Preguntas Frecuentes</h2>
+                <div class="space-y-6">
+                    <div class="border border-gray-200 rounded-lg">
+                        <button class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                            <span class="font-semibold">¿Hacen entregas a domicilio?</span>
+                            <i class="fas fa-chevron-down text-orange-600"></i>
+                        </button>
+                        <div class="px-6 pb-4 hidden">
+                            <p class="text-gray-600">Sí, ofrecemos servicio de entrega a domicilio en un radio de 5km alrededor del restaurante. Los tiempos de entrega varían entre 30-45 minutos.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg">
+                        <button class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                            <span class="font-semibold">¿Aceptan reservaciones para grupos grandes?</span>
+                            <i class="fas fa-chevron-down text-orange-600"></i>
+                        </button>
+                        <div class="px-6 pb-4 hidden">
+                            <p class="text-gray-600">Sí, aceptamos reservaciones para grupos de hasta 20 personas. Para grupos más grandes, contáctanos directamente para coordinar.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg">
+                        <button class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                            <span class="font-semibold">¿Tienen opciones vegetarianas y veganas?</span>
+                            <i class="fas fa-chevron-down text-orange-600"></i>
+                        </button>
+                        <div class="px-6 pb-4 hidden">
+                            <p class="text-gray-600">Sí, tenemos una amplia variedad de opciones vegetarianas y veganas en nuestro menú. Todos nuestros platos están claramente marcados con sus características dietéticas.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg">
+                        <button class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                            <span class="font-semibold">¿Puedo cancelar mi reservación?</span>
+                            <i class="fas fa-chevron-down text-orange-600"></i>
+                        </button>
+                        <div class="px-6 pb-4 hidden">
+                            <p class="text-gray-600">Sí, puedes cancelar tu reservación hasta 2 horas antes de la hora programada sin ningún cargo. Para cancelaciones más tardías, contáctanos directamente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mb-4">
+                    <h4 class="text-xl font-bold mb-4">Sunset's Tarbaca</h4>
+                    <p class="text-gray-300">Sabor mediterráneo en cada bocado</p>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Enlaces Rápidos</h5>
+                    <ul class="space-y-2">
+                        <li><a href="menu.html" class="text-gray-300 hover:text-white transition">Menú</a></li>
+                        <li><a href="reservaciones.html" class="text-gray-300 hover:text-white transition">Reservaciones</a></li>
+                        <li><a href="about.html" class="text-gray-300 hover:text-white transition">Nosotros</a></li>
+                        <li><a href="contacto.html" class="text-gray-300 hover:text-white transition">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Redes Sociales</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Newsletter</h5>
+                    <p class="text-gray-300 mb-2">Suscríbete para recibir ofertas especiales</p>
+                    <input type="email" placeholder="Tu email" class="w-full px-3 py-2 rounded text-gray-800">
+                    <button class="bg-orange-600 text-white px-4 py-2 rounded mt-2 hover:bg-orange-700 transition">Suscribirse</button>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleFAQ(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            content.classList.toggle('hidden');
+            
+            if (content.classList.contains('hidden')) {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.');
+        });
+    </script>
+</body>
+</html> 
