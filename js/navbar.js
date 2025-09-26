@@ -30,13 +30,48 @@ function loadNavbar(currentPage = null) {
 function highlightCurrentPage(currentPage) {
     // Remover resaltado de todas las páginas
     document.querySelectorAll('nav a').forEach(link => {
-        link.classList.remove('border-b-2', 'border-white', 'text-orange-400');
+        link.classList.remove('border-b-2', 'border-white', 'text-orange-400', 'text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white');
+        // Restaurar hover para todos los enlaces
+        link.classList.add('hover:text-white');
+        // Remover estilos inline
+        link.style.backgroundImage = '';
+        link.style.backgroundSize = '';
+        link.style.backgroundPosition = '';
+        link.style.backgroundRepeat = '';
+        link.style.paddingBottom = '';
+        link.style.borderBottom = '';
+        link.style.background = '';
+        link.style.webkitBackgroundClip = '';
+        link.style.webkitTextFillColor = '';
+        link.style.backgroundClip = '';
     });
     
-    // Resaltar la página actual
+    // Manejar el logo cuando estás en el index
+    const logoLink = document.querySelector('nav a[href="/"]');
+    if (logoLink) {
+        const sunsetText = logoLink.querySelector('.text-2xl');
+        if (sunsetText) {
+            if (currentPage === '/' || currentPage === '/index.html' || currentPage === 'index.html') {
+                // Si estás en el index, hacer que "Sunset's Tarbaca" se vea como en hover
+                sunsetText.classList.remove('text-gray-300');
+                sunsetText.classList.add('text-white');
+            } else {
+                // Si no estás en el index, restaurar el color normal
+                sunsetText.classList.remove('text-white');
+                sunsetText.classList.add('text-gray-300');
+            }
+        }
+    }
+    
+    // Resaltar la página actual con gradiente
     const currentLink = document.querySelector(`nav a[href="${currentPage}"]`);
-    if (currentLink) {
-        currentLink.classList.add('border-b-2', 'border-white', 'text-orange-400');
+    if (currentLink && currentPage !== '/' && currentPage !== '/index.html' && currentPage !== 'index.html') {
+        // Aplicar gradiente al texto (solo para páginas que no sean el index)
+        currentLink.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+        currentLink.style.webkitBackgroundClip = 'text';
+        currentLink.style.webkitTextFillColor = 'transparent';
+        currentLink.style.backgroundClip = 'text';
+        currentLink.classList.remove('hover:text-white');
     }
 }
 

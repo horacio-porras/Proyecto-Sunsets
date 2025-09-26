@@ -16,10 +16,18 @@
     <div id="navbar-container"></div>
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-800 text-white py-20">
-                    <div class="container mx-auto px-4 text-center">
+    <section class="relative py-20 overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop');"></div>
+        
+        <!-- Overlay with transparency -->
+        <div class="absolute inset-0 bg-gray-800 bg-opacity-80"></div>
+        
+        <!-- Content -->
+        <div class="relative z-10 text-white">
+            <div class="container mx-auto px-4 text-center">
                 <h1 class="text-4xl md:text-5xl font-bold mb-6">Nuestra Historia</h1>
-            <p class="text-xl mb-8 max-w-3xl mx-auto">Descubre la pasión y tradición detrás de Sunset's Tarbaca, donde cada plato cuenta una historia de sabor mediterráneo</p>
+                <p class="text-xl mb-8 max-w-3xl mx-auto">Descubre la pasión y tradición detrás de Sunset's Tarbaca, donde cada plato cuenta una historia de sabor mediterráneo</p>
         </div>
     </section>
 
