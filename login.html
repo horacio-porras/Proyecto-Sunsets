@@ -223,26 +223,9 @@
                     
                     showMessage('¡Login exitoso! Redirigiendo...', false);
                     
-                    // Redirigir según el id_rol del usuario
+                    // Redirigir a la página principal
                     setTimeout(() => {
-                        if (window.AuthUtils && window.AuthUtils.redirectBasedOnRole) {
-                            window.AuthUtils.redirectBasedOnRole(data.data.user.id_rol);
-                        } else {
-                            // Fallback al método anterior si la función no está disponible
-                            switch(data.data.user.tipoUsuario) {
-                                case 'Cliente':
-                                    window.location.href = 'cliente/dashboard.html';
-                                    break;
-                                case 'Empleado':
-                                    window.location.href = 'empleado/dashboard.html';
-                                    break;
-                                case 'Administrador':
-                                    window.location.href = 'admin/dashboard.html';
-                                    break;
-                                default:
-                                    window.location.href = 'index.html';
-                            }
-                        }
+                        window.location.href = '/';
                     }, 1500);
                 } else {
                     showMessage(data.message || 'Error al iniciar sesión');
@@ -274,23 +257,8 @@
                             logoutBtn.classList.remove('hidden');
                         }
                         
-                        const userData = JSON.parse(localStorage.getItem('userData'));
-                        if (window.AuthUtils && window.AuthUtils.redirectBasedOnRole && userData.id_rol) {
-                            window.AuthUtils.redirectBasedOnRole(userData.id_rol);
-                        } else {
-                            // Fallback al método anterior si la función no está disponible
-                            switch(userData.tipoUsuario) {
-                                case 'Cliente':
-                                    window.location.href = 'cliente/dashboard.html';
-                                    break;
-                                case 'Empleado':
-                                    window.location.href = 'empleado/dashboard.html';
-                                    break;
-                                case 'Administrador':
-                                    window.location.href = 'admin/dashboard.html';
-                                    break;
-                            }
-                        }
+                        // Usuario ya está logueado, redirigir a página principal
+                        window.location.href = '/';
                     }
                 })
                 .catch(error => {

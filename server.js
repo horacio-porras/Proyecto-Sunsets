@@ -83,6 +83,7 @@ if (isDevelopment) {
             timestamp: new Date().toISOString()
         });
     });
+
 }
 
 // Ruta raíz - servir index.html

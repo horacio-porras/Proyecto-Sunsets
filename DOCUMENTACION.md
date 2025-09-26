@@ -177,6 +177,77 @@ Cerrar sesión.
 Authorization: Bearer jwt_token_aqui
 ```
 
+#### GET `/api/auth/profile`
+Obtener perfil completo del usuario.
+
+**Headers:**
+```
+Authorization: Bearer jwt_token_aqui
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "nombre": "Juan Pérez",
+      "correo": "juan@email.com",
+      "telefono": "+506 8888-8888",
+      "id_rol": 3,
+      "tipoUsuario": "Cliente",
+      "fecha_registro": "2025-01-27",
+      "puntos_acumulados": 150,
+      "notificaciones_activas": true,
+      "fecha_registro_programa": "2025-01-27"
+    }
+  }
+}
+```
+
+#### PUT `/api/auth/profile`
+Actualizar perfil de usuario.
+
+**Headers:**
+```
+Authorization: Bearer jwt_token_aqui
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "nombre": "Juan Pérez",
+  "correo": "juan@email.com",
+  "telefono": "+506 8888-8888",
+  "contrasenaActual": "MiPassword123",
+  "nuevaContrasena": "NuevaPassword123",
+  "notificacionesActivas": true
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Perfil actualizado exitosamente",
+  "data": {
+    "user": {
+      "id": 1,
+      "nombre": "Juan Pérez",
+      "correo": "juan@email.com",
+      "telefono": "+506 8888-8888",
+      "id_rol": 3,
+      "tipoUsuario": "Cliente",
+      "fecha_registro": "2025-01-27",
+      "puntos_acumulados": 150,
+      "notificaciones_activas": true
+    }
+  }
+}
+```
+
 ### Utilidades
 
 #### GET `/api/health`

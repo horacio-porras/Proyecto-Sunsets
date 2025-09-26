@@ -74,8 +74,55 @@ const changePasswordValidation = [
         })
 ];
 
+// Validaciones para actualización de perfil
+const profileUpdateValidation = [
+    body('nombre')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('El nombre debe tener entre 2 y 100 caracteres')
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+        .withMessage('El nombre solo puede contener letras y espacios'),
+
+    body('correo')
+        .optional()
+        .isEmail()
+        .withMessage('Debe proporcionar un correo electrónico válido')
+        .normalizeEmail()
+        .isLength({ max: 100 })
+        .withMessage('El correo electrónico es demasiado largo'),
+
+    body('telefono')
+        .optional()
+        .trim()
+        .isLength({ min: 8, max: 20 })
+        .withMessage('El teléfono debe tener entre 8 y 20 caracteres')
+        .matches(/^[\+]?[0-9\s\-\(\)]+$/)
+        .withMessage('Formato de teléfono inválido'),
+
+    body('nuevaContrasena')
+        .optional()
+        .isLength({ min: 8 })
+        .withMessage('La nueva contraseña debe tener al menos 8 caracteres')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('La nueva contraseña debe contener al menos una minúscula, una mayúscula y un número')
+        .isLength({ max: 128 })
+        .withMessage('La nueva contraseña es demasiado larga'),
+
+    body('contrasenaActual')
+        .optional()
+        .notEmpty()
+        .withMessage('La contraseña actual es requerida para cambiar la contraseña'),
+
+    body('notificacionesActivas')
+        .optional()
+        .isBoolean()
+        .withMessage('Las notificaciones activas deben ser un valor booleano')
+];
+
 module.exports = {
     registerValidation,
     loginValidation,
-    changePasswordValidation
+    changePasswordValidation,
+    profileUpdateValidation
 };

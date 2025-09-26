@@ -16,94 +16,310 @@
 
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard del Cliente</h1>
-            <p class="text-gray-600">Bienvenido a tu panel de control</p>
+        <!-- Welcome Section -->
+        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
+            <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-shopping-bag text-blue-600 text-xl"></i>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Active Reservations -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Reservaciones Activas</h2>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Pedidos Totales</h3>
-                        <p class="text-2xl font-bold text-blue-600">12</p>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-semibold">Cena Familiar</h4>
+                                    <p class="text-sm text-gray-600">20 Dic 2024 • 7:00 PM • 4 personas</p>
+                                    <p class="text-sm text-gray-600">Mesa interior, ventana</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
+                                    <div class="mt-2">
+                                        <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-semibold">Cumpleaños Ana</h4>
+                                    <p class="text-sm text-gray-600">25 Dic 2024 • 8:00 PM • 6 personas</p>
+                                    <p class="text-sm text-gray-600">Terraza, decoración especial</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
+                                    <div class="mt-2">
+                                        <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="/reservaciones.html" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition">Nueva Reservación</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Pedidos Recientes</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-pizza-slice text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Pizza Margherita + Limonada</h4>
+                                        <p class="text-sm text-gray-600">Orden #12345 • 15 Dic 2024</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡10,300</p>
+                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Pasta Carbonara + Tiramisú</h4>
+                                        <p class="text-sm text-gray-600">Orden #12344 • 12 Dic 2024</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡11,000</p>
+                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-pizza-slice text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Pizza Pepperoni</h4>
+                                        <p class="text-sm text-gray-600">Orden #12343 • 10 Dic 2024</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡9,200</p>
+                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-star text-green-600 text-xl"></i>
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-24 h-24 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-user text-orange-600 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold user-name">-</h3>
+                        <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Puntos Acumulados</h3>
-                        <p class="text-2xl font-bold text-green-600">1,250</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <span class="text-sm user-email">-</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-gray-400"></i>
+                            <span class="text-sm" id="telefonoUsuario">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <a href="/cliente/perfil.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
+                            Editar Perfil
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i class="fas fa-calendar text-orange-600 text-xl"></i>
+                <!-- Loyalty Points -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
+                    
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold" id="puntosDisplay">-</div>
+                            <div class="text-orange-100">Puntos Acumulados</div>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Reservaciones</h3>
-                        <p class="text-2xl font-bold text-orange-600">3</p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Próximo nivel:</span>
+                            <span class="text-sm font-semibold">Plata (2,000 pts)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-orange-600 h-2 rounded-full" id="progresoBar" style="width: 0%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 text-center" id="progresoText">Calculando progreso...</div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <a href="#rewards" class="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition text-center block">
+                            Canjear Puntos
+                        </a>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="/menu.html" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-utensils text-xl mb-2 block"></i>
-                    Ver Menú
-                </a>
-                <a href="/reservaciones.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-calendar-plus text-xl mb-2 block"></i>
-                    Hacer Reservación
-                </a>
-                <a href="/pedidos.html" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-shopping-cart text-xl mb-2 block"></i>
-                    Ver Pedidos
-                </a>
-            </div>
-        </div>
 
-        <!-- User Info -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Información de la Cuenta</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                    <p class="user-name text-gray-900 font-semibold">-</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo</label>
-                    <p class="user-email text-gray-900">-</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Usuario</label>
-                    <p class="user-role text-gray-900">-</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Activo
-                    </span>
-                </div>
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
+            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Cargar datos del perfil del usuario al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+        });
+
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const userData = data.data.user;
+                    
+                    // Actualizar puntos acumulados
+                    const puntos = userData.puntos_acumulados || 0;
+                    const puntosDisplayElement = document.getElementById('puntosDisplay');
+                    
+                    if (puntosDisplayElement) {
+                        puntosDisplayElement.textContent = puntos;
+                    }
+                    
+                    // Actualizar progreso de lealtad
+                    updateLoyaltyProgress(puntos);
+                    
+                    // Actualizar información del usuario
+                    const nameElements = document.querySelectorAll('.user-name');
+                    nameElements.forEach(element => {
+                        element.textContent = userData.nombre || '-';
+                    });
+                    
+                    const emailElements = document.querySelectorAll('.user-email');
+                    emailElements.forEach(element => {
+                        element.textContent = userData.correo || '-';
+                    });
+                    
+                    // Actualizar teléfono
+                    const telefonoElement = document.getElementById('telefonoUsuario');
+                    if (telefonoElement) {
+                        telefonoElement.textContent = userData.telefono || '-';
+                    }
+                    
+                    // Actualizar fecha de registro
+                    const fechaRegistroElement = document.getElementById('fechaRegistro');
+                    if (fechaRegistroElement && userData.fecha_registro) {
+                        const fecha = new Date(userData.fecha_registro);
+                        const day = fecha.getDate().toString().padStart(2, '0');
+                        const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+                        const year = fecha.getFullYear();
+                        fechaRegistroElement.textContent = `Cliente desde ${day}/${month}/${year}`;
+                    }
+                    
+                    // Actualizar localStorage con datos frescos
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                } else {
+                    console.error('Error al cargar perfil:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar perfil del usuario:', error);
+            }
+        }
+
+        function updateLoyaltyProgress(puntos) {
+            const progresoBar = document.getElementById('progresoBar');
+            const progresoText = document.getElementById('progresoText');
+            
+            if (!progresoBar || !progresoText) return;
+            
+            // Niveles de lealtad
+            const niveles = [
+                { nombre: 'Bronce', puntos: 0 },
+                { nombre: 'Plata', puntos: 2000 },
+                { nombre: 'Oro', puntos: 5000 },
+                { nombre: 'Diamante', puntos: 10000 }
+            ];
+            
+            // Encontrar el nivel actual y el siguiente
+            let nivelActual = niveles[0];
+            let siguienteNivel = niveles[1];
+            
+            for (let i = niveles.length - 1; i >= 0; i--) {
+                if (puntos >= niveles[i].puntos) {
+                    nivelActual = niveles[i];
+                    siguienteNivel = niveles[i + 1] || null;
+                    break;
+                }
+            }
+            
+            if (siguienteNivel) {
+                const progreso = ((puntos - nivelActual.puntos) / (siguienteNivel.puntos - nivelActual.puntos)) * 100;
+                const puntosRestantes = siguienteNivel.puntos - puntos;
+                
+                progresoBar.style.width = `${Math.min(progreso, 100)}%`;
+                progresoText.textContent = `${puntosRestantes} puntos más para ${siguienteNivel.nombre}`;
+            } else {
+                // Usuario en el nivel más alto
+                progresoBar.style.width = '100%';
+                progresoText.textContent = '¡Nivel máximo alcanzado!';
+            }
+        }
+
+        // Función para formatear números con comas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
 
 </body>
 </html>

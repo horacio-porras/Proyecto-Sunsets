@@ -24,8 +24,9 @@
             <!-- User Actions -->
             <div class="hidden md:flex items-center space-x-4">
                 <div id="userNotLoggedIn">
-                    <a href="/login.html" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition">Iniciar Sesión</a>
-                    <a href="/registro.html" class="bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition">Registrarse</a>
+                    <a href="/login.html" class="hover:text-orange-400 transition">
+                        <i class="fas fa-user text-xl"></i>
+                    </a>
                 </div>
                 <div id="userLoggedIn" class="hidden">
                     <!-- User Dropdown -->
@@ -49,11 +50,6 @@
                             <div id="dashboardLink">
                                 <!-- Will be populated by JavaScript based on user role -->
                             </div>
-                            
-                            <!-- Common Menu Items -->
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
-                                <i class="fas fa-user mr-2"></i>Mi Perfil
-                            </a>
                             
                             <!-- Role-specific menu items -->
                             <div id="roleSpecificMenu">
@@ -85,8 +81,9 @@
                 <a href="/contacto.html" class="hover:text-orange-400 transition">Contacto</a>
                 <div class="pt-2 border-t border-gray-600">
                     <div id="mobileUserNotLoggedIn">
-                        <a href="/login.html" class="block bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition text-center">Iniciar Sesión</a>
-                        <a href="/registro.html" class="block bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition text-center mt-2">Registrarse</a>
+                        <a href="/login.html" class="block hover:text-orange-400 transition text-center">
+                            <i class="fas fa-user text-xl"></i>
+                        </a>
                     </div>
                     <div id="mobileUserLoggedIn" class="hidden">
                         <!-- Mobile User Info -->
@@ -103,9 +100,6 @@
                             <div id="mobileDashboardLink">
                                 <!-- Will be populated by JavaScript based on user role -->
                             </div>
-                            <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                                <i class="fas fa-user mr-2"></i>Mi Perfil
-                            </a>
                             <div id="mobileRoleSpecificMenu">
                                 <!-- Will be populated by JavaScript based on user role -->
                             </div>

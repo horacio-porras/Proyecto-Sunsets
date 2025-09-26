@@ -147,24 +147,27 @@ function configureRoleSpecificMenus() {
     switch(userRole) {
         case 'Cliente':
             roleMenuItems = `
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
-                    <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
+                <a href="/cliente/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                    <i class="fas fa-user mr-2"></i>Mi Perfil
                 </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
-                    <i class="fas fa-calendar mr-2"></i>Mis Reservaciones
+                    <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
                 </a>
             `;
             mobileRoleMenuItems = `
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
+                <a href="/cliente/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-user mr-2"></i>Mi Perfil
                 </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-calendar mr-2"></i>Mis Reservaciones
+                    <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
                 </a>
             `;
             break;
         case 'Empleado':
             roleMenuItems = `
+                <a href="/empleado/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
                     <i class="fas fa-list mr-2"></i>Gestionar Pedidos
                 </a>
@@ -173,6 +176,9 @@ function configureRoleSpecificMenus() {
                 </a>
             `;
             mobileRoleMenuItems = `
+                <a href="/empleado/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-list mr-2"></i>Gestionar Pedidos
                 </a>
@@ -183,6 +189,9 @@ function configureRoleSpecificMenus() {
             break;
         case 'Administrador':
             roleMenuItems = `
+                <a href="/admin/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
                     <i class="fas fa-users-cog mr-2"></i>Gestionar Usuarios
                 </a>
@@ -194,6 +203,9 @@ function configureRoleSpecificMenus() {
                 </a>
             `;
             mobileRoleMenuItems = `
+                <a href="/admin/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-users-cog mr-2"></i>Gestionar Usuarios
                 </a>

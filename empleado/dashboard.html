@@ -16,85 +16,311 @@
 
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard del Empleado</h1>
-            <p class="text-gray-600">Panel de control para empleados</p>
+        <!-- Welcome Section -->
+        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold mb-2">¡Bienvenido, <span class="user-name">-</span>!</h1>
+            <p class="text-gray-300">Gestiona tus pedidos asignados, verifica el inventario y consulta tu horario de trabajo</p>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-shopping-bag text-blue-600 text-xl"></i>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Assigned Orders -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Mis Pedidos Asignados</h2>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Pedidos Pendientes</h3>
-                        <p class="text-2xl font-bold text-blue-600">8</p>
+                    <div class="p-6">
+                        <div class="space-y-4" id="pedidosAsignados">
+                            <!-- Los pedidos se cargarán dinámicamente -->
+                            <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-clock text-yellow-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12346</h4>
+                                        <p class="text-sm text-gray-600">Pizza Margherita, Pasta Carbonara</p>
+                                        <p class="text-sm text-gray-600">Cliente: Juan Pérez • 15 min restantes</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
+                                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Pasta</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡18,500</p>
+                                    <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">En Preparación</span>
+                                    <div class="mt-2">
+                                        <button onclick="updateOrderStatus('12346', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12349</h4>
+                                        <p class="text-sm text-gray-600">Pizza Pepperoni, Tiramisú</p>
+                                        <p class="text-sm text-gray-600">Cliente: Ana García • 8 min restantes</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
+                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Postre</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡13,700</p>
+                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">En Preparación</span>
+                                    <div class="mt-2">
+                                        <button onclick="updateOrderStatus('12349', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-400 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Orden #12350</h4>
+                                        <p class="text-sm text-gray-600">Pizza Vegetariana</p>
+                                        <p class="text-sm text-gray-600">Cliente: Carlos Ruiz • Completado</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Pizza</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₡8,900</p>
+                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="#orders" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos mis pedidos</a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-check text-green-600 text-xl"></i>
+                <!-- Inventory Check -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Verificación de Inventario</h2>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Completados Hoy</h3>
-                        <p class="text-2xl font-bold text-green-600">24</p>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold mb-3">Ingredientes Críticos</h4>
+                                <div class="space-y-2" id="ingredientesCriticos">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Mozzarella Fresca</span>
+                                        <span class="text-sm text-red-600 font-semibold">2kg</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Harina de Trigo</span>
+                                        <span class="text-sm text-yellow-600 font-semibold">15kg</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Tomates Frescos</span>
+                                        <span class="text-sm text-green-600 font-semibold">8kg</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold mb-3">Herramientas</h4>
+                                <div class="space-y-2" id="herramientas">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Hornos</span>
+                                        <span class="text-sm text-green-600 font-semibold">3/3</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Batidoras</span>
+                                        <span class="text-sm text-green-600 font-semibold">2/2</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Cuchillos</span>
+                                        <span class="text-sm text-green-600 font-semibold">5/5</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="#inventory" class="text-orange-600 hover:text-orange-700 font-semibold">Ver inventario</a>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i class="fas fa-clock text-orange-600 text-xl"></i>
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-24 h-24 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-user text-orange-600 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold user-name">-</h3>
+                        <p class="text-gray-600" id="areaTrabajo">-</p>
+                        <p class="text-sm text-gray-500" id="fechaContratacion">Empleado desde -</p>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">En Preparación</h3>
-                        <p class="text-2xl font-bold text-orange-600">5</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <span class="text-sm user-email">-</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-gray-400"></i>
+                            <span class="text-sm" id="telefonoUsuario">-</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-id-badge text-gray-400"></i>
+                            <span class="text-sm">ID: <span id="idEmpleado">-</span></span>
+                        </div>
+                    </div>
+                    
+                </div>
+
+
+                <!-- Today's Schedule -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Mi Horario</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4" id="horarioHoy">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-clock text-gray-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Turno Mañana</h4>
+                                        <p class="text-sm text-gray-600">8:00 AM - 4:00 PM</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-gray-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Descanso</h4>
+                                        <p class="text-sm text-gray-600">12:00 PM - 1:00 PM</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">Pendiente</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-calendar text-purple-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Reservaciones</h3>
-                        <p class="text-2xl font-bold text-purple-600">12</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Acciones Disponibles</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-list text-xl mb-2 block"></i>
-                    Gestionar Pedidos
-                </button>
-                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-boxes text-xl mb-2 block"></i>
-                    Inventario
-                </button>
-                <button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-calendar-check text-xl mb-2 block"></i>
-                    Reservaciones
-                </button>
-                <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-center transition">
-                    <i class="fas fa-chart-bar text-xl mb-2 block"></i>
-                    Reportes
-                </button>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
+            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Cargar datos del usuario cuando la página se carga
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNavbar('dashboard');
+            loadUserProfile();
+        });
+
+        // Función para cargar el perfil del usuario
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const userData = data.data.user;
+                    
+                    // Actualizar información del usuario
+                    document.querySelectorAll('.user-name').forEach(el => {
+                        el.textContent = userData.nombre || 'Empleado';
+                    });
+                    document.querySelectorAll('.user-email').forEach(el => {
+                        el.textContent = userData.correo || '-';
+                    });
+                    
+                    // Actualizar información específica del empleado
+                    document.getElementById('telefonoUsuario').textContent = userData.telefono || '-';
+                    document.getElementById('areaTrabajo').textContent = userData.area_trabajo || 'Empleado';
+                    document.getElementById('idEmpleado').textContent = userData.id_empleado || '-';
+                    
+                    // Formatear fecha de contratación
+                    if (userData.fecha_contratacion) {
+                        const fecha = new Date(userData.fecha_contratacion);
+                        const day = fecha.getDate().toString().padStart(2, '0');
+                        const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+                        const year = fecha.getFullYear();
+                        document.getElementById('fechaContratacion').textContent = `Empleado desde ${day}/${month}/${year}`;
+                    }
+
+                    // Actualizar localStorage
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                } else {
+                    console.error('Error al cargar perfil:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar perfil:', error);
+            }
+        }
+
+        // Función para actualizar estado de pedido
+        function updateOrderStatus(orderId, status) {
+            // Simular actualización de estado de pedido
+            alert(`Orden #${orderId} marcada como ${status === 'ready' ? 'lista' : status}`);
+            
+            // Actualizar la UI
+            const orderElement = document.querySelector(`[data-order="${orderId}"]`);
+            if (orderElement) {
+                const statusElement = orderElement.querySelector('.status-badge');
+                statusElement.textContent = 'Listo';
+                statusElement.className = 'text-sm bg-green-100 text-green-800 px-2 py-1 rounded status-badge';
+            }
+        }
+
+        // Función para reportar problema
+        function reportarProblema() {
+            const problema = prompt('Describa el problema encontrado:');
+            if (problema) {
+                alert('Problema reportado exitosamente. El administrador será notificado.');
+            }
+        }
+
+    </script>
 </body>
 </html>
