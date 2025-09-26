@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
@@ -146,17 +147,11 @@
                         <div>
                             <h3 class="text-xl font-semibold mb-4">Síguenos en Redes Sociales</h3>
                             <div class="flex space-x-4">
-                                <a href="#" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                                <a href="https://www.facebook.com/people/Sunsets-Tarbaca/61558284743734/" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition">
                                     <i class="fab fa-facebook-f"></i>
                                 </a>
-                                <a href="https://www.instagram.com/sunsets_tarbaca/?hl=es" class="bg-pink-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-pink-700 transition">
+                                <a href="https://www.instagram.com/sunsets_tarbaca/" class="bg-pink-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-pink-700 transition">
                                     <i class="fab fa-instagram"></i>
-                                </a>
-                                <a href="#" class="bg-blue-400 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-500 transition">
-                                    <i class="fab fa-twitter"></i>
-                                </a>
-                                <a href="#" class="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-red-700 transition">
-                                    <i class="fab fa-youtube"></i>
                                 </a>
                             </div>
                         </div>
@@ -235,44 +230,8 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mb-4">
-                    <h4 class="text-xl font-bold mb-4">Sunset's Tarbaca</h4>
-                    <p class="text-gray-300">Sabor mediterráneo en cada bocado</p>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Enlaces Rápidos</h5>
-                    <ul class="space-y-2">
-                        <li><a href="menu.html" class="text-gray-300 hover:text-white transition">Menú</a></li>
-                        <li><a href="reservaciones.html" class="text-gray-300 hover:text-white transition">Reservaciones</a></li>
-                        <li><a href="about.html" class="text-gray-300 hover:text-white transition">Nosotros</a></li>
-                        <li><a href="contacto.html" class="text-gray-300 hover:text-white transition">Contacto</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Redes Sociales</h5>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-instagram text-xl"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
-                    </div>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Newsletter</h5>
-                    <p class="text-gray-300 mb-2">Suscríbete para recibir ofertas especiales</p>
-                    <input type="email" placeholder="Tu email" class="w-full px-3 py-2 rounded text-gray-800">
-                    <button class="bg-orange-600 text-white px-4 py-2 rounded mt-2 hover:bg-orange-700 transition">Suscribirse</button>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
-                <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
         function toggleMobileMenu() {
