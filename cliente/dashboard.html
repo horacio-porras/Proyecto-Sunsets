@@ -204,7 +204,7 @@
     </footer>
 
     <script>
-        // Cargar datos del perfil del usuario al cargar la página
+        //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             loadUserProfile();
         });
@@ -229,7 +229,6 @@
                 if (data.success) {
                     const userData = data.data.user;
                     
-                    // Actualizar puntos acumulados
                     const puntos = userData.puntos_acumulados || 0;
                     const puntosDisplayElement = document.getElementById('puntosDisplay');
                     
@@ -237,10 +236,9 @@
                         puntosDisplayElement.textContent = puntos;
                     }
                     
-                    // Actualizar progreso de lealtad
                     updateLoyaltyProgress(puntos);
                     
-                    // Actualizar información del usuario
+                    //Actualiza información del usuario
                     const nameElements = document.querySelectorAll('.user-name');
                     nameElements.forEach(element => {
                         element.textContent = userData.nombre || '-';
@@ -251,13 +249,11 @@
                         element.textContent = userData.correo || '-';
                     });
                     
-                    // Actualizar teléfono
                     const telefonoElement = document.getElementById('telefonoUsuario');
                     if (telefonoElement) {
                         telefonoElement.textContent = userData.telefono || '-';
                     }
                     
-                    // Actualizar fecha de registro
                     const fechaRegistroElement = document.getElementById('fechaRegistro');
                     if (fechaRegistroElement && userData.fecha_registro) {
                         const fecha = new Date(userData.fecha_registro);
@@ -267,7 +263,7 @@
                         fechaRegistroElement.textContent = `Cliente desde ${day}/${month}/${year}`;
                     }
                     
-                    // Actualizar localStorage con datos frescos
+                    //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     console.error('Error al cargar perfil:', data.message);
@@ -283,7 +279,7 @@
             
             if (!progresoBar || !progresoText) return;
             
-            // Niveles de lealtad
+            //Niveles de lealtad
             const niveles = [
                 { nombre: 'Bronce', puntos: 0 },
                 { nombre: 'Plata', puntos: 2000 },
@@ -291,7 +287,7 @@
                 { nombre: 'Diamante', puntos: 10000 }
             ];
             
-            // Encontrar el nivel actual y el siguiente
+            //Encuentra el nivel actual y el siguiente
             let nivelActual = niveles[0];
             let siguienteNivel = niveles[1];
             
@@ -316,7 +312,7 @@
             }
         }
 
-        // Función para formatear números con comas
+        //Función para formatear números con comas
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }

@@ -10,9 +10,7 @@ const PROTECTED_ROUTES = {
     '/empleado/perfil.html': 'Empleado',
     
     '/admin/dashboard.html': 'Administrador',
-    '/admin/perfil.html': 'Administrador',
-    
-    '/pedidos.html': 'Cliente'
+    '/admin/perfil.html': 'Administrador'
 };
 
 //Rutas que son públicas (no requieren autenticación)
@@ -22,7 +20,8 @@ const PUBLIC_ROUTES = [
     '/menu.html',
     '/reservaciones.html',
     '/about.html',
-    '/contacto.html'
+    '/contacto.html',
+    '/pedidos.html'
 ];
 
 //Función para obtener el usuario actual desde localStorage

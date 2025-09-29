@@ -71,28 +71,28 @@
                         <div>
                             <h4 class="text-lg font-semibold mb-4">Horarios Disponibles</h4>
                             <div class="grid grid-cols-3 gap-2" id="timeSlots">
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="11:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="11:00">
                                     11:00 AM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="12:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="12:00">
                                     12:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="13:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="13:00">
                                     1:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="14:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="14:00">
                                     2:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="18:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="18:00">
                                     6:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="19:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="19:00">
                                     7:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="20:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="20:00">
                                     8:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="21:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="21:00">
                                     9:00 PM
                                 </button>
                             </div>
@@ -148,22 +148,22 @@
                             <!-- Table Preference -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Preferencia de Mesa</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="indoor" class="mr-2">
-                                        <span class="text-sm">Interior</span>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="indoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Interior</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="outdoor" class="mr-2">
-                                        <span class="text-sm">Terraza</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="outdoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Terraza</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="window" class="mr-2">
-                                        <span class="text-sm">Ventana</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="window" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Ventana</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="any" class="mr-2">
-                                        <span class="text-sm">Cualquiera</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="any" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Cualquiera</span>
                                     </label>
                                 </div>
                             </div>
@@ -258,17 +258,25 @@
                 date.setDate(startDate.getDate() + i);
                 
                 const dayElement = document.createElement('div');
-                dayElement.className = 'text-center py-2 cursor-pointer hover:bg-orange-100 rounded transition';
+                dayElement.className = 'text-center py-2 cursor-pointer rounded transition';
                 
                 if (date.getMonth() === month) {
                     dayElement.textContent = date.getDate();
                     
-                    // Disable past dates
                     if (date < new Date().setHours(0, 0, 0, 0)) {
                         dayElement.classList.add('text-gray-300', 'cursor-not-allowed');
-                        dayElement.classList.remove('hover:bg-orange-100');
                     } else {
                         dayElement.addEventListener('click', () => selectDate(date));
+                        dayElement.addEventListener('mouseenter', function() {
+                            this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+                            this.style.color = 'white';
+                        });
+                        dayElement.addEventListener('mouseleave', function() {
+                            if (!this.classList.contains('selected')) {
+                                this.style.background = '';
+                                this.style.color = '';
+                            }
+                        });
                     }
                 } else {
                     dayElement.classList.add('text-gray-300');
@@ -282,24 +290,32 @@
             selectedDate = date;
             document.getElementById('selectedDate').textContent = date.toLocaleDateString('es-ES');
             
-            // Update calendar display
             document.querySelectorAll('#calendar > div').forEach(day => {
-                day.classList.remove('bg-orange-600', 'text-white');
+                day.classList.remove('selected');
+                day.style.background = '';
+                day.style.color = '';
             });
-            event.target.classList.add('bg-orange-600', 'text-white');
+            
+            const selectedDay = event.target;
+            selectedDay.classList.add('selected');
+            selectedDay.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+            selectedDay.style.color = 'white';
         }
 
         function selectTime(time) {
             selectedTime = time;
             document.getElementById('selectedTime').textContent = time;
             
-            // Update time slots display
             document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('bg-orange-600', 'text-white');
-                slot.classList.add('bg-gray-100', 'text-gray-700');
+                slot.classList.remove('selected');
+                slot.style.background = '';
+                slot.style.color = '';
             });
-            event.target.classList.remove('bg-gray-100', 'text-gray-700');
-            event.target.classList.add('bg-orange-600', 'text-white');
+            
+            const selectedSlot = event.target;
+            selectedSlot.classList.add('selected');
+            selectedSlot.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+            selectedSlot.style.color = 'white';
         }
 
         function previousMonth() {
@@ -312,15 +328,44 @@
             generateCalendar();
         }
 
-        // Initialize calendar
         generateCalendar();
 
-        // Add event listeners to time slots
         document.querySelectorAll('.time-slot').forEach(slot => {
             slot.addEventListener('click', () => selectTime(slot.dataset.time));
+            
+            slot.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('selected')) {
+                    this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+                    this.style.color = 'white';
+                }
+            });
+            slot.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('selected')) {
+                    this.style.background = '';
+                    this.style.color = '';
+                }
+            });
         });
 
-        // Handle form submission
+        function filterTablePreference() {
+            document.querySelectorAll('.table-preference').forEach(preference => {
+                const radio = preference.querySelector('input[type="radio"]');
+                const span = preference.querySelector('span');
+                
+                if (radio.checked) {
+                    preference.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                    preference.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+                    span.classList.remove('text-gray-700');
+                    span.classList.add('text-white');
+                } else {
+                    preference.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+                    preference.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                    span.classList.remove('text-white');
+                    span.classList.add('text-gray-700');
+                }
+            });
+        }
+
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -340,7 +385,6 @@
             alert('¡Reservación confirmada! Recibirás un correo de confirmación pronto.');
         });
 
-        // Handle party size change
         document.querySelector('select').addEventListener('change', function() {
             document.getElementById('selectedPeople').textContent = this.value ? this.value + ' persona(s)' : 'No seleccionado';
         });

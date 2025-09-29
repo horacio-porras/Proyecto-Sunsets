@@ -105,15 +105,15 @@
     </div>
 
     <script>
-        // Load user data when page loads
+        //Carga los datos del usuario cuando la página se carga
         document.addEventListener('DOMContentLoaded', function() {
             loadUserData();
             
-            // Handle form submission
+            //Maneja el envío del formulario
             document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
         });
 
-        // Load user data into form from database
+        //Carga los datos del usuario en el formulario desde la base de datos
         async function loadUserData() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -134,9 +134,9 @@
                 if (data.success) {
                     const userData = data.data.user;
                     
-                    // No form fields to populate since we only have security section
+                    //No hay campos para llenar ya que solo tenemos la sección de seguridad
                     
-                    // Update localStorage with fresh data
+                    //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     showMessage(data.message || 'Error al cargar datos del perfil', true);
@@ -147,7 +147,7 @@
             }
         }
 
-        // Handle profile update
+        //Actualiza el perfil del usuario
         async function handleProfileUpdate(e) {
             e.preventDefault();
             
@@ -155,18 +155,16 @@
             const saveBtnText = document.getElementById('saveBtnText');
             const saveBtnSpinner = document.getElementById('saveBtnSpinner');
             
-            // Show loading state
             saveBtn.disabled = true;
             saveBtnText.classList.add('hidden');
             saveBtnSpinner.classList.remove('hidden');
             
             try {
-                // Get password fields
                 const contrasenaActual = document.getElementById('contrasenaActual').value;
                 const nuevaContrasena = document.getElementById('nuevaContrasena').value;
                 const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value;
 
-                // Check if user wants to change password
+                //Verifica si el usuario quiere cambiar la contraseña
                 if (!contrasenaActual && !nuevaContrasena && !confirmarNuevaContrasena) {
                     throw new Error('Debes llenar al menos la contraseña actual para hacer cambios');
                 }
@@ -180,13 +178,13 @@
                     }
                 }
 
-                // Prepare form data with only password fields
+                //Prepara los datos del formulario con solo los campos de contraseña
                 const formData = {
                     contrasenaActual: contrasenaActual,
                     nuevaContrasena: nuevaContrasena
                 };
 
-                // Make API call
+                //Hace la llamada a la API
                 const token = localStorage.getItem('authToken');
                 const response = await fetch('/api/auth/profile', {
                     method: 'PUT',
@@ -202,16 +200,16 @@
                 if (data.success) {
                     showMessage('Perfil actualizado exitosamente', false);
                     
-                    // Update localStorage with new data
+                    //Actualiza el localStorage con los nuevos datos
                     const updatedUserData = { ...JSON.parse(localStorage.getItem('userData')), ...data.data.user };
                     localStorage.setItem('userData', JSON.stringify(updatedUserData));
                     
-                    // Clear password fields
+                    //Limpia los campos de contraseña
                     document.getElementById('contrasenaActual').value = '';
                     document.getElementById('nuevaContrasena').value = '';
                     document.getElementById('confirmarNuevaContrasena').value = '';
                     
-                    // Refresh navbar if user name changed
+                    //Actualiza el navbar si el nombre de usuario cambió
                     if (window.AuthUtils && window.AuthUtils.displayUserInfo) {
                         window.AuthUtils.displayUserInfo();
                     }
@@ -222,14 +220,13 @@
                 console.error('Error:', error);
                 showMessage(error.message || 'Error al actualizar el perfil', true);
             } finally {
-                // Hide loading state
                 saveBtn.disabled = false;
                 saveBtnText.classList.remove('hidden');
                 saveBtnSpinner.classList.add('hidden');
             }
         }
 
-        // Show success/error messages
+        //Muestra los mensajes de éxito o error
         function showMessage(message, isError) {
             hideMessages();
             
@@ -242,7 +239,7 @@
             }
         }
 
-        // Hide messages
+        //Oculta los mensajes
         function hideMessages() {
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('successMessage').classList.add('hidden');

@@ -317,14 +317,55 @@
 
     <script>
         function placeOrder() {
-            // Simulate order placement
+            //Simula el envío del pedido
             alert('¡Pedido confirmado! Tu orden #12352 ha sido recibida y está siendo preparada. Recibirás actualizaciones por SMS.');
             
-            // Redirect to confirmation page or dashboard
-            // window.location.href = 'cliente/dashboard.html';
+            //Redirige a la página de confirmación o dashboard
+            //window.location.href = 'cliente/dashboard.html';
         }
 
-        // Handle loyalty points toggle
+        //Función para verificar si el usuario está autenticado
+        function isUserLoggedIn() {
+            const userData = localStorage.getItem('userData');
+            const authToken = localStorage.getItem('authToken');
+            return userData && authToken;
+        }
+
+        //Función para manejar la visibilidad de elementos de lealtad
+        function handleLoyaltyElements() {
+            const loyaltyCheckbox = document.getElementById('loyalty');
+            const loyaltyLabel = document.querySelector('label[for="loyalty"]');
+            
+            if (!isUserLoggedIn()) {
+                //Si el usuario no está logueado, ocultar elementos de lealtad
+                if (loyaltyCheckbox) {
+                    loyaltyCheckbox.style.display = 'none';
+                }
+                if (loyaltyLabel) {
+                    loyaltyLabel.style.display = 'none';
+                }
+                
+                //Oculta información de puntos
+                const allParagraphs = document.querySelectorAll('p');
+                allParagraphs.forEach(el => {
+                    if (el.textContent.includes('Ganarás') || 
+                        el.textContent.includes('puntos') || 
+                        el.textContent.includes('lealtad')) {
+                        el.style.display = 'none';
+                    }
+                });
+                
+                //Oculta también los elementos de la lista de puntos
+                const pointsList = document.querySelectorAll('.text-xs.text-gray-500 p');
+                pointsList.forEach(el => {
+                    if (el.textContent.includes('punto') || el.textContent.includes('Puntos')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        //Maneja el toggle de puntos de lealtad
         document.getElementById('loyalty').addEventListener('change', function() {
             const totalElement = document.querySelector('.font-semibold.text-lg span:last-child');
             if (this.checked) {
@@ -332,6 +373,11 @@
             } else {
                 totalElement.textContent = '₡23,865';
             }
+        });
+
+        //Inicializa cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            handleLoyaltyElements();
         });
     </script>
 </body>

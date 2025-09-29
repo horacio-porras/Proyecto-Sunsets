@@ -647,8 +647,8 @@ function openLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
         setNavbarIconGradient(true);
+        disableChatAndCartButtons();
     }
 }
 
@@ -657,8 +657,8 @@ function closeLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
         modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
         setNavbarIconGradient(false);
+        enableChatAndCartButtons();
         
         const form = document.getElementById('loginForm');
         if (form) form.reset();
@@ -675,8 +675,8 @@ function openRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Prevenir scroll del body
         setNavbarIconGradient(true); // Activar gradiente del icono
+        disableChatAndCartButtons();
         console.log('Register modal opened');
     } else {
         console.error('Register modal not found');
@@ -688,8 +688,8 @@ function closeRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
         modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
         setNavbarIconGradient(false);
+        enableChatAndCartButtons();
         
         const form = document.getElementById('registerForm');
         if (form) form.reset();
@@ -739,6 +739,40 @@ function switchToLogin() {
     }
 }
 
+//Función para deshabilitar botones de ChatBot y Carrito
+function disableChatAndCartButtons() {
+    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton) {
+        chatButton.disabled = true;
+        chatButton.classList.add('opacity-50', 'cursor-not-allowed');
+        chatButton.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    const cartButton = document.querySelector('button[onclick="toggleCart()"]');
+    if (cartButton) {
+        cartButton.disabled = true;
+        cartButton.classList.add('opacity-50', 'cursor-not-allowed');
+        cartButton.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    }
+}
+
+//Función para habilitar botones de ChatBot y Carrito
+function enableChatAndCartButtons() {
+    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton) {
+        chatButton.disabled = false;
+        chatButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        chatButton.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    const cartButton = document.querySelector('button[onclick="toggleCart()"]');
+    if (cartButton) {
+        cartButton.disabled = false;
+        cartButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        cartButton.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    }
+}
+
 //Funciones para uso global
 window.NavbarManager = {
     loadNavbar,
@@ -754,7 +788,9 @@ window.NavbarManager = {
     closeRegisterModal,
     switchToRegister,
     switchToLogin,
-    setNavbarIconGradient
+    setNavbarIconGradient,
+    disableChatAndCartButtons,
+    enableChatAndCartButtons
 };
 
 //Disponibilidad global
@@ -769,6 +805,8 @@ window.switchToLogin = switchToLogin;
 window.toggleLoginPassword = toggleLoginPassword;
 window.toggleRegisterPassword = toggleRegisterPassword;
 window.setNavbarIconGradient = setNavbarIconGradient;
+window.disableChatAndCartButtons = disableChatAndCartButtons;
+window.enableChatAndCartButtons = enableChatAndCartButtons;
 
 //Carga el navbar automáticamente cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {

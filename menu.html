@@ -186,7 +186,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
             </div>
 
             <!-- Entradas -->
@@ -244,7 +244,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
             </div>
 
             <!-- Platos Principales -->
@@ -278,7 +278,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
             </div>
 
             <!-- Bebidas -->
@@ -316,7 +316,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
             </div>
 
             <!-- Postres -->
@@ -362,9 +362,9 @@
                 <span>Total:</span>
                 <span id="cartTotal">₡0</span>
             </div>
-                                                                       <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition">
-                            Proceder al Pago
-                        </button>
+                <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition">
+                Proceder al Pago
+                </button>
         </div>
     </div>
 
@@ -387,12 +387,10 @@
         }
 
         function filterCategory(category) {
-            // Update active button
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
                 btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
                 
-                // Reset icons to original color
                 const icons = btn.querySelectorAll('i');
                 icons.forEach(icon => {
                     icon.classList.remove('text-white');
@@ -400,7 +398,6 @@
                 });
             });
             
-            // Find the correct button element (in case click was on icon)
             const clickedElement = event.target;
             const button = clickedElement.closest('.category-btn');
             
@@ -408,7 +405,6 @@
                 button.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
                 button.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
                 
-                // Ensure icons also change color
                 const icons = button.querySelectorAll('i');
                 icons.forEach(icon => {
                     icon.classList.remove('text-gray-700');
@@ -416,7 +412,6 @@
                 });
             }
 
-            // Show/hide sections and separators
             document.querySelectorAll('.menu-section').forEach(section => {
                 section.classList.add('hidden');
             });
@@ -437,19 +432,16 @@
         }
 
         function filterDietary() {
-            // Update checkbox styles based on checked state
             document.querySelectorAll('.dietary-filter').forEach(filter => {
                 const checkbox = filter.querySelector('input[type="checkbox"]');
                 const span = filter.querySelector('span');
                 
                 if (checkbox.checked) {
-                    // Apply gradient when checked
                     filter.classList.remove('bg-gray-100', 'hover:bg-gray-200');
                     filter.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
                     span.classList.remove('text-gray-700');
                     span.classList.add('text-white');
                 } else {
-                    // Restore default style when unchecked
                     filter.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
                     filter.classList.add('bg-gray-100', 'hover:bg-gray-200');
                     span.classList.remove('text-white');
@@ -457,7 +449,6 @@
                 }
             });
             
-            // Implementation for dietary filters
             console.log('Filtering by dietary preferences...');
         }
 
@@ -498,13 +489,11 @@
         }
 
         function showNotification(message) {
-            // Create notification element
             const notification = document.createElement('div');
             notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            // Remove after 3 seconds
             setTimeout(() => {
                 notification.remove();
             }, 3000);

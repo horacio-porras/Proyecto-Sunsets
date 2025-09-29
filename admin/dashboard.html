@@ -421,7 +421,7 @@
     </footer>
 
     <script>
-        // Load admin profile data
+        //Carga los datos del perfil del administrador
         async function loadAdminProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -442,12 +442,12 @@
                 if (data.success) {
                     const userData = data.data.user;
                     
-                    // Update user name in welcome message
+                    //Actualiza el nombre de usuario en el mensaje de bienvenida
                     document.querySelectorAll('.user-name').forEach(element => {
                         element.textContent = userData.nombre || '-';
                     });
 
-                    // Update localStorage with fresh data
+                    //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     console.error('Error al cargar perfil:', data.message);
@@ -457,7 +457,7 @@
             }
         }
 
-        // Initialize page
+        //Inicializa la página
         document.addEventListener('DOMContentLoaded', function() {
             loadAdminProfile();
         });

@@ -241,13 +241,13 @@
     </footer>
 
     <script>
-        // Cargar datos del usuario cuando la página se carga
+        //Carga los datos del usuario cuando la página se carga
         document.addEventListener('DOMContentLoaded', function() {
             loadNavbar('dashboard');
             loadUserProfile();
         });
 
-        // Función para cargar el perfil del usuario
+        //Función para cargar el perfil del usuario
         async function loadUserProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -268,7 +268,7 @@
                 if (data.success) {
                     const userData = data.data.user;
                     
-                    // Actualizar información del usuario
+                    //Actualiza información del usuario
                     document.querySelectorAll('.user-name').forEach(el => {
                         el.textContent = userData.nombre || 'Empleado';
                     });
@@ -276,12 +276,12 @@
                         el.textContent = userData.correo || '-';
                     });
                     
-                    // Actualizar información específica del empleado
+                    //Actualiza información específica del empleado
                     document.getElementById('telefonoUsuario').textContent = userData.telefono || '-';
                     document.getElementById('areaTrabajo').textContent = userData.area_trabajo || 'Empleado';
                     document.getElementById('idEmpleado').textContent = userData.id_empleado || '-';
                     
-                    // Formatear fecha de contratación
+                    //Formatea la fecha de contratación
                     if (userData.fecha_contratacion) {
                         const fecha = new Date(userData.fecha_contratacion);
                         const day = fecha.getDate().toString().padStart(2, '0');
@@ -290,7 +290,7 @@
                         document.getElementById('fechaContratacion').textContent = `Empleado desde ${day}/${month}/${year}`;
                     }
 
-                    // Actualizar localStorage
+                    //Actualiza el localStorage
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     console.error('Error al cargar perfil:', data.message);
@@ -300,12 +300,12 @@
             }
         }
 
-        // Función para actualizar estado de pedido
+        //Función para actualizar estado de pedido
         function updateOrderStatus(orderId, status) {
-            // Simular actualización de estado de pedido
+            //Simula la actualización de estado de pedido
             alert(`Orden #${orderId} marcada como ${status === 'ready' ? 'lista' : status}`);
             
-            // Actualizar la UI
+            //Actualiza la UI
             const orderElement = document.querySelector(`[data-order="${orderId}"]`);
             if (orderElement) {
                 const statusElement = orderElement.querySelector('.status-badge');
@@ -314,7 +314,7 @@
             }
         }
 
-        // Función para reportar problema
+        //Función para reportar problema
         function reportarProblema() {
             const problema = prompt('Describa el problema encontrado:');
             if (problema) {
