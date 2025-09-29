@@ -325,8 +325,11 @@ function addNavbarEventListeners() {
     if (registerForm) {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('Register form submitted');
             handleRegister();
         });
+    } else {
+        console.error('Register form not found');
     }
 }
 
@@ -512,21 +515,22 @@ function validateRegisterPasswords() {
 
 // Función para manejar el registro
 async function handleRegister() {
+    console.log('handleRegister called');
     const nombre = document.getElementById('registerNombre').value;
     const email = document.getElementById('registerEmail').value;
     const telefono = document.getElementById('registerTelefono').value;
     const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const notificacionesActivas = document.getElementById('registerNotificacionesActivas').checked;
-    const aceptaTerminos = document.getElementById('registerAceptaTerminos').checked;
 
     // Validaciones básicas
-    if (!nombre || !email || !telefono || !password) {
+    if (!nombre || !email || !telefono || !password || !confirmPassword) {
         showRegisterMessage('Por favor, completa todos los campos requeridos');
         return;
     }
 
-    if (!aceptaTerminos) {
-        showRegisterMessage('Debes aceptar los términos y condiciones');
+    if (password !== confirmPassword) {
+        showRegisterMessage('Las contraseñas no coinciden');
         return;
     }
 
@@ -704,6 +708,9 @@ function openRegisterModal() {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Prevenir scroll del body
         setNavbarIconGradient(true); // Activar gradiente del icono
+        console.log('Register modal opened');
+    } else {
+        console.error('Register modal not found');
     }
 }
 
