@@ -186,7 +186,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
             </div>
 
             <!-- Entradas -->
@@ -244,7 +244,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
             </div>
 
             <!-- Platos Principales -->
@@ -278,7 +278,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
             </div>
 
             <!-- Bebidas -->
@@ -316,7 +316,7 @@
 
             <!-- Separador -->
             <div class="separator my-16">
-                <div class="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
             </div>
 
             <!-- Postres -->
@@ -391,9 +391,30 @@
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
                 btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                
+                // Reset icons to original color
+                const icons = btn.querySelectorAll('i');
+                icons.forEach(icon => {
+                    icon.classList.remove('text-white');
+                    icon.classList.add('text-gray-700');
+                });
             });
-            event.target.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-            event.target.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
+            
+            // Find the correct button element (in case click was on icon)
+            const clickedElement = event.target;
+            const button = clickedElement.closest('.category-btn');
+            
+            if (button) {
+                button.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                button.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
+                
+                // Ensure icons also change color
+                const icons = button.querySelectorAll('i');
+                icons.forEach(icon => {
+                    icon.classList.remove('text-gray-700');
+                    icon.classList.add('text-white');
+                });
+            }
 
             // Show/hide sections and separators
             document.querySelectorAll('.menu-section').forEach(section => {
