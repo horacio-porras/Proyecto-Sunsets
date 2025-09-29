@@ -589,6 +589,8 @@ async function handleRegister() {
 
 // Función para controlar el gradiente del icono del navbar
 function setNavbarIconGradient(active) {
+    const userButton = document.querySelector('#userNotLoggedIn button');
+    const mobileUserButton = document.querySelector('#mobileUserNotLoggedIn button');
     const userIcon = document.querySelector('#userNotLoggedIn button i');
     const mobileUserIcon = document.querySelector('#mobileUserNotLoggedIn button i');
     
@@ -603,14 +605,18 @@ function setNavbarIconGradient(active) {
             mobileUserIcon.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
         }
     } else {
-        // Desactivar gradiente - restaurar color normal
-        if (userIcon) {
+        // Desactivar gradiente - restaurar color normal con hover
+        if (userIcon && userButton) {
             userIcon.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
             userIcon.classList.add('text-gray-300');
+            // Asegurar que el hover funcione
+            userButton.classList.add('hover:text-white');
         }
-        if (mobileUserIcon) {
+        if (mobileUserIcon && mobileUserButton) {
             mobileUserIcon.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
             mobileUserIcon.classList.add('text-gray-300');
+            // Asegurar que el hover funcione
+            mobileUserButton.classList.add('hover:text-white');
         }
     }
 }
