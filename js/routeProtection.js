@@ -1,25 +1,21 @@
-// Route Protection System for Sunset's Tarbaca
-// Protects routes that require authentication
+//Protección de rutas para Sunset's Tarbaca
+//Protege las rutas que requieren autenticación
 
-// Routes that require authentication
+//Rutas que requieren autenticación
 const PROTECTED_ROUTES = {
-    // Client routes
     '/cliente/dashboard.html': 'Cliente',
     '/cliente/perfil.html': 'Cliente',
     
-    // Employee routes
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',
     
-    // Admin routes
     '/admin/dashboard.html': 'Administrador',
     '/admin/perfil.html': 'Administrador',
     
-    // Order page
     '/pedidos.html': 'Cliente'
 };
 
-// Routes that are public (no authentication required)
+//Rutas que son públicas (no requieren autenticación)
 const PUBLIC_ROUTES = [
     '/',
     '/index.html',
@@ -29,7 +25,7 @@ const PUBLIC_ROUTES = [
     '/contacto.html'
 ];
 
-// Function to get current user from localStorage
+//Función para obtener el usuario actual desde localStorage
 function getCurrentUser() {
     const userData = localStorage.getItem('userData');
     if (userData) {
@@ -38,47 +34,47 @@ function getCurrentUser() {
     return null;
 }
 
-// Function to check if user has valid session
+//Función para verificar si el usuario tiene una sesión válida
 function hasValidSession() {
     const user = getCurrentUser();
     const authToken = localStorage.getItem('authToken');
     return user && authToken;
 }
 
-// Function to check if user has required role
+//Función para verificar si el usuario tiene el rol requerido
 function hasRequiredRole(requiredRole) {
     const user = getCurrentUser();
     return user && user.tipoUsuario === requiredRole;
 }
 
-// Function to redirect to home page
+//Función para redirigir a la página principal
 function redirectToHome() {
     window.location.href = '/';
 }
 
-// Function to check route protection
+//Función para verificar la protección de la ruta
 function checkRouteProtection() {
     const currentPath = window.location.pathname;
     
-    // Check if current route is public
+    //Verifica si la ruta actual es pública
     if (PUBLIC_ROUTES.includes(currentPath)) {
-        return; // No protection needed
+        return;
     }
     
-    // Check if current route requires authentication
+    //Verifica si la ruta actual requiere autenticación
     const requiredRole = PROTECTED_ROUTES[currentPath];
     if (!requiredRole) {
-        return; // Route not in protection list
+        return;
     }
     
-    // Check if user is authenticated
+    //Verifica si el usuario tiene una sesión válida
     if (!hasValidSession()) {
         console.log('User not authenticated, redirecting to home');
         redirectToHome();
         return;
     }
     
-    // Check if user has required role
+    //Verifica si el usuario tiene el rol requerido
     if (!hasRequiredRole(requiredRole)) {
         console.log('User does not have required role, redirecting to home');
         redirectToHome();
@@ -88,9 +84,8 @@ function checkRouteProtection() {
     console.log('Route access granted');
 }
 
-// Function to initialize route protection
+//Función para inicializar la protección de la ruta
 function initializeRouteProtection() {
-    // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', checkRouteProtection);
     } else {
@@ -98,7 +93,7 @@ function initializeRouteProtection() {
     }
 }
 
-// Export functions for global use
+//Funciones para uso global
 window.RouteProtection = {
     checkRouteProtection,
     initializeRouteProtection,
@@ -108,5 +103,5 @@ window.RouteProtection = {
     redirectToHome
 };
 
-// Auto-initialize when script loads
+//Inicializa cuando se carga el script
 initializeRouteProtection();

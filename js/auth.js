@@ -1,30 +1,27 @@
-// Funciones de autenticación comunes para Sunset's Tarbaca
+//Funciones de autenticación comunes para Sunset's Tarbaca
 
-// Función para cerrar sesión
+//Función para cerrar sesión
 function logout() {
-    // Limpiar datos del localStorage
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     
-    // Redirigir a la página principal
     window.location.href = '/';
 }
 
-// Función para verificar si el usuario está autenticado
+//Función para verificar si el usuario está autenticado
 function checkAuth() {
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('userData');
     
     if (!token || !userData) {
-        // No hay sesión activa, redirigir al login
-        window.location.href = '/login.html';
+        window.location.href = '/';
         return false;
     }
     
     return true;
 }
 
-// Función para obtener datos del usuario actual
+//Función para obtener datos del usuario actual
 function getCurrentUser() {
     const userData = localStorage.getItem('userData');
     if (userData) {
@@ -33,22 +30,22 @@ function getCurrentUser() {
     return null;
 }
 
-// Función para verificar si el usuario tiene un rol específico
+//Función para verificar si el usuario tiene un rol específico
 function hasRole(role) {
     const user = getCurrentUser();
     return user && user.tipoUsuario === role;
 }
 
-// Función para redirigir según el id_rol del usuario
+//Función para redirigir según el id_rol del usuario
 function redirectBasedOnRole(id_rol) {
     switch (id_rol) {
-        case 1: // Administrador
+        case 1:
             window.location.href = '/admin/dashboard.html';
             break;
-        case 2: // Empleado
+        case 2:
             window.location.href = '/empleado/dashboard.html';
             break;
-        case 3: // Cliente
+        case 3:
             window.location.href = '/cliente/dashboard.html';
             break;
         default:
@@ -58,11 +55,10 @@ function redirectBasedOnRole(id_rol) {
     }
 }
 
-// Función para mostrar información del usuario en la interfaz
+//Función para mostrar información del usuario en la interfaz
 function displayUserInfo() {
     const user = getCurrentUser();
     if (user) {
-        // Buscar elementos comunes donde mostrar la información del usuario
         const userNameElements = document.querySelectorAll('.user-name');
         const userEmailElements = document.querySelectorAll('.user-email');
         const userRoleElements = document.querySelectorAll('.user-role');
@@ -73,21 +69,18 @@ function displayUserInfo() {
     }
 }
 
-// Función para agregar botón de logout a la interfaz
+//Función para agregar botón de logout a la interfaz
 function addLogoutButton() {
-    // Buscar si ya existe un botón de logout
     if (document.getElementById('logoutBtn')) {
         return;
     }
     
-    // Crear botón de logout
     const logoutBtn = document.createElement('button');
     logoutBtn.id = 'logoutBtn';
     logoutBtn.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition';
     logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión';
     logoutBtn.onclick = logout;
     
-    // Buscar un lugar común para agregar el botón (header, nav, etc.)
     const header = document.querySelector('header nav');
     const userActions = document.querySelector('.user-actions');
     const nav = document.querySelector('nav .flex:last-child');
@@ -101,15 +94,13 @@ function addLogoutButton() {
     }
 }
 
-// Función para inicializar la autenticación en la página
+//Función para inicializar la autenticación en la página
 function initAuth() {
     const currentPage = window.location.pathname;
     
-    // Verificar si hay una sesión activa
     const user = getCurrentUser();
     const hasValidSession = user && localStorage.getItem('authToken');
     
-    // Si estamos en el index, mostrar/ocultar elementos según el estado de autenticación
     if (currentPage === '/' || currentPage === '/index.html') {
         const userNotLoggedIn = document.getElementById('userNotLoggedIn');
         const userLoggedIn = document.getElementById('userLoggedIn');
@@ -117,7 +108,7 @@ function initAuth() {
         const mobileUserLoggedIn = document.getElementById('mobileUserLoggedIn');
         
         if (hasValidSession) {
-            // Usuario logueado
+            //Usuario logeado
             if (userNotLoggedIn) userNotLoggedIn.classList.add('hidden');
             if (userLoggedIn) userLoggedIn.classList.remove('hidden');
             if (mobileUserNotLoggedIn) mobileUserNotLoggedIn.classList.add('hidden');
@@ -125,13 +116,12 @@ function initAuth() {
             
             displayUserInfo();
         } else {
-            // Usuario no logueado
+            //Usuario no logeado
             if (userNotLoggedIn) userNotLoggedIn.classList.remove('hidden');
             if (userLoggedIn) userLoggedIn.classList.add('hidden');
             if (mobileUserNotLoggedIn) mobileUserNotLoggedIn.classList.remove('hidden');
             if (mobileUserLoggedIn) mobileUserLoggedIn.classList.add('hidden');
             
-            // Asegurar que el dropdown esté cerrado
             const dropdown = document.getElementById('userDropdown');
             if (dropdown) {
                 dropdown.classList.add('hidden');
@@ -139,7 +129,7 @@ function initAuth() {
         }
     }
     
-    // Verificar autenticación si estamos en una página protegida
+    //Verifica la autenticación si estamos en una página protegida
     const protectedPages = ['/cliente/dashboard.html', '/empleado/dashboard.html', '/admin/dashboard.html'];
     
     if (protectedPages.some(page => currentPage.includes(page))) {
@@ -147,15 +137,12 @@ function initAuth() {
             return;
         }
         
-        // Mostrar información del usuario
         displayUserInfo();
         
-        // Agregar botón de logout
         addLogoutButton();
         
-        // Verificar que el usuario tenga el rol correcto para la página
+        //Verifica que el usuario tenga el rol correcto para la página
         if (user && user.id_rol) {
-            // Redirigir al dashboard correcto si el usuario está en una página que no le corresponde
             if (currentPage.includes('/cliente/') && user.id_rol !== 3) {
                 redirectBasedOnRole(user.id_rol);
                 return;
@@ -172,12 +159,12 @@ function initAuth() {
     }
 }
 
-// Ejecutar cuando se carga la página
+//Se ejecuta cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     initAuth();
 });
 
-// Función para toggle del dropdown del usuario
+//Función para toggle del dropdown del usuario
 function toggleUserDropdown() {
     const dropdown = document.getElementById('userDropdown');
     const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-down');
@@ -195,7 +182,7 @@ function toggleUserDropdown() {
     }
 }
 
-// Exportar funciones para uso en otros archivos
+//Funciones para uso en otros archivos
 window.AuthUtils = {
     logout,
     checkAuth,
@@ -208,5 +195,5 @@ window.AuthUtils = {
     toggleUserDropdown
 };
 
-// Hacer disponible globalmente
+//Disponibilidad global
 window.toggleUserDropdown = toggleUserDropdown;

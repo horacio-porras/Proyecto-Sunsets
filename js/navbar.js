@@ -1,22 +1,20 @@
-// Navbar Component Manager for Sunset's Tarbaca
+//Componente Navbar
 
-// Función para cargar el navbar en cualquier página
+//Función para cargar el navbar en cualquier página
 function loadNavbar(currentPage = null) {
-    // Buscar el contenedor del navbar
+    //Busca el contenedor del navbar
     const navbarContainer = document.getElementById('navbar-container');
     if (!navbarContainer) {
         console.warn('No se encontró el contenedor del navbar con id "navbar-container"');
         return;
     }
 
-    // Cargar el contenido del navbar
+    //Carga el contenido del navbar
     fetch('/components/navbar.html')
         .then(response => response.text())
         .then(html => {
             navbarContainer.innerHTML = html;
-            // Inicializar funcionalidades del navbar después de cargarlo
             initializeNavbar();
-            // Resaltar página actual si se especifica
             if (currentPage) {
                 highlightCurrentPage(currentPage);
             }
@@ -26,14 +24,11 @@ function loadNavbar(currentPage = null) {
         });
 }
 
-// Función para resaltar la página actual en el navbar
+//Función para resaltar la página actual en el navbar
 function highlightCurrentPage(currentPage) {
-    // Remover resaltado de todas las páginas (incluyendo dropdown)
     document.querySelectorAll('nav a, #dashboardLink a, #mobileDashboardLink a, #roleSpecificMenu a, #mobileRoleSpecificMenu a').forEach(link => {
         link.classList.remove('border-b-2', 'border-white', 'text-orange-400', 'text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white');
-        // Restaurar hover para todos los enlaces
         link.classList.add('hover:text-white');
-        // Remover estilos inline
         link.style.backgroundImage = '';
         link.style.backgroundSize = '';
         link.style.backgroundPosition = '';
@@ -46,27 +41,24 @@ function highlightCurrentPage(currentPage) {
         link.style.backgroundClip = '';
     });
     
-    // Manejar el logo cuando estás en el index
+    //Resalta el logo cuando se esta en el index
     const logoLink = document.querySelector('nav a[href="/"]');
     if (logoLink) {
         const sunsetText = logoLink.querySelector('.text-2xl');
         if (sunsetText) {
             if (currentPage === '/' || currentPage === '/index.html' || currentPage === 'index.html') {
-                // Si estás en el index, hacer que "Sunset's Tarbaca" se vea como en hover
                 sunsetText.classList.remove('text-gray-300');
                 sunsetText.classList.add('text-white');
             } else {
-                // Si no estás en el index, restaurar el color normal
                 sunsetText.classList.remove('text-white');
                 sunsetText.classList.add('text-gray-300');
             }
         }
     }
     
-    // Resaltar la página actual con gradiente (incluyendo enlaces del dropdown)
+    //Resalta la página actual con gradiente (incluyendo enlaces del dropdown)
     const currentLink = document.querySelector(`nav a[href="${currentPage}"], #dashboardLink a[href="${currentPage}"], #mobileDashboardLink a[href="${currentPage}"], #roleSpecificMenu a[href="${currentPage}"], #mobileRoleSpecificMenu a[href="${currentPage}"]`);
     if (currentLink && currentPage !== '/' && currentPage !== '/index.html' && currentPage !== 'index.html') {
-        // Aplicar gradiente al texto (solo para páginas que no sean el index)
         currentLink.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
         currentLink.style.webkitBackgroundClip = 'text';
         currentLink.style.webkitTextFillColor = 'transparent';
@@ -75,33 +67,25 @@ function highlightCurrentPage(currentPage) {
     }
 }
 
-// Función para inicializar las funcionalidades del navbar
+//Función para inicializar las funcionalidades del navbar
 function initializeNavbar() {
-    // Mostrar/ocultar elementos según el estado de autenticación
     updateAuthState();
-    
-    // Configurar menús específicos por rol
     configureRoleSpecificMenus();
-    
-    // Agregar event listeners
     addNavbarEventListeners();
 }
 
-// Función para actualizar el estado de autenticación en el navbar
+//Función para actualizar el estado de autenticación en el navbar
 function updateAuthState() {
     const user = getCurrentUser();
     const hasValidSession = user && localStorage.getItem('authToken');
     
-    // Elementos desktop
     const userNotLoggedIn = document.getElementById('userNotLoggedIn');
     const userLoggedIn = document.getElementById('userLoggedIn');
-    
-    // Elementos móvil
     const mobileUserNotLoggedIn = document.getElementById('mobileUserNotLoggedIn');
     const mobileUserLoggedIn = document.getElementById('mobileUserLoggedIn');
     
     if (hasValidSession) {
-        // Usuario logueado
+        //Usuario logeado
         if (userNotLoggedIn) userNotLoggedIn.classList.add('hidden');
         if (userLoggedIn) userLoggedIn.classList.remove('hidden');
         if (mobileUserNotLoggedIn) mobileUserNotLoggedIn.classList.add('hidden');
@@ -110,20 +94,18 @@ function updateAuthState() {
         displayUserInfo();
         configureRoleSpecificMenus();
         
-        // Resaltar página actual después de configurar menús
         setTimeout(() => {
             const currentPath = window.location.pathname;
             const currentPage = currentPath === '/' ? '/index.html' : currentPath;
             highlightCurrentPage(currentPage);
         }, 100);
     } else {
-        // Usuario no logueado
+        //Usuario no logeado
         if (userNotLoggedIn) userNotLoggedIn.classList.remove('hidden');
         if (userLoggedIn) userLoggedIn.classList.add('hidden');
         if (mobileUserNotLoggedIn) mobileUserNotLoggedIn.classList.remove('hidden');
         if (mobileUserLoggedIn) mobileUserLoggedIn.classList.add('hidden');
         
-        // Asegurar que el dropdown esté cerrado
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) {
             dropdown.classList.add('hidden');
@@ -131,14 +113,13 @@ function updateAuthState() {
     }
 }
 
-// Función para configurar menús específicos por rol
+//Función para configurar menús específicos por rol
 function configureRoleSpecificMenus() {
     const user = getCurrentUser();
     if (!user) return;
 
     const userRole = user.tipoUsuario;
     
-    // Configurar enlace del dashboard
     const dashboardLink = document.getElementById('dashboardLink');
     const mobileDashboardLink = document.getElementById('mobileDashboardLink');
     
@@ -180,7 +161,6 @@ function configureRoleSpecificMenus() {
         `;
     }
     
-    // Configurar menús específicos por rol
     const roleSpecificMenu = document.getElementById('roleSpecificMenu');
     const mobileRoleSpecificMenu = document.getElementById('mobileRoleSpecificMenu');
     
@@ -270,15 +250,13 @@ function configureRoleSpecificMenus() {
         mobileRoleSpecificMenu.innerHTML = mobileRoleMenuItems;
     }
     
-    // Resaltar página actual después de configurar los menús
     const currentPath = window.location.pathname;
     const currentPage = currentPath === '/' ? '/index.html' : currentPath;
     highlightCurrentPage(currentPage);
 }
 
-// Función para agregar event listeners del navbar
+//Función para agregar event listeners del navbar
 function addNavbarEventListeners() {
-    // Cerrar dropdown al hacer clic fuera
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('userDropdown');
         const dropdownBtn = document.getElementById('userDropdownBtn');
@@ -294,7 +272,6 @@ function addNavbarEventListeners() {
             }
         }
         
-        // Cerrar modales al hacer clic fuera
         const loginModal = document.getElementById('loginModal');
         const registerModal = document.getElementById('registerModal');
         
@@ -311,7 +288,6 @@ function addNavbarEventListeners() {
         }
     });
     
-    // Manejar formulario de login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
@@ -320,7 +296,6 @@ function addNavbarEventListeners() {
         });
     }
     
-    // Manejar formulario de registro
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', function(e) {
@@ -333,7 +308,7 @@ function addNavbarEventListeners() {
     }
 }
 
-// Función para mostrar/ocultar contraseña en login
+//Función para mostrar/ocultar contraseña en login
 function toggleLoginPassword() {
     const passwordInput = document.getElementById('loginPassword');
     const passwordIcon = document.getElementById('loginPasswordIcon');
@@ -349,7 +324,7 @@ function toggleLoginPassword() {
     }
 }
 
-// Función para mostrar/ocultar contraseña en registro
+//Función para mostrar/ocultar contraseña en registro
 function toggleRegisterPassword(fieldId) {
     const passwordInput = document.getElementById(fieldId);
     const passwordIcon = document.getElementById(fieldId + 'Icon');
@@ -365,14 +340,13 @@ function toggleRegisterPassword(fieldId) {
     }
 }
 
-// Función para mostrar mensajes en login
+//Función para mostrar mensajes en login
 function showLoginMessage(message, isError = true) {
     const errorDiv = document.getElementById('loginErrorMessage');
     const successDiv = document.getElementById('loginSuccessMessage');
     const errorText = document.getElementById('loginErrorText');
     const successText = document.getElementById('loginSuccessText');
 
-    // Ocultar ambos mensajes primero
     errorDiv.classList.add('hidden');
     successDiv.classList.add('hidden');
 
@@ -385,14 +359,13 @@ function showLoginMessage(message, isError = true) {
     }
 }
 
-// Función para mostrar mensajes en registro
+//Función para mostrar mensajes en registro
 function showRegisterMessage(message, isError = true) {
     const errorDiv = document.getElementById('registerErrorMessage');
     const successDiv = document.getElementById('registerSuccessMessage');
     const errorText = document.getElementById('registerErrorText');
     const successText = document.getElementById('registerSuccessText');
 
-    // Ocultar ambos mensajes primero
     errorDiv.classList.add('hidden');
     successDiv.classList.add('hidden');
 
@@ -405,7 +378,7 @@ function showRegisterMessage(message, isError = true) {
     }
 }
 
-// Función para mostrar/ocultar loading en login
+//Función para mostrar/ocultar loading en login
 function toggleLoginLoading(show) {
     const loginBtn = document.getElementById('loginBtn');
     const loginBtnText = document.getElementById('loginBtnText');
@@ -422,7 +395,7 @@ function toggleLoginLoading(show) {
     }
 }
 
-// Función para mostrar/ocultar loading en registro
+//Función para mostrar/ocultar loading en registro
 function toggleRegisterLoading(show) {
     const registerBtn = document.getElementById('registerBtn');
     const registerBtnText = document.getElementById('registerBtnText');
@@ -439,12 +412,11 @@ function toggleRegisterLoading(show) {
     }
 }
 
-// Función para manejar el login
+//Función para manejar el login
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    // Validación básica
     if (!email || !password) {
         showLoginMessage('Por favor, completa todos los campos requeridos');
         return;
@@ -467,13 +439,13 @@ async function handleLogin() {
         const data = await response.json();
 
         if (data.success) {
-            // Guardar token en localStorage
+            //Guarda el token en localStorage
             localStorage.setItem('authToken', data.data.token);
             localStorage.setItem('userData', JSON.stringify(data.data.user));
             
             showLoginMessage('¡Login exitoso! Redirigiendo...', false);
             
-            // Cerrar modal y actualizar navbar
+            //Cierra el modal y actualiza el navbar
             setTimeout(() => {
                 closeLoginModal();
                 updateAuthState();
@@ -490,7 +462,7 @@ async function handleLogin() {
     }
 }
 
-// Validación de contraseñas para registro
+//Validación de contraseñas para registro
 function validateRegisterPasswords() {
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
@@ -513,7 +485,7 @@ function validateRegisterPasswords() {
     return true;
 }
 
-// Función para manejar el registro
+//Función para manejar el registro
 async function handleRegister() {
     console.log('handleRegister called');
     const nombre = document.getElementById('registerNombre').value;
@@ -523,7 +495,6 @@ async function handleRegister() {
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const notificacionesActivas = document.getElementById('registerNotificacionesActivas').checked;
 
-    // Validaciones básicas
     if (!nombre || !email || !telefono || !password || !confirmPassword) {
         showRegisterMessage('Por favor, completa todos los campos requeridos');
         return;
@@ -558,13 +529,13 @@ async function handleRegister() {
         const data = await response.json();
 
         if (data.success) {
-            // Guardar token en localStorage
+            //Guarda el token en localStorage
             localStorage.setItem('authToken', data.data.token);
             localStorage.setItem('userData', JSON.stringify(data.data.user));
             
             showRegisterMessage('¡Cuenta creada exitosamente! Redirigiendo...', false);
             
-            // Cerrar modal y actualizar navbar
+            //Cierra el modal y actualiza el navbar
             setTimeout(() => {
                 closeRegisterModal();
                 updateAuthState();
@@ -572,7 +543,6 @@ async function handleRegister() {
             }, 2000);
         } else {
             if (data.errors && data.errors.length > 0) {
-                // Mostrar errores de validación
                 const errorMessages = data.errors.map(error => error.msg).join(', ');
                 showRegisterMessage(errorMessages);
             } else {
@@ -587,7 +557,7 @@ async function handleRegister() {
     }
 }
 
-// Función para controlar el gradiente del icono del navbar
+//Función para controlar el gradiente del icono del navbar
 function setNavbarIconGradient(active) {
     const userButton = document.querySelector('#userNotLoggedIn button');
     const mobileUserButton = document.querySelector('#mobileUserNotLoggedIn button');
@@ -595,7 +565,6 @@ function setNavbarIconGradient(active) {
     const mobileUserIcon = document.querySelector('#mobileUserNotLoggedIn button i');
     
     if (active) {
-        // Activar gradiente en el icono mismo
         if (userIcon) {
             userIcon.classList.remove('text-gray-300');
             userIcon.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
@@ -605,23 +574,20 @@ function setNavbarIconGradient(active) {
             mobileUserIcon.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
         }
     } else {
-        // Desactivar gradiente - restaurar color normal con hover
         if (userIcon && userButton) {
             userIcon.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
             userIcon.classList.add('text-gray-300');
-            // Asegurar que el hover funcione
             userButton.classList.add('hover:text-white');
         }
         if (mobileUserIcon && mobileUserButton) {
             mobileUserIcon.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-orange-500', 'to-red-500');
             mobileUserIcon.classList.add('text-gray-300');
-            // Asegurar que el hover funcione
             mobileUserButton.classList.add('hover:text-white');
         }
     }
 }
 
-// Función para toggle del menú móvil
+//Función para toggle del menú móvil
 function toggleMobileMenu() {
     const menu = document.getElementById('mobileMenu');
     if (menu) {
@@ -629,7 +595,7 @@ function toggleMobileMenu() {
     }
 }
 
-// Función para toggle del dropdown del usuario
+//Función para toggle del dropdown del usuario
 function toggleUserDropdown() {
     const dropdown = document.getElementById('userDropdown');
     const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-down');
@@ -647,7 +613,7 @@ function toggleUserDropdown() {
     }
 }
 
-// Función para mostrar información del usuario
+//Función para mostrar información del usuario
 function displayUserInfo() {
     const user = getCurrentUser();
     if (user) {
@@ -657,7 +623,7 @@ function displayUserInfo() {
     }
 }
 
-// Función para obtener usuario actual (debe estar definida en auth.js)
+//Función para obtener usuario actual (debe estar definida en auth.js)
 function getCurrentUser() {
     const userData = localStorage.getItem('userData');
     if (userData) {
@@ -666,41 +632,37 @@ function getCurrentUser() {
     return null;
 }
 
-// Función para logout (debe estar definida en auth.js)
+//Función para logout (debe estar definida en auth.js)
 function logout() {
-    // Limpiar datos del localStorage
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     
-    // Actualizar el estado del navbar inmediatamente
     updateAuthState();
     
-    // Redirigir a la página principal
     window.location.href = '/';
 }
 
-// Funciones para manejar modales de login y registro
+//Funciones para manejar modales de login y registro
 function openLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-        setNavbarIconGradient(true); // Activar gradiente del icono
+        document.body.style.overflow = 'hidden';
+        setNavbarIconGradient(true);
     }
 }
 
+//Función para cerrar el modal de login
 function closeLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
         modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; // Restaurar scroll del body
-        setNavbarIconGradient(false); // Desactivar gradiente del icono
+        document.body.style.overflow = 'auto';
+        setNavbarIconGradient(false);
         
-        // Limpiar formulario y mensajes
         const form = document.getElementById('loginForm');
         if (form) form.reset();
         
-        // Ocultar mensajes
         const errorDiv = document.getElementById('loginErrorMessage');
         const successDiv = document.getElementById('loginSuccessMessage');
         if (errorDiv) errorDiv.classList.add('hidden');
@@ -708,6 +670,7 @@ function closeLoginModal() {
     }
 }
 
+//Función para abrir el modal de registro
 function openRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
@@ -720,18 +683,17 @@ function openRegisterModal() {
     }
 }
 
+//Función para cerrar el modal de registro
 function closeRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
         modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; // Restaurar scroll del body
-        setNavbarIconGradient(false); // Desactivar gradiente del icono
+        document.body.style.overflow = 'auto';
+        setNavbarIconGradient(false);
         
-        // Limpiar formulario y mensajes
         const form = document.getElementById('registerForm');
         if (form) form.reset();
         
-        // Ocultar mensajes
         const errorDiv = document.getElementById('registerErrorMessage');
         const successDiv = document.getElementById('registerSuccessMessage');
         if (errorDiv) errorDiv.classList.add('hidden');
@@ -739,8 +701,8 @@ function closeRegisterModal() {
     }
 }
 
+//Función para cambiar al modal de registro
 function switchToRegister() {
-    // No cambiar el gradiente, solo cambiar el modal
     const loginModal = document.getElementById('loginModal');
     const registerModal = document.getElementById('registerModal');
     
@@ -748,11 +710,9 @@ function switchToRegister() {
         loginModal.classList.add('hidden');
         registerModal.classList.remove('hidden');
         
-        // Limpiar formulario de login
         const loginForm = document.getElementById('loginForm');
         if (loginForm) loginForm.reset();
         
-        // Ocultar mensajes de login
         const loginErrorDiv = document.getElementById('loginErrorMessage');
         const loginSuccessDiv = document.getElementById('loginSuccessMessage');
         if (loginErrorDiv) loginErrorDiv.classList.add('hidden');
@@ -760,8 +720,8 @@ function switchToRegister() {
     }
 }
 
+//Función para cambiar al modal de login
 function switchToLogin() {
-    // No cambiar el gradiente, solo cambiar el modal
     const loginModal = document.getElementById('loginModal');
     const registerModal = document.getElementById('registerModal');
     
@@ -769,11 +729,9 @@ function switchToLogin() {
         registerModal.classList.add('hidden');
         loginModal.classList.remove('hidden');
         
-        // Limpiar formulario de registro
         const registerForm = document.getElementById('registerForm');
         if (registerForm) registerForm.reset();
         
-        // Ocultar mensajes de registro
         const registerErrorDiv = document.getElementById('registerErrorMessage');
         const registerSuccessDiv = document.getElementById('registerSuccessMessage');
         if (registerErrorDiv) registerErrorDiv.classList.add('hidden');
@@ -781,7 +739,7 @@ function switchToLogin() {
     }
 }
 
-// Exportar funciones para uso global
+//Funciones para uso global
 window.NavbarManager = {
     loadNavbar,
     initializeNavbar,
@@ -799,7 +757,7 @@ window.NavbarManager = {
     setNavbarIconGradient
 };
 
-// Hacer disponibles globalmente
+//Disponibilidad global
 window.toggleMobileMenu = toggleMobileMenu;
 window.toggleUserDropdown = toggleUserDropdown;
 window.openLoginModal = openLoginModal;
@@ -812,9 +770,8 @@ window.toggleLoginPassword = toggleLoginPassword;
 window.toggleRegisterPassword = toggleRegisterPassword;
 window.setNavbarIconGradient = setNavbarIconGradient;
 
-// Cargar navbar automáticamente cuando se carga el DOM
+//Carga el navbar automáticamente cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
-    // Detectar página actual basada en la URL
     const currentPath = window.location.pathname;
     const currentPage = currentPath === '/' ? '/index.html' : currentPath;
     

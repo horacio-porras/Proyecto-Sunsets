@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 
-// Validaciones para registro
+//Validaciones para registro
 const registerValidation = [
     body('nombre')
         .trim()
@@ -37,7 +37,7 @@ const registerValidation = [
         .withMessage('Las notificaciones activas deben ser un valor booleano')
 ];
 
-// Validaciones para login
+//Validaciones para login
 const loginValidation = [
     body('correo')
         .isEmail()
@@ -51,7 +51,7 @@ const loginValidation = [
         .withMessage('La contraseña no puede estar vacía')
 ];
 
-// Validaciones para cambio de contraseña
+//Validaciones para cambio de contraseña
 const changePasswordValidation = [
     body('currentPassword')
         .notEmpty()
@@ -74,7 +74,7 @@ const changePasswordValidation = [
         })
 ];
 
-// Validaciones para actualización de perfil
+//Validaciones para actualización de perfil
 const profileUpdateValidation = [
     body('nombre')
         .optional()

@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
-// Middleware para verificar JWT
+//Middleware para verificar JWT
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         return res.status(401).json({
@@ -16,7 +16,7 @@ const authenticateToken = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Verificar que el usuario existe y está activo
+        //Verifica que el usuario existe y está activo
         const [rows] = await pool.execute(
             `SELECT u.id_usuario, u.nombre, u.correo, u.activo, u.id_rol, r.nombre_rol
              FROM usuario u 
@@ -57,7 +57,7 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// Middleware para verificar roles específicos
+//Middleware para verificar roles específicos
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -78,13 +78,13 @@ const authorizeRoles = (...roles) => {
     };
 };
 
-// Middleware para verificar si es administrador
+//Middleware para verificar si es administrador
 const requireAdmin = authorizeRoles('administrador');
 
-// Middleware para verificar si es empleado o administrador
+//Middleware para verificar si es empleado o administrador
 const requireEmployee = authorizeRoles('empleado', 'administrador');
 
-// Middleware para verificar si es cliente, empleado o administrador
+//Middleware para verificar si es cliente, empleado o administrador
 const requireUser = authorizeRoles('cliente', 'empleado', 'administrador');
 
 module.exports = {

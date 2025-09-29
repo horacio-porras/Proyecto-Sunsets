@@ -1,9 +1,6 @@
-/**
- * Footer Component Loader for Sunset's Tarbaca
- * This script loads the unified footer component into pages
- */
+//Componente Footer
 
-// Load footer into the specified container
+//Función para cargar el footer en cualquier página
 async function loadFooter(containerId = 'footer-container') {
     try {
         const response = await fetch('/components/footer.html');
@@ -23,10 +20,10 @@ async function loadFooter(containerId = 'footer-container') {
     }
 }
 
-// Initialize footer when DOM is loaded
+//Inicializa el footer cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
     loadFooter();
 });
 
-// Make loadFooter available globally
+//Disponibilidad global
 window.loadFooter = loadFooter;

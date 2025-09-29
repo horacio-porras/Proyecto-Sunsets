@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { pool } = require('../config/database');
 
-// Función para generar JWT
+//Función para generar JWT
 const generateToken = (userId, userType) => {
     return jwt.sign(
         { userId, userType },
@@ -12,10 +12,10 @@ const generateToken = (userId, userType) => {
     );
 };
 
-// Registro de usuario
+//Registro de usuario
 const register = async (req, res) => {
     try {
-        // Verificar errores de validación
+        //Verificar errores de validación
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -33,7 +33,7 @@ const register = async (req, res) => {
             notificacionesActivas = false
         } = req.body;
 
-        // Verificar si el usuario ya existe
+        //Verifica si el usuario ya existe
         const [existingUser] = await pool.execute(
             'SELECT id_usuario FROM usuario WHERE correo = ?',
             [correo]
@@ -46,11 +46,11 @@ const register = async (req, res) => {
             });
         }
 
-        // Hash de la contraseña
+        //Hash de la contraseña
         const saltRounds = 12;
         const passwordHash = await bcrypt.hash(contrasena, saltRounds);
 
-        // Obtener ID del rol cliente (id_rol = 3 según tu especificación)
+        //Obtener ID del rol cliente
         const [roleResult] = await pool.execute(
             'SELECT id_rol FROM rol WHERE nombre_rol = ?',
             ['Cliente']
@@ -65,7 +65,7 @@ const register = async (req, res) => {
 
         const clienteRoleId = roleResult[0].id_rol;
 
-        // Insertar nuevo usuario
+        //Inserta nuevo usuario
         const [userResult] = await pool.execute(
             `INSERT INTO usuario (
                 nombre, correo, telefono, contrasena, id_rol, 
@@ -82,7 +82,7 @@ const register = async (req, res) => {
 
         const userId = userResult.insertId;
 
-        // Crear registro en tabla cliente
+        //Crea registro en la tabla cliente
         await pool.execute(
             `INSERT INTO cliente (
                 id_usuario, puntos_acumulados, fecha_registro_programa, 
@@ -91,10 +91,10 @@ const register = async (req, res) => {
             [userId, notificacionesActivas]
         );
 
-        // Generar token
+        //Genera el token
         const token = generateToken(userId, 'Cliente');
 
-        // Respuesta exitosa
+        //Respuesta exitosa
         res.status(201).json({
             success: true,
             message: 'Usuario registrado exitosamente',
@@ -119,10 +119,10 @@ const register = async (req, res) => {
     }
 };
 
-// Login de usuario
+//Login de usuario
 const login = async (req, res) => {
     try {
-        // Verificar errores de validación
+        //Verifica errores de validación
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -134,7 +134,7 @@ const login = async (req, res) => {
 
         const { correo, contrasena } = req.body;
 
-        // Buscar usuario con información del rol
+        //Busca el usuario con información del rol
         const [users] = await pool.execute(
             `SELECT u.id_usuario, u.nombre, u.correo, u.contrasena, u.activo, u.id_rol, r.nombre_rol
              FROM usuario u 
@@ -152,7 +152,7 @@ const login = async (req, res) => {
 
         const user = users[0];
 
-        // Verificar contraseña
+        //Verifica la contraseña
         const isValidPassword = await bcrypt.compare(contrasena, user.contrasena);
         if (!isValidPassword) {
             return res.status(401).json({
@@ -161,10 +161,10 @@ const login = async (req, res) => {
             });
         }
 
-        // Generar token
+        //Genera el token
         const token = generateToken(user.id_usuario, user.nombre_rol);
 
-        // Respuesta exitosa
+        //Respuesta exitosa
         res.json({
             success: true,
             message: 'Login exitoso',
@@ -189,10 +189,10 @@ const login = async (req, res) => {
     }
 };
 
-// Verificar token (para mantener sesión)
+//Verifica el token (para mantener sesión)
 const verifyToken = async (req, res) => {
     try {
-        // El middleware de autenticación ya verificó el token
+        //El middleware de autenticación ya verificó el token
         res.json({
             success: true,
             message: 'Token válido',
@@ -209,11 +209,9 @@ const verifyToken = async (req, res) => {
     }
 };
 
-// Logout (opcional - para invalidar tokens del lado del servidor)
+//Logout
 const logout = async (req, res) => {
     try {
-        // En un sistema más complejo, podrías agregar el token a una lista negra
-        // Por ahora, simplemente confirmamos el logout
         res.json({
             success: true,
             message: 'Logout exitoso'
@@ -227,13 +225,13 @@ const logout = async (req, res) => {
     }
 };
 
-// Obtener perfil completo del usuario
+//Obtiene el perfil completo del usuario
 const getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.tipoUsuario;
 
-        // Obtener datos básicos del usuario
+        //Obtiene datos básicos del usuario
         const [userData] = await pool.execute(
             `SELECT u.id_usuario, u.nombre, u.correo, u.telefono, u.id_rol, u.fecha_registro, r.nombre_rol
              FROM usuario u 
@@ -251,7 +249,7 @@ const getProfile = async (req, res) => {
 
         let profileData = userData[0];
 
-        // Agregar datos específicos del rol
+        //Agrega datos específicos del rol
         if (userRole === 'Cliente') {
             const [clienteData] = await pool.execute(
                 'SELECT puntos_acumulados, notificaciones_activas, fecha_registro_programa FROM cliente WHERE id_usuario = ?',
@@ -303,10 +301,10 @@ const getProfile = async (req, res) => {
     }
 };
 
-// Actualizar perfil de usuario
+//Actualiza el perfil de usuario
 const updateProfile = async (req, res) => {
     try {
-        // Verificar errores de validación
+        //Verifica errores de validación
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -327,7 +325,7 @@ const updateProfile = async (req, res) => {
             notificacionesActivas
         } = req.body;
 
-        // Verificar si el usuario existe
+        //Verifica si el usuario existe
         const [existingUser] = await pool.execute(
             'SELECT * FROM usuario WHERE id_usuario = ?',
             [userId]
@@ -342,7 +340,7 @@ const updateProfile = async (req, res) => {
 
         const user = existingUser[0];
 
-        // Verificar contraseña actual si se quiere cambiar la contraseña
+        //Verifica la contraseña actual si se quiere cambiar la contraseña
         if (nuevaContrasena && contrasenaActual) {
             const isValidPassword = await bcrypt.compare(contrasenaActual, user.contrasena);
             if (!isValidPassword) {
@@ -353,7 +351,7 @@ const updateProfile = async (req, res) => {
             }
         }
 
-        // Verificar si el correo ya existe en otro usuario
+        //Verifica si el correo ya existe en otro usuario
         if (correo && correo !== user.correo) {
             const [emailExists] = await pool.execute(
                 'SELECT id_usuario FROM usuario WHERE correo = ? AND id_usuario != ?',
@@ -368,7 +366,7 @@ const updateProfile = async (req, res) => {
             }
         }
 
-        // Preparar datos para actualizar
+        //Prepara los datos para actualizar
         const updateData = {};
         if (nombre) updateData.nombre = nombre;
         if (correo) updateData.correo = correo;
@@ -378,7 +376,7 @@ const updateProfile = async (req, res) => {
             updateData.contrasena = await bcrypt.hash(nuevaContrasena, saltRounds);
         }
 
-        // Actualizar datos del usuario
+        //Actualiza los datos del usuario
         if (Object.keys(updateData).length > 0) {
             const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
             const values = Object.values(updateData);
@@ -390,7 +388,7 @@ const updateProfile = async (req, res) => {
             );
         }
 
-        // Actualizar datos específicos del rol
+        //Actualiza los datos específicos del rol
         if (userRole === 'Cliente' && notificacionesActivas !== undefined) {
             await pool.execute(
                 'UPDATE cliente SET notificaciones_activas = ? WHERE id_usuario = ?',
@@ -398,7 +396,7 @@ const updateProfile = async (req, res) => {
             );
         }
 
-        // Obtener datos actualizados del usuario
+        //Obtiene los datos actualizados del usuario
         const [updatedUser] = await pool.execute(
             `SELECT u.id_usuario, u.nombre, u.correo, u.telefono, u.id_rol, u.fecha_registro, r.nombre_rol
              FROM usuario u 
@@ -409,7 +407,7 @@ const updateProfile = async (req, res) => {
 
         let userData = updatedUser[0];
 
-        // Agregar datos específicos del rol
+        //Agrega datos específicos del rol
         if (userRole === 'Cliente') {
             const [clienteData] = await pool.execute(
                 'SELECT puntos_acumulados, notificaciones_activas FROM cliente WHERE id_usuario = ?',
