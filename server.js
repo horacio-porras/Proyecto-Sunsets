@@ -7,6 +7,7 @@ require('dotenv').config({ path: './config.env' });
 
 const { testConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,7 +42,7 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Rate limiting para autenticación
+//Rate limiting para autenticación
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: isDevelopment ? 50 : 5,
@@ -61,6 +62,7 @@ app.use(express.static('.'));
 
 //Rutas de API
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/menu', menuRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

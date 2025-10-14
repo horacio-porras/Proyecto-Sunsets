@@ -7,9 +7,82 @@
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .cart-btn-increase,
+        .cart-btn-decrease {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            min-height: 24px !important;
+            max-width: 24px !important;
+            max-height: 24px !important;
+            background-color: #e5e7eb !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            font-weight: normal !important;
+            color: #374151 !important;
+        }
+        
+        .cart-btn-remove {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            max-width: 32px !important;
+            max-height: 32px !important;
+            background-color: transparent !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            color: #dc2626 !important;
+        }
+        
+        .cart-btn-increase:hover,
+        .cart-btn-decrease:hover {
+            background-color: #d1d5db !important;
+            transform: scale(1.1) !important;
+        }
+        
+        .cart-btn-remove:hover {
+            color: #b91c1c !important;
+            transform: scale(1.2) !important;
+        }
+        
+        #cartItems {
+            pointer-events: auto !important;
+        }
+        
+        #cartItems > div {
+            position: relative !important;
+            z-index: 1 !important;
+            pointer-events: auto !important;
+        }
+        
+        #cartItems * {
+            box-sizing: border-box !important;
+        }
+    </style>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
+    <script src="/js/menu.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
@@ -81,280 +154,42 @@
     <!-- Menu Items -->
     <section class="py-12">
         <div class="container mx-auto px-4">
-            <!-- Pizzas -->
-            <div class="menu-section" data-category="pizzas">
-                <h2 class="text-3xl font-bold text-center mb-12">Pizzas Artesanales</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Pizza Margherita -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="vegetariano">
-                        <img src="https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400" alt="Pizza Margherita" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Pizza Margherita</h3>
-                                <span class="text-orange-600 font-bold text-base">₡8,500</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Salsa de tomate, mozzarella fresca, albahaca y aceite de oliva extra virgen</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.8 (124 reseñas)</span>
-                                </div>
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Vegetariano</span>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Pizza Margherita', 8500)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
+            <!-- Loading indicator -->
+            <div id="menu-loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                <p class="mt-4 text-gray-600">Cargando menú...</p>
+            </div>
 
-                    <!-- Pizza Pepperoni -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="">
-                        <img src="https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400" alt="Pizza Pepperoni" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Pizza Pepperoni</h3>
-                                <span class="text-orange-600 font-bold text-base">₡9,200</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Pepperoni, mozzarella, salsa de tomate y especias italianas</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.9 (98 reseñas)</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Pizza Pepperoni', 9200)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Pizza Hawaiana -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="">
-                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" alt="Pizza Hawaiana" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Pizza Hawaiana</h3>
-                                <span class="text-orange-600 font-bold text-base">₡9,800</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Jamón, piña, mozzarella y salsa de tomate</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.7 (87 reseñas)</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Pizza Hawaiana', 9800)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Pizza Vegetariana -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="vegetariano vegano">
-                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400" alt="Pizza Vegetariana" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Pizza Vegetariana</h3>
-                                <span class="text-orange-600 font-bold text-base">₡8,900</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Champiñones, pimientos, cebolla, aceitunas y mozzarella</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.6 (76 reseñas)</span>
-                                </div>
-                                <div class="flex gap-1">
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Vegetariano</span>
-                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Vegano</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Pizza Vegetariana', 8900)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
+            <!-- Error message -->
+            <div id="menu-error" class="text-center py-12 hidden">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <strong>Error:</strong> No se pudo cargar el menú. Por favor, intenta de nuevo.
                 </div>
             </div>
 
-            <!-- Separador -->
-            <div class="separator my-16">
-                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
-            </div>
-
-            <!-- Entradas -->
-            <div class="menu-section" data-category="entradas">
-                <h2 class="text-3xl font-bold text-center mb-12">Entradas</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Bruschetta -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="vegetariano">
-                        <img src="https://images.unsplash.com/photo-1506280754576-f6fa8a873550?w=400" alt="Bruschetta" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Bruschetta</h3>
-                                <span class="text-orange-600 font-bold text-base">₡3,200</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Pan tostado con tomate, albahaca, ajo y aceite de oliva</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.5 (45 reseñas)</span>
-                                </div>
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Vegetariano</span>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Bruschetta', 3200)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Calamari -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="">
-                        <img src="https://images.unsplash.com/photo-1682264895449-f75b342cbab6?w=400" alt="Calamari" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Calamari Fritos</h3>
-                                <span class="text-orange-600 font-bold text-base">₡5,800</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Anillos de calamar fritos con salsa marinara</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.7 (67 reseñas)</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Calamari Fritos', 5800)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
+            <!-- Empty filter message -->
+            <div id="menu-empty" class="text-center py-12 hidden">
+                <div class="bg-gray-100 border border-gray-300 text-gray-600 px-8 py-12 rounded-lg max-w-md mx-auto">
+                    <i class="fas fa-search text-4xl mb-4 text-gray-400"></i>
+                    <h3 class="text-lg font-semibold mb-2">No se encontraron productos</h3>
+                    <p class="text-sm mb-4">No hay productos que coincidan con los filtros seleccionados.</p>
+                    <button onclick="clearAllFilters()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-full hover:from-orange-600 hover:to-red-600 transition">
+                        Limpiar Filtros
+                    </button>
                 </div>
             </div>
 
-            <!-- Separador -->
-            <div class="separator my-16">
-                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
-            </div>
-
-            <!-- Platos Principales -->
-            <div class="menu-section" data-category="principales">
-                <h2 class="text-3xl font-bold text-center mb-12">Platos Principales</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Pasta Carbonara -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="">
-                        <img src="https://images.unsplash.com/photo-1588013273468-315fd88ea34c?w=400" alt="Pasta Carbonara" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Pasta Carbonara</h3>
-                                <span class="text-orange-600 font-bold text-base">₡7,500</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Espagueti con panceta, huevo, parmesano y pimienta negra</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.8 (89 reseñas)</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Pasta Carbonara', 7500)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Separador -->
-            <div class="separator my-16">
-                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
-            </div>
-
-            <!-- Bebidas -->
-            <div class="menu-section" data-category="bebidas">
-                <h2 class="text-3xl font-bold text-center mb-12">Bebidas</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Limonada -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="vegetariano vegano">
-                        <img src="https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400" alt="Limonada" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Limonada Natural</h3>
-                                <span class="text-orange-600 font-bold text-base">₡1,800</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Limonada fresca con menta y limón</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.6 (34 reseñas)</span>
-                                </div>
-                                <div class="flex gap-1">
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Vegetariano</span>
-                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Vegano</span>
-                                </div>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Limonada Natural', 1800)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Separador -->
-            <div class="separator my-16">
-                <div class="h-2 bg-gradient-to-r from-transparent via-orange-500 to-red-500 rounded-full"></div>
-            </div>
-
-            <!-- Postres -->
-            <div class="menu-section" data-category="postres">
-                <h2 class="text-3xl font-bold text-center mb-12">Postres</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Tiramisú -->
-                    <div class="menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full" data-dietary="vegetariano">
-                        <img src="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400" alt="Tiramisú" class="w-full h-40 object-cover">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-lg font-semibold">Tiramisú</h3>
-                                <span class="text-orange-600 font-bold text-base">₡3,500</span>
-                            </div>
-                            <p class="text-gray-600 mb-4 flex-grow">Postre italiano con café, mascarpone y cacao</p>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center text-yellow-500">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-600 ml-1">4.9 (56 reseñas)</span>
-                                </div>
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Vegetariano</span>
-                            </div>
-                             <div class="flex justify-end">
-                                 <button onclick="addToCart('Tiramisú', 3500)" class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
-                                     <i class="fas fa-plus text-lg"></i>
-                                 </button>
-                             </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Menu content will be dynamically loaded here -->
+            <div id="menu-content" class="hidden">
+                <!-- Content will be populated by JavaScript -->
             </div>
         </div>
     </section>
 
     <!-- Shopping Cart -->
-    <div id="cart" class="fixed top-20 right-4 bg-white rounded-lg shadow-lg p-4 w-80 hidden">
+    <div id="cart" class="fixed top-36 right-4 bg-white rounded-lg shadow-lg p-4 w-80 hidden" style="z-index: 9998;">
         <h3 class="text-lg font-semibold mb-4">Carrito de Compras</h3>
-        <div id="cartItems" class="space-y-2 mb-4">
+        <div id="cartItems" class="mb-4" style="display: flex; flex-direction: column; gap: 8px;">
             <!-- Cart items will be added here -->
         </div>
         <div class="border-t pt-4">
@@ -362,8 +197,8 @@
                 <span>Total:</span>
                 <span id="cartTotal">₡0</span>
             </div>
-                <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition">
-                Proceder al Pago
+                <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold">
+                Ver Pedido
                 </button>
         </div>
     </div>
@@ -377,127 +212,5 @@
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
-    <script>
-        let cart = [];
-        let cartTotal = 0;
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        function filterCategory(category) {
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
-                btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                
-                const icons = btn.querySelectorAll('i');
-                icons.forEach(icon => {
-                    icon.classList.remove('text-white');
-                    icon.classList.add('text-gray-700');
-                });
-            });
-            
-            const clickedElement = event.target;
-            const button = clickedElement.closest('.category-btn');
-            
-            if (button) {
-                button.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                button.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'text-white', 'hover:from-orange-600', 'hover:to-red-600');
-                
-                const icons = button.querySelectorAll('i');
-                icons.forEach(icon => {
-                    icon.classList.remove('text-gray-700');
-                    icon.classList.add('text-white');
-                });
-            }
-
-            document.querySelectorAll('.menu-section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            document.querySelectorAll('.separator').forEach(separator => {
-                separator.classList.add('hidden');
-            });
-            
-            if (category === 'all') {
-                document.querySelectorAll('.menu-section').forEach(section => {
-                    section.classList.remove('hidden');
-                });
-                document.querySelectorAll('.separator').forEach(separator => {
-                    separator.classList.remove('hidden');
-                });
-            } else {
-                document.querySelector(`[data-category="${category}"]`).classList.remove('hidden');
-            }
-        }
-
-        function filterDietary() {
-            document.querySelectorAll('.dietary-filter').forEach(filter => {
-                const checkbox = filter.querySelector('input[type="checkbox"]');
-                const span = filter.querySelector('span');
-                
-                if (checkbox.checked) {
-                    filter.classList.remove('bg-gray-100', 'hover:bg-gray-200');
-                    filter.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
-                    span.classList.remove('text-gray-700');
-                    span.classList.add('text-white');
-                } else {
-                    filter.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
-                    filter.classList.add('bg-gray-100', 'hover:bg-gray-200');
-                    span.classList.remove('text-white');
-                    span.classList.add('text-gray-700');
-                }
-            });
-            
-            console.log('Filtering by dietary preferences...');
-        }
-
-        function addToCart(name, price) {
-            cart.push({ name, price });
-            cartTotal += price;
-            updateCartDisplay();
-            showNotification(`${name} agregado al carrito`);
-        }
-
-        function updateCartDisplay() {
-            const cartItems = document.getElementById('cartItems');
-            const cartCount = document.getElementById('cartCount');
-            const cartTotalElement = document.getElementById('cartTotal');
-            
-            cartCount.textContent = cart.length;
-            cartTotalElement.textContent = `₡${cartTotal.toLocaleString()}`;
-            
-            cartItems.innerHTML = cart.map(item => `
-                <div class="flex justify-between items-center">
-                    <span class="text-sm">${item.name}</span>
-                    <span class="text-sm font-semibold">₡${item.price.toLocaleString()}</span>
-                </div>
-            `).join('');
-        }
-
-        function toggleCart() {
-            const cart = document.getElementById('cart');
-            cart.classList.toggle('hidden');
-        }
-
-        function checkout() {
-            if (cart.length === 0) {
-                alert('Tu carrito está vacío');
-                return;
-            }
-            window.location.href = 'pedidos.html';
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-    </script>
 </body>
-</html> 
+</html>

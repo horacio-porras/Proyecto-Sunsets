@@ -325,3 +325,33 @@ JOIN administrador a ON u.id_usuario = a.id_usuario
 WHERE u.correo = 'admin@sunsets.com';
 
 
+-- Creación de productos existentes (tabla productos)
+INSERT INTO producto (
+    id_categoria,
+    nombre,
+    descripcion,
+    ingredientes,
+    precio,
+    imagen_url,
+    vegetariano,
+    vegano,
+    sin_gluten,
+    disponible,
+    tiempo_preparacion
+) VALUES
+-- PIZZAS
+(1, 'Bacon & tomate', 'Tocino ahumado, tomate, cebolla y orégano', NULL, 6400.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Barbacoa picante', 'Pollo crispy, salsa BBQ, cebolla morada, chile dulce, hongos, chile jalapeño', NULL, 6900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Camarones con Perejil y Ajo', NULL, NULL, 6300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Camarones, piña y perejil', NULL, NULL, 6300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Capresse de queso de bufala', 'Queso de bufala fresco, pesto, tomate cherry y albahaca', NULL, 6500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Chicharrón y Tomate', NULL, NULL, 5800.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Hawaiana', NULL, NULL, 5500.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Jamón y Queso', NULL, NULL, 5300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Margarita', 'Tomate cherry, queso mozarella, queso parmesano y albahaca', NULL, 5500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Pepperoni', NULL, NULL, 5500.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Pollo crispy picante', 'Pollo Crispy, Jalapeño y Cebolla Morada, hongos', NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Pollos crispy, hongos, cebolla morada, chile dulce', NULL, NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Suprema', 'Peperoni, Jamón, Hongos, Cebolla y Chile dulce', NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Tres Quesos', 'Gorgonzola, Mozarella y Parmesano', NULL, 6500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Vegetariana', 'Hongos Aceitunas, chile dulce, cebolla morada y Tomate', NULL, 5400.00, NULL, 1, 0, 0, 1, NULL);
