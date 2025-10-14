@@ -4,14 +4,14 @@ let deliveryFee = 1500;
 let taxRate = 0.05;
 
 //Función para cargar el carrito desde localStorage
-function loadOrderCart() {
+async function loadOrderCart() {
     const savedCart = localStorage.getItem('sunsets-cart');
     
     if (savedCart) {
         try {
             orderCart = JSON.parse(savedCart);
             renderOrderCart();
-            updateOrderSummary();
+            await updateOrderSummary();
         } catch (error) {
             console.error('Error al cargar carrito:', error);
             orderCart = [];
@@ -77,15 +77,15 @@ function renderOrderCart() {
         
         cartItem.innerHTML = `
             ${imageHtml}
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
                 <h3 class="font-semibold">${item.name}</h3>
-                <p class="text-sm text-gray-600">${item.description || 'Producto delicioso'}</p>
+                <p class="text-sm text-gray-600 max-w-xs truncate" title="${item.description || 'Producto delicioso'}">${item.description || 'Producto delicioso'}</p>
                 <div class="flex items-center space-x-2 mt-2">
                     ${dietaryBadges}
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center gap-2">
+            <div class="flex items-center space-x-4 flex-shrink-0">
+                <div class="flex items-center gap-2 w-32 justify-center">
                     <button class="cart-btn-decrease" onclick="updateOrderQuantity(${index}, -1)">
                         <i class="fas fa-minus"></i>
                     </button>
@@ -97,7 +97,7 @@ function renderOrderCart() {
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <div class="text-right">
+                <div class="text-right w-24">
                     <p class="font-semibold">₡${(item.price * item.quantity).toLocaleString()}</p>
                 </div>
             </div>
@@ -131,7 +131,7 @@ function createDietaryBadges(dietary) {
 }
 
 //Función para actualizar cantidad de un item en el carrito
-function updateOrderQuantity(index, change) {
+async function updateOrderQuantity(index, change) {
     if (index < 0 || index >= orderCart.length) return;
     
     orderCart[index].quantity += change;
@@ -143,7 +143,7 @@ function updateOrderQuantity(index, change) {
     localStorage.setItem('sunsets-cart', JSON.stringify(orderCart));
     
     renderOrderCart();
-    updateOrderSummary();
+    await updateOrderSummary();
     
     if (orderCart.length === 0) {
         showEmptyCart();
@@ -151,7 +151,7 @@ function updateOrderQuantity(index, change) {
 }
 
 //Función para eliminar un item del carrito
-function removeOrderItem(index) {
+async function removeOrderItem(index) {
     if (index < 0 || index >= orderCart.length) return;
     
     orderCart.splice(index, 1);
@@ -159,7 +159,7 @@ function removeOrderItem(index) {
     localStorage.setItem('sunsets-cart', JSON.stringify(orderCart));
     
     renderOrderCart();
-    updateOrderSummary();
+    await updateOrderSummary();
     
     if (orderCart.length === 0) {
         showEmptyCart();
@@ -167,7 +167,7 @@ function removeOrderItem(index) {
 }
 
 //Función para actualizar el resumen del pedido
-function updateOrderSummary() {
+async function updateOrderSummary() {
     const summaryContainer = document.getElementById('order-summary');
     if (!summaryContainer) return;
     
@@ -227,22 +227,107 @@ function updateOrderSummary() {
     `;
     summaryContainer.appendChild(totalRow);
     
-    updateLoyaltyInfo(subtotal);
+    await updateLoyaltyInfo(subtotal);
+}
+
+//Función para obtener puntos del usuario logueado
+async function getUserLoyaltyPoints() {
+    try {
+        const token = localStorage.getItem('token');
+        console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+        
+        if (!token) {
+            console.log('⚠️ No hay token de autenticación');
+            return 0;
+        }
+        
+        const response = await fetch('/api/cliente/puntos', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        console.log('📡 Respuesta API puntos:', response.status, response.statusText);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Datos de puntos recibidos:', data);
+            return data.puntos_acumulados || 0;
+        } else {
+            const errorData = await response.text();
+            console.error('Error al obtener puntos de lealtad:', response.status, errorData);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de conexión al obtener puntos de lealtad:', error);
+        return 0;
+    }
 }
 
 //Función para actualizar información de puntos de lealtad
-function updateLoyaltyInfo(subtotal) {
+async function updateLoyaltyInfo(subtotal) {
     const pointsToEarn = Math.floor(subtotal / 100);
+    
+    const userPoints = await getUserLoyaltyPoints();
+    
+    const loyaltyPointsAvailable = document.getElementById('loyalty-points-available');
+    if (loyaltyPointsAvailable) {
+        loyaltyPointsAvailable.textContent = userPoints.toLocaleString();
+    }
+    
+    const loyaltyPointsToEarn = document.getElementById('loyalty-points-to-earn');
+    if (loyaltyPointsToEarn) {
+        loyaltyPointsToEarn.textContent = `Ganarás ${pointsToEarn} puntos con este pedido`;
+    }
     
     const loyaltySections = document.querySelectorAll('.bg-white.rounded-lg.shadow-md.p-6');
     loyaltySections.forEach(section => {
         const paragraphs = section.querySelectorAll('p');
         paragraphs.forEach(p => {
-            if (p.textContent.includes('Ganarás')) {
+            if (p.textContent.includes('Ganarás') && !p.id) {
                 p.textContent = `Ganarás ${pointsToEarn} puntos con este pedido`;
             }
         });
     });
+    
+    updateLoyaltyCheckbox(userPoints);
+}
+
+//Función para actualizar el checkbox de lealtad con los puntos del usuario
+function updateLoyaltyCheckbox(userPoints) {
+    const loyaltyCheckbox = document.getElementById('loyalty');
+    const loyaltyLabel = document.querySelector('label[for="loyalty"]');
+    
+    if (loyaltyCheckbox && loyaltyLabel) {
+        const pointsNeeded = 500;
+        const discountAmount = 2500;
+        
+        if (userPoints >= pointsNeeded) {
+            loyaltyCheckbox.disabled = false;
+            loyaltyLabel.textContent = `Usar ${pointsNeeded} puntos de lealtad (-₡${discountAmount.toLocaleString()})`;
+            loyaltyLabel.style.color = '#374151';
+            
+            const pointsInfo = loyaltyLabel.parentElement.querySelector('.points-info');
+            if (!pointsInfo) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'points-info text-xs text-gray-500 mt-1';
+                infoDiv.textContent = `Puntos disponibles: ${userPoints}`;
+                loyaltyLabel.parentElement.appendChild(infoDiv);
+            }
+        } else {
+            loyaltyCheckbox.disabled = true;
+            loyaltyCheckbox.checked = false;
+            loyaltyLabel.textContent = `Puntos insuficientes (necesitas ${pointsNeeded}, tienes ${userPoints})`;
+            loyaltyLabel.style.color = '#9CA3AF';
+            
+            const pointsInfo = loyaltyLabel.parentElement.querySelector('.points-info');
+            if (pointsInfo) {
+                pointsInfo.remove();
+            }
+        }
+    }
 }
 
 //Función para procesar el pedido
@@ -370,14 +455,55 @@ function setupLoyaltyToggle() {
     }
 }
 
-//Inicializa cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    loadOrderCart();
-    handleLoyaltyElements();
-    setupLoyaltyToggle();
-});
-
 //Funciones globales para onclick
 window.updateOrderQuantity = updateOrderQuantity;
 window.removeOrderItem = removeOrderItem;
 window.placeOrder = placeOrder;
+
+//Función para inicializar puntos de lealtad
+async function initializeLoyaltyPoints() {
+    try {
+        const userPoints = await getUserLoyaltyPoints();
+        
+        const loyaltyPointsAvailable = document.getElementById('loyalty-points-available');
+        if (loyaltyPointsAvailable) {
+            loyaltyPointsAvailable.textContent = userPoints.toLocaleString();
+        }
+        
+        updateLoyaltyCheckbox(userPoints);
+    } catch (error) {
+        console.error('Error al inicializar puntos de lealtad:', error);
+    }
+}
+
+//Inicializa cuando se carga la página
+document.addEventListener('DOMContentLoaded', async function() {
+    const currentPath = window.location.pathname;
+    
+    if (currentPath.includes('/cliente/')) {
+        if (typeof verifyFullAuth === 'function' && !verifyFullAuth()) {
+            window.location.href = '/';
+            return;
+        }
+        
+        if (typeof handleUserChange === 'function') {
+            handleUserChange();
+        }
+        
+        await loadOrderCart();
+        await initializeLoyaltyPoints();
+        handleLoyaltyElements();
+        setupLoyaltyToggle();
+    } else {
+        await loadOrderCart();
+        
+        const userData = localStorage.getItem('userData');
+        const authToken = localStorage.getItem('authToken');
+        
+        if (userData && authToken) {
+            await initializeLoyaltyPoints();
+            handleLoyaltyElements();
+            setupLoyaltyToggle();
+        }
+    }
+});

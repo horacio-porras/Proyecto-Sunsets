@@ -109,6 +109,7 @@ function updateAuthState() {
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) {
             dropdown.classList.add('hidden');
+            dropdown.classList.remove('dropdown-show', 'dropdown-hide');
         }
     }
 }
@@ -263,11 +264,19 @@ function addNavbarEventListeners() {
         
         if (dropdown && dropdownBtn) {
             if (!dropdownBtn.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.classList.add('hidden');
-                const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-up');
-                if (chevron) {
-                    chevron.classList.remove('fa-chevron-up');
-                    chevron.classList.add('fa-chevron-down');
+                if (!dropdown.classList.contains('hidden')) {
+                    dropdown.classList.remove('dropdown-show');
+                    dropdown.classList.add('dropdown-hide');
+                    const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-up, #userDropdownBtn i.fa-chevron-down');
+                    if (chevron) {
+                        chevron.classList.remove('fa-chevron-up');
+                        chevron.classList.add('fa-chevron-down');
+                    }
+                    
+                    setTimeout(() => {
+                        dropdown.classList.add('hidden');
+                        dropdown.classList.remove('dropdown-hide');
+                    }, 200);
                 }
             }
         }
@@ -276,13 +285,21 @@ function addNavbarEventListeners() {
         const registerModal = document.getElementById('registerModal');
         
         if (loginModal && !loginModal.classList.contains('hidden')) {
-            if (event.target === loginModal) {
+            const isClickOnModalBackground = event.target === loginModal || 
+                (event.target.closest('#loginModal') === loginModal && 
+                 !event.target.closest('.bg-white'));
+            
+            if (isClickOnModalBackground) {
                 closeLoginModal();
             }
         }
         
         if (registerModal && !registerModal.classList.contains('hidden')) {
-            if (event.target === registerModal) {
+            const isClickOnModalBackground = event.target === registerModal || 
+                (event.target.closest('#registerModal') === registerModal && 
+                 !event.target.closest('.bg-white'));
+            
+            if (isClickOnModalBackground) {
                 closeRegisterModal();
             }
         }
@@ -443,9 +460,12 @@ async function handleLogin() {
             localStorage.setItem('authToken', data.data.token);
             localStorage.setItem('userData', JSON.stringify(data.data.user));
             
+            if (typeof handleUserChange === 'function') {
+                handleUserChange();
+            }
+            
             showLoginMessage('¡Login exitoso! Redirigiendo...', false);
             
-            //Cierra el modal y actualiza el navbar
             setTimeout(() => {
                 closeLoginModal();
                 updateAuthState();
@@ -598,17 +618,28 @@ function toggleMobileMenu() {
 //Función para toggle del dropdown del usuario
 function toggleUserDropdown() {
     const dropdown = document.getElementById('userDropdown');
-    const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-down');
+    const chevron = document.querySelector('#userDropdownBtn i.fa-chevron-down, #userDropdownBtn i.fa-chevron-up');
     
     if (dropdown && chevron) {
         if (dropdown.classList.contains('hidden')) {
             dropdown.classList.remove('hidden');
+            dropdown.classList.remove('dropdown-hide');
             chevron.classList.remove('fa-chevron-down');
             chevron.classList.add('fa-chevron-up');
+            
+            setTimeout(() => {
+                dropdown.classList.add('dropdown-show');
+            }, 10);
         } else {
-            dropdown.classList.add('hidden');
+            dropdown.classList.remove('dropdown-show');
+            dropdown.classList.add('dropdown-hide');
             chevron.classList.remove('fa-chevron-up');
             chevron.classList.add('fa-chevron-down');
+            
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+                dropdown.classList.remove('dropdown-hide');
+            }, 200);
         }
     }
 }
@@ -632,15 +663,7 @@ function getCurrentUser() {
     return null;
 }
 
-//Función para logout (debe estar definida en auth.js)
-function logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    
-    updateAuthState();
-    
-    window.location.href = '/';
-}
+//Función para logout - usar la definida en auth.js
 
 //Funciones para manejar modales de login y registro
 function openLoginModal() {

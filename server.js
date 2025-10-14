@@ -8,6 +8,7 @@ require('dotenv').config({ path: './config.env' });
 const { testConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
+const clienteRoutes = require('./routes/clienteRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,6 +64,7 @@ app.use(express.static('.'));
 //Rutas de API
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/menu', menuRoutes);
+app.use('/api/cliente', clienteRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

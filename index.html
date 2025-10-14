@@ -16,25 +16,35 @@
     <div id="navbar-container"></div>
 
     <!-- Hero Section -->
-    <section class="relative py-20 overflow-hidden">
-        <!-- Background Image -->
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop');"></div>
+    <section class="relative h-96 overflow-hidden">
+        <!-- Background Image with Parallax -->
+        <div id="hero-background" class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1503803548695-c2a7b4a5b875?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470'); transform: scale(1.15);"></div>
         
-        <!-- Overlay with transparency -->
+        <!-- Overlay with transparency and gradient -->
         <div class="absolute inset-0 bg-gray-800 bg-opacity-80"></div>
         
-        <!-- Content -->
-        <div class="relative z-10 text-white">
+        
+        <!-- Content with Parallax -->
+        <div id="hero-content" class="relative z-10 text-white h-full flex items-center justify-center">
             <div class="container mx-auto px-4 text-center">
-                <h2 class="text-5xl md:text-6xl font-bold mb-6">Bienvenido a Sunset's Tarbaca</h2>
-                <p class="text-xl mb-8 max-w-2xl mx-auto">Descubre el sabor auténtico de nuestras pizzas artesanales y platos mediterráneos</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 px-8 py-3 rounded-lg font-semibold transition">Ver Menú</a>
-                    <a href="reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 px-8 py-3 rounded-lg font-semibold transition">Hacer Reservación</a>
+                <div class="mb-2 opacity-0" id="hero-title">
+                    <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca" class="mx-auto h-36 md:h-40 lg:h-44">
+                </div>
+                <p class="text-xl mb-8 max-w-2xl mx-auto opacity-0" id="hero-description">Descubre el sabor auténtico de nuestras pizzas artesanales y platos tradicionales</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center opacity-0" id="hero-buttons">
+                    <a href="menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 px-8 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fas fa-utensils"></i>
+                        Ver Menú
+                    </a>
+                    <a href="reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 px-8 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fas fa-calendar-alt"></i>
+                        Hacer Reservación
+                    </a>
                 </div>
             </div>
         </div>
     </section>
+
 
     <!-- Featured Products -->
     <section class="py-16 bg-white">
@@ -122,17 +132,17 @@
                 </div>
                 <div class="text-center">
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-utensils text-white text-2xl"></i>
+                        <i class="fas fa-coffee text-white text-2xl"></i>
                     </div>
-                    <h4 class="text-xl font-semibold mb-2">Platos Principales</h4>
-                    <p class="text-gray-600">Especialidades mediterráneas y pasta fresca</p>
+                    <h4 class="text-xl font-semibold mb-2">Desayunos</h4>
+                    <p class="text-gray-600">Desayunos completos y deliciosos para empezar el día</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-wine-glass text-white text-2xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Bebidas</h4>
-                    <p class="text-gray-600">Refrescos, vinos y cócteles especiales</p>
+                    <p class="text-gray-600">Frias, calientes, vinos y cócteles especiales</p>
                 </div>
             </div>
         </div>
@@ -145,18 +155,15 @@
                 <div>
                     <h3 class="text-3xl font-bold mb-6">Nuestra Historia</h3>
                     <p class="text-gray-600 mb-4">
-                        Sunset's Tarbaca nació de la pasión por la auténtica cocina mediterránea. 
-                        Desde 2010, hemos estado sirviendo las mejores pizzas artesanales y platos 
-                        tradicionales con ingredientes frescos y recetas familiares.
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a dictum est. Nullam ac dignissim leo. Maecenas libero sem, tempus at purus at, mollis consequat enim. In hac habitasse platea dictumst. Praesent id feugiat urna. Sed eget dolor sed purus viverra cursus a nec elit. Phasellus ultrices commodo elementum.
                     </p>
                     <p class="text-gray-600 mb-6">
-                        Nuestro nombre rinde homenaje a la isla de Tarbaca, conocida por su rica 
-                        tradición gastronómica y sus hermosos atardeceres que inspiran nuestros sabores.
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a dictum est. Nullam ac dignissim leo. Maecenas libero sem, tempus at purus at, mollis consequat enim. In hac habitasse platea dictumst. Praesent id feugiat urna. Sed eget dolor sed purus viverra cursus a nec elit. Phasellus ultrices commodo elementum.
                     </p>
                     <a href="about.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition">Conoce Más</a>
                 </div>
                 <div>
-                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600" alt="Restaurante" class="rounded-lg shadow-lg">
+                    <img src="https://lh3.googleusercontent.com/gps-cs-s/AC9h4npQw0uaBLBdiEyMp8Wrglhp7-DsO46mdSQYR1aJiZvlNF5rDa2AkhZ8yB8Wn3eZ759sDCyrOnmeDzqgAgzMMO6f9hCsTXsr99R2vtYKUjbkwjDr3R5oLSYvGr8kBITfMDDIdtRj=s680-w600-h510-rw" alt="Restaurante" class="rounded-lg shadow-lg">
                 </div>
             </div>
         </div>
@@ -186,7 +193,7 @@
                         <i class="fas fa-phone text-white text-xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Contacto</h4>
-                    <p class="text-gray-600">+506 6171-4020<br>info@sunsets-tarbaca.com</p>
+                    <p class="text-gray-600">+506 6171-4020<br>sunsetstarbaca@gmail.com</p>
                 </div>
             </div>
         </div>
@@ -197,14 +204,116 @@
 
     <!-- ChatBot -->
     <div class="fixed bottom-4 right-4 z-50">
-        <button onclick="toggleChat()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition">
+        <button id="chatbotButton" onclick="toggleChat()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition">
             <i class="fas fa-comments text-xl"></i>
         </button>
     </div>
 
+    <style>
+        /* Efecto de pulse para el botón de chatbot */
+        #chatbotButton {
+            transition: transform 0.3s ease;
+        }
+        
+        #chatbotButton.pulse-add {
+            animation: pulseAdd 0.3s ease;
+        }
+        
+        #hero-background {
+            transform: translateZ(0) scale(1.15);
+            will-change: transform;
+            min-height: 130%;
+        }
+        
+        #hero-content {
+            transform: translateZ(0);
+            will-change: transform;
+        }
+        
+        #hero-title, #hero-description, #hero-buttons {
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transform: translateY(30px);
+        }
+        
+        #hero-title.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        #hero-description.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+        
+        #hero-buttons.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.4s;
+        }
+        
+        @keyframes pulseAdd {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+
     <script>
+        //Parallax Effect
+        document.addEventListener('DOMContentLoaded', function() {
+            const heroBackground = document.getElementById('hero-background');
+            const heroContent = document.getElementById('hero-content');
+            const heroTitle = document.getElementById('hero-title');
+            const heroDescription = document.getElementById('hero-description');
+            const heroButtons = document.getElementById('hero-buttons');
+            
+            setTimeout(() => {
+                heroTitle.classList.add('animate-in');
+                heroDescription.classList.add('animate-in');
+                heroButtons.classList.add('animate-in');
+            }, 500);
+            
+            function updateParallax() {
+                const scrolled = window.pageYOffset;
+                const rate = scrolled * 0.15;
+                const contentRate = scrolled * -0.05;
+                
+                if (heroBackground) {
+                    heroBackground.style.transform = `translateY(${rate}px) scale(1.15)`;
+                }
+                
+                if (heroContent) {
+                    heroContent.style.transform = `translateY(${contentRate}px)`;
+                }
+            }
+            
+            let ticking = false;
+            function requestTick() {
+                if (!ticking) {
+                    requestAnimationFrame(updateParallax);
+                    ticking = true;
+                    setTimeout(() => {
+                        ticking = false;
+                    }, 16);
+                }
+            }
+            
+            window.addEventListener('scroll', requestTick);
+            
+            window.addEventListener('resize', function() {
+                updateParallax();
+            });
+        });
+        
         function toggleChat() {
-            alert('¡Hola! Soy el asistente virtual de Sunset\'s Tarbaca. ¿En qué puedo ayudarte?');
+            const chatbotButton = document.getElementById('chatbotButton');
+            if (chatbotButton) {
+                chatbotButton.classList.add('pulse-add');
+                setTimeout(() => {
+                    chatbotButton.classList.remove('pulse-add');
+                }, 300);
+            }
         }
     </script>
 </body>

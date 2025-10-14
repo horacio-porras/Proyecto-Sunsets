@@ -5,6 +5,7 @@
 const PROTECTED_ROUTES = {
     '/cliente/dashboard.html': 'Cliente',
     '/cliente/perfil.html': 'Cliente',
+    '/cliente/pedidos.html': 'Cliente',
     
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',

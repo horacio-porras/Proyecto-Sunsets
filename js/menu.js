@@ -178,7 +178,7 @@ function createProductCard(product) {
             
             <!-- Botón - altura fija y siempre visible -->
             <div class="flex justify-end pt-1" style="min-height: 44px; margin-top: auto;">
-                <button onclick="addToCart('${product.name}', ${product.price})" 
+                <button onclick="addToCart('${product.name}', ${product.price}, this)" 
                         class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center flex-shrink-0 shadow-lg">
                     <i class="fas fa-plus text-lg"></i>
                 </button>
@@ -420,9 +420,32 @@ function saveCartToStorage() {
     }
 }
 
+//Función para crear animación de agregar al carrito
+function createAddToCartAnimation(buttonElement, productName) {
+    if (!buttonElement) return;
+    
+    buttonElement.classList.add('pulse-add');
+    setTimeout(() => {
+        buttonElement.classList.remove('pulse-add');
+    }, 300);
+    
+    const cartButton = document.getElementById('cartButton');
+    
+    if (cartButton) {
+        setTimeout(() => {
+            cartButton.classList.add('pulse-add');
+            setTimeout(() => {
+                cartButton.classList.remove('pulse-add');
+            }, 300);
+        }, 100);
+    }
+}
+
 //Funciones del carrito en scope global para que estén disponibles desde onclick
-window.addToCart = function(name, price) {
+window.addToCart = function(name, price, buttonElement) {
     const product = menuProducts.find(p => p.name === name);
+    
+    createAddToCartAnimation(buttonElement, name);
     
     const existingItem = cart.find(item => item.name === name);
     
@@ -464,8 +487,29 @@ window.updateQuantity = function(name, change) {
 
 window.toggleCart = function() {
     const cartElement = document.getElementById('cart');
+    const cartButton = document.getElementById('cartButton');
+    
     if (cartElement) {
-        cartElement.classList.toggle('hidden');
+        const isHidden = cartElement.classList.contains('hidden');
+        
+        if (isHidden) {
+            cartElement.classList.remove('hidden');
+            setTimeout(() => {
+                cartElement.classList.add('show');
+            }, 10);
+        } else {
+            cartElement.classList.remove('show');
+            setTimeout(() => {
+                cartElement.classList.add('hidden');
+            }, 300);
+        }
+    }
+    
+    if (cartButton) {
+        cartButton.classList.add('pulse-add');
+        setTimeout(() => {
+            cartButton.classList.remove('pulse-add');
+        }, 300);
     }
 };
 
@@ -542,7 +586,11 @@ function setupCartClickOutside() {
             const isClickOnToggle = cartToggle && cartToggle.contains(event.target);
             
             if (!isClickInsideCart && !isClickOnToggle && !isCartButton && !isMenuAddButton) {
-                cart.classList.add('hidden');
+                // Cerrar carrito con la misma animación que toggleCart
+                cart.classList.remove('show');
+                setTimeout(() => {
+                    cart.classList.add('hidden');
+                }, 300);
             }
         }
     });
@@ -557,6 +605,10 @@ window.checkout = function() {
 
 //Carga el menú cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
+    if (typeof handleUserChange === 'function') {
+        handleUserChange();
+    }
+    
     loadCartFromStorage();
     loadMenuProducts();
     
