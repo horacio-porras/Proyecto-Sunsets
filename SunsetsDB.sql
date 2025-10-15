@@ -293,17 +293,15 @@ CREATE TABLE configuracion_sistema (
 );
 
 
-
 -- Inserts de roles
 INSERT INTO rol (nombre_rol) VALUES 
 ('Administrador'), 
 ('Empleado'), 
 ('Cliente');
 
-
 -- Creación de usuario admin (tabla usuario)
 INSERT INTO usuario (nombre, correo, telefono, contrasena, id_rol, fecha_registro, activo)
-VALUES ('Christian Armando Jiménez Cerdas', 'admin@sunsets.com', '61319543', 'hashed_password_aqui', 1, NOW(), TRUE);
+VALUES ('Christian Armando Jiménez Cerdas', 'admin@sunsets.com', '61319543', '$2a$12$XN4rbpnZXEwwLDZ2tb0mquhdVcV37ziLilZWBUU2ImwqEKbDKPdtS', 1, NOW(), TRUE);
 
 -- Creación de perfil de admin (tabla administrador)
 INSERT INTO administrador (id_usuario, permisos_especiales)
@@ -312,18 +310,9 @@ VALUES (
  'TODOS'
 );
 
-
--- Verificar usuario administrador
-SELECT id_usuario, nombre, correo, id_rol, fecha_registro, activo
-FROM usuario
-WHERE correo = 'admin@sunsets.com';
-
--- Verificar perfil de administrador y permisos
-SELECT u.id_usuario, u.nombre, u.correo, a.permisos_especiales
-FROM usuario u
-JOIN administrador a ON u.id_usuario = a.id_usuario
-WHERE u.correo = 'admin@sunsets.com';
-
+-- Creación de categorias
+INSERT INTO categoria (nombre_categoria, descripcion, activa) VALUES
+('Pizzas', 'Masa Crunch o Masa Artesanal', 1);
 
 -- Creación de productos existentes (tabla productos)
 INSERT INTO producto (
@@ -355,3 +344,15 @@ INSERT INTO producto (
 (1, 'Suprema', 'Peperoni, Jamón, Hongos, Cebolla y Chile dulce', NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
 (1, 'Tres Quesos', 'Gorgonzola, Mozarella y Parmesano', NULL, 6500.00, NULL, 1, 0, 0, 1, NULL),
 (1, 'Vegetariana', 'Hongos Aceitunas, chile dulce, cebolla morada y Tomate', NULL, 5400.00, NULL, 1, 0, 0, 1, NULL);
+
+
+-- Verificar usuario administrador
+SELECT id_usuario, nombre, correo, id_rol, fecha_registro, activo
+FROM usuario
+WHERE correo = 'admin@sunsets.com';
+
+-- Verificar perfil de administrador y permisos
+SELECT u.id_usuario, u.nombre, u.correo, a.permisos_especiales
+FROM usuario u
+JOIN administrador a ON u.id_usuario = a.id_usuario
+WHERE u.correo = 'admin@sunsets.com';
