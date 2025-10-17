@@ -96,6 +96,7 @@ CREATE TABLE inventario (
     costo_unitario DECIMAL(10,2),
     ultima_actualizacion DATETIME,
     id_responsable INT,
+    area VARCHAR(50),
     FOREIGN KEY (id_responsable) REFERENCES empleado(id_empleado)
 );
 
@@ -293,7 +294,6 @@ CREATE TABLE configuracion_sistema (
 );
 
 
-
 -- Inserts de roles
 INSERT INTO rol (nombre_rol) VALUES 
 ('Administrador'), 
@@ -311,7 +311,6 @@ VALUES (
  (SELECT id_usuario FROM usuario WHERE correo = 'admin@sunsets.com'), 
  'TODOS'
 );
-
 
 -- Verificar usuario administrador
 SELECT id_usuario, nombre, correo, id_rol, fecha_registro, activo

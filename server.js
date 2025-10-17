@@ -62,6 +62,14 @@ app.use(express.static('.'));
 //Rutas de API
 app.use('/api/auth', authLimiter, authRoutes);
 
+// Inventario API
+const inventarioRoutes = require('./routes/inventarioRoutes');
+app.use('/api/inventario', inventarioRoutes);
+
+// Pedidos API
+const pedidoRoutes = require('./routes/pedidoRoutes');
+app.use('/api/pedidos', pedidoRoutes);
+
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
     res.json({
