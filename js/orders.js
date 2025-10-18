@@ -337,39 +337,34 @@ function placeOrder() {
         return;
     }
     
-    const formData = validateDeliveryForm();
-    if (!formData) {
+    if (typeof validateOrderForm === 'function' && !validateOrderForm()) {
         return;
     }
     
-    const paymentMethod = document.querySelector('input[name="payment"]:checked');
-    if (!paymentMethod) {
-        alert('Por favor selecciona un método de pago.');
+    const orderData = typeof getOrderData === 'function' ? getOrderData() : null;
+    if (!orderData) {
+        alert('Error al obtener los datos del pedido. Por favor intenta de nuevo.');
         return;
     }
     
     const order = {
-        id: generateOrderId(),
         items: orderCart,
-        delivery: formData,
-        payment: paymentMethod.value,
+        customer: orderData.customer,
+        delivery: orderData.delivery,
         subtotal: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
         deliveryFee: deliveryFee,
         taxes: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * taxRate,
-        total: 0, // Se calculará
         timestamp: new Date().toISOString(),
         status: 'pending'
     };
     
     order.total = order.subtotal + order.deliveryFee + order.taxes;
     
-    console.log('Pedido creado:', order);
+    console.log('Datos del pedido preparados:', order);
     
-    localStorage.removeItem('sunsets-cart');
+    localStorage.setItem('sunsets-order-data', JSON.stringify(order));
     
-    alert(`¡Pedido confirmado! Tu orden #${order.id} ha sido recibida y está siendo preparada. Recibirás actualizaciones por SMS.`);
-    
-    window.location.href = '/cliente/dashboard.html';
+    window.location.href = '/pago.html';
 }
 
 //Función para validar el formulario de entrega

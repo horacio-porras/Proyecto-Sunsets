@@ -267,9 +267,6 @@
                 const user = JSON.parse(userData);
                 console.log('Datos del usuario:', user);
                 console.log('Estructura del usuario:', Object.keys(user));
-                console.log('Nombre:', user.nombre);
-                console.log('Apellido:', user.apellido);
-                console.log('Teléfono:', user.telefono);
 
                 const nameField = document.getElementById('deliveryName');
                 if (nameField) {
@@ -291,6 +288,10 @@
                         console.log('Nombre auto-rellenado:', nameField.value);
                     } else {
                         console.log('No se encontraron campos de nombre válidos');
+                        nameField.readOnly = false;
+                        nameField.classList.remove('bg-gray-50', 'text-gray-600', 'cursor-not-allowed');
+                        nameField.classList.add('bg-white', 'text-gray-900');
+                        nameField.placeholder = 'Ingresa tu nombre completo';
                     }
                 } else {
                     console.log('Campo de nombre no encontrado');
@@ -314,6 +315,10 @@
                         console.log('Teléfono auto-rellenado:', phoneField.value);
                     } else {
                         console.log('No se encontraron campos de teléfono válidos');
+                        phoneField.readOnly = false;
+                        phoneField.classList.remove('bg-gray-50', 'text-gray-600', 'cursor-not-allowed');
+                        phoneField.classList.add('bg-white', 'text-gray-900');
+                        phoneField.placeholder = 'Ingresa tu número de teléfono';
                     }
                 } else {
                     console.log('Campo de teléfono no encontrado');
@@ -373,6 +378,88 @@
             } catch (error) {
                 console.error('Error al cargar direcciones del cliente:', error);
             }
+        }
+
+        //Función para validar el formulario antes de procesar el pedido
+        function validateOrderForm() {
+            const deliveryAddress = document.getElementById('deliveryAddress');
+            if (!deliveryAddress || !deliveryAddress.value) {
+                alert('Por favor selecciona una dirección de entrega.');
+                return false;
+            }
+
+            return true;
+        }
+
+        //Función para obtener los datos del formulario
+        function getOrderData() {
+            const deliveryName = document.getElementById('deliveryName').value.trim();
+            const deliveryPhone = document.getElementById('deliveryPhone').value.trim();
+            const deliveryAddress = document.getElementById('deliveryAddress');
+            const selectedAddress = deliveryAddress.options[deliveryAddress.selectedIndex];
+            const deliveryInstructions = document.querySelector('textarea').value.trim();
+
+            if (!deliveryName) {
+                alert('Por favor ingresa tu nombre completo.');
+                return null;
+            }
+
+            if (!deliveryPhone) {
+                alert('Por favor ingresa tu número de teléfono.');
+                return null;
+            }
+
+            return {
+                customer: {
+                    name: deliveryName,
+                    phone: deliveryPhone,
+                    email: ''
+                },
+                delivery: {
+                    addressId: deliveryAddress.value,
+                    addressText: selectedAddress.textContent,
+                    instructions: deliveryInstructions
+                }
+            };
+        }
+
+        //Función para procesar el pedido (sobrescribe la del orders.js)
+        function placeOrder() {
+            if (orderCart.length === 0) {
+                alert('Tu carrito está vacío. Agrega algunos productos antes de continuar.');
+                return;
+            }
+            
+            if (!validateOrderForm()) {
+                return;
+            }
+            
+            const orderData = getOrderData();
+            if (!orderData) {
+                alert('Error al obtener los datos del pedido. Por favor intenta de nuevo.');
+                return;
+            }
+            
+            console.log('Datos del pedido capturados:', orderData);
+            
+            const order = {
+                items: orderCart,
+                customer: orderData.customer,
+                delivery: orderData.delivery,
+                subtotal: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                deliveryFee: 1500,
+                taxes: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.05,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+            
+            order.total = order.subtotal + order.deliveryFee + order.taxes;
+            
+            console.log('Datos del pedido preparados:', order);
+            
+            localStorage.setItem('sunsets-order-data', JSON.stringify(order));
+            
+            window.location.href = '/pago.html';
         }
     </script>
 

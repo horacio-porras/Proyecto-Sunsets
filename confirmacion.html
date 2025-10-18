@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Pedido - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Confirmation Content -->
+    <section class="py-12 flex-grow">
+        <div class="container mx-auto px-4">
+            <div class="max-w-2xl mx-auto text-center">
+                <!-- Success Icon -->
+                <div class="mb-8">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-check text-green-600 text-4xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-4">¡Pedido Confirmado!</h1>
+                    <p class="text-lg text-gray-600 mb-8">Tu pedido ha sido recibido y está siendo preparado</p>
+                </div>
+
+                <!-- Order Details -->
+                <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+                    <h2 class="text-xl font-semibold mb-6">Detalles del Pedido</h2>
+                    
+                    <div id="order-details" class="space-y-4">
+                        <!-- Los detalles se cargarán dinámicamente aquí -->
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4">¿Qué sigue?</h3>
+                    <div class="space-y-3 text-left">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+                            <p class="text-blue-700">Recibirás un SMS de confirmación en los próximos minutos</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+                            <p class="text-blue-700">Tu pedido será preparado en 30-45 minutos</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+                            <p class="text-blue-700">Te notificaremos cuando el repartidor esté en camino</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-utensils"></i>
+                        Hacer Otro Pedido
+                    </a>
+                    <a href="/index.html" class="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-home"></i>
+                        Ir al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+    <script>
+        let orderData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrderData();
+            displayOrderDetails();
+        });
+
+        //Carga los datos del pedido
+        function loadOrderData() {
+            const savedOrderData = localStorage.getItem('sunsets-complete-order');
+            if (savedOrderData) {
+                orderData = JSON.parse(savedOrderData);
+            } else {
+                window.location.href = '/pedidos.html';
+            }
+        }
+
+        //Muestra los detalles del pedido
+        function displayOrderDetails() {
+            const detailsContainer = document.getElementById('order-details');
+            if (!detailsContainer || !orderData) return;
+
+            const customer = orderData.customer;
+            const delivery = orderData.delivery;
+            const payment = orderData.payment;
+
+            detailsContainer.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Información del Cliente</h4>
+                        <p class="text-gray-600"><strong>Nombre:</strong> ${customer.name}</p>
+                        <p class="text-gray-600"><strong>Teléfono:</strong> ${customer.phone}</p>
+                        ${customer.email ? `<p class="text-gray-600"><strong>Email:</strong> ${customer.email}</p>` : ''}
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Dirección de Entrega</h4>
+                        ${getDeliveryAddressHTML(delivery)}
+                        ${delivery.instructions ? `<p class="text-gray-600 mt-2"><strong>Instrucciones:</strong> ${delivery.instructions}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="font-semibold text-gray-700 mb-2">Método de Pago</h4>
+                    <p class="text-gray-600">${getPaymentMethodName(payment.method)}</p>
+                </div>
+                
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="font-semibold text-gray-700 mb-2">Resumen del Pedido</h4>
+                    <div class="space-y-2">
+                        ${orderData.items.map(item => `
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                                <span>₡${(item.price * item.quantity).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                        <hr class="my-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span>₡${orderData.subtotal.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Costo de entrega</span>
+                            <span>₡${orderData.deliveryFee.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Impuestos</span>
+                            <span>₡${Math.round(orderData.taxes).toLocaleString()}</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="flex justify-between font-semibold text-lg">
+                            <span>Total</span>
+                            <span>₡${Math.round(orderData.total).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4 mt-4 text-center">
+                    <p class="text-sm text-gray-500">
+                        <strong>Número de Pedido:</strong> #${orderData.id}<br>
+                        <strong>Fecha:</strong> ${new Date(orderData.timestamp).toLocaleString('es-CR')}
+                    </p>
+                </div>
+            `;
+        }
+
+        //Obtiene la dirección de entrega en HTML
+        function getDeliveryAddressHTML(delivery) {
+            if (delivery.addressText) {
+                return `<p class="text-gray-600">${delivery.addressText}</p>`;
+            }
+            
+            if (delivery.address && delivery.district && delivery.canton && delivery.province) {
+                return `
+                    <p class="text-gray-600">${delivery.address}</p>
+                    <p class="text-gray-600">${delivery.district}, ${delivery.canton}</p>
+                    <p class="text-gray-600">${delivery.province}</p>
+                `;
+            }
+            
+            return `<p class="text-gray-600">Dirección no disponible</p>`;
+        }
+
+        //Obtiene el nombre del método de pago
+        function getPaymentMethodName(method) {
+            const methods = {
+                'efectivo': 'Pago en Efectivo',
+                'tarjeta': 'Tarjeta de Crédito/Débito',
+                'transferencia': 'Transferencia Bancaria',
+                'sinpe': 'SINPE Móvil'
+            };
+            return methods[method] || method;
+        }
+    </script>
+</body>
+</html>
