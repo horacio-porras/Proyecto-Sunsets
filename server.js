@@ -7,6 +7,10 @@ require('dotenv').config({ path: './config.env' });
 
 const { testConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
+const { authMiddleware, isAdmin } = require('./middlewares/auth');
+const empleadoRoutes = require('./routes/empleadoRoutes');
+const productoRoutes = require('./routes/productoRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,6 +65,11 @@ app.use(express.static('.'));
 
 //Rutas de API
 app.use('/api/auth', authLimiter, authRoutes);
+
+// Rutas protegidas solo para admin
+app.use('/api/empleados', authMiddleware, isAdmin, empleadoRoutes);
+app.use('/api/productos', authMiddleware, isAdmin, productoRoutes);
+
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
