@@ -4,69 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservaciones - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
 </head>
 <body class="bg-gray-50">
-        <!-- Header -->
-    <header class="bg-gray-800 text-white shadow-lg">
-        <nav class="bg-gray-900 px-4 py-3">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                                                <a href="index.html" class="flex items-center space-x-4">
-                                <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto">
-                                                            <div class="flex flex-col">
-                                <span class="text-2xl font-bold">Sunset's Tarbaca</span>
-                                <span class="text-sm bg-gradient-to-r from-orange-500 to-red-500 px-2 py-1 rounded text-center">Pizzería & Restaurante</span>
-                            </div>
-                    </a>
-                </div>
-                
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="index.html" class="hover:text-orange-400 transition">Inicio</a>
-                    <a href="menu.html" class="hover:text-orange-400 transition">Menú</a>
-                    <a href="reservaciones.html" class="hover:text-orange-400 transition border-b-2 border-white">Reservaciones</a>
-                    <a href="about.html" class="hover:text-orange-400 transition">Nosotros</a>
-                    <a href="contacto.html" class="hover:text-orange-400 transition">Contacto</a>
-                </div>
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
 
-                <!-- User Actions -->
-                <div class="hidden md:flex items-center space-x-4">
-                    <a href="login.html" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition">Iniciar Sesión</a>
-                    <a href="registro.html" class="bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition">Registrarse</a>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-
-            <!-- Mobile Navigation -->
-            <div id="mobileMenu" class="md:hidden hidden mt-4 pb-4">
-                <div class="flex flex-col space-y-3">
-                    <a href="index.html" class="hover:text-orange-400 transition">Inicio</a>
-                    <a href="menu.html" class="hover:text-orange-400 transition">Menú</a>
-                    <a href="reservaciones.html" class="hover:text-orange-400 transition border-b-2 border-white">Reservaciones</a>
-                    <a href="about.html" class="hover:text-orange-400 transition">Nosotros</a>
-                    <a href="contacto.html" class="hover:text-orange-400 transition">Contacto</a>
-                    <div class="pt-2 border-t border-gray-600">
-                        <a href="login.html" class="block bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded transition text-center">Iniciar Sesión</a>
-                        <a href="registro.html" class="block bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded transition text-center mt-2">Registrarse</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Reservation Header -->
-    <section class="bg-gray-800 text-white py-16">
-                    <div class="container mx-auto px-4 text-center">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4">Reservaciones</h1>
-            <p class="text-xl mb-8">Reserva tu mesa y disfruta de una experiencia gastronómica única</p>
-        </div>
-    </section>
 
     <!-- Reservation Form -->
     <section class="py-12">
@@ -108,28 +57,28 @@
                         <div>
                             <h4 class="text-lg font-semibold mb-4">Horarios Disponibles</h4>
                             <div class="grid grid-cols-3 gap-2" id="timeSlots">
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="11:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="11:00">
                                     11:00 AM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="12:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="12:00">
                                     12:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="13:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="13:00">
                                     1:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="14:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="14:00">
                                     2:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="18:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="18:00">
                                     6:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="19:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="19:00">
                                     7:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="20:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="20:00">
                                     8:00 PM
                                 </button>
-                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-orange-100 hover:text-orange-700 transition" data-time="21:00">
+                                <button class="time-slot bg-gray-100 text-gray-700 py-2 px-3 rounded transition" data-time="21:00">
                                     9:00 PM
                                 </button>
                             </div>
@@ -185,22 +134,22 @@
                             <!-- Table Preference -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Preferencia de Mesa</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="indoor" class="mr-2">
-                                        <span class="text-sm">Interior</span>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="indoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Interior</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="outdoor" class="mr-2">
-                                        <span class="text-sm">Terraza</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="outdoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Terraza</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="window" class="mr-2">
-                                        <span class="text-sm">Ventana</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="window" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Ventana</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="table-preference" value="any" class="mr-2">
-                                        <span class="text-sm">Cualquiera</span>
+                                    <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
+                                        <input type="radio" name="table-preference" value="any" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <span class="text-sm text-gray-700">Cualquiera</span>
                                     </label>
                                 </div>
                             </div>
@@ -216,7 +165,8 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <button type="submit" class="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold">
+                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
+                                <i class="fas fa-check"></i>
                                 Confirmar Reservación
                             </button>
                         </form>
@@ -233,69 +183,33 @@
                 <h3 class="text-3xl font-bold text-center mb-12">Información del Restaurante</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="text-center">
-                        <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-clock text-white text-xl"></i>
                         </div>
                         <h4 class="text-xl font-semibold mb-2">Horarios</h4>
-                        <p class="text-gray-600">Lunes - Domingo<br>11:00 AM - 10:00 PM</p>
+                        <p class="text-gray-600">Miércoles - Domingo<br>12:00 PM - 08:00 PM</p>
                     </div>
                     <div class="text-center">
-                        <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-users text-white text-xl"></i>
                         </div>
                         <h4 class="text-xl font-semibold mb-2">Capacidad</h4>
                         <p class="text-gray-600">Hasta 8 personas<br>por mesa</p>
                     </div>
                     <div class="text-center">
-                        <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-phone text-white text-xl"></i>
                         </div>
                         <h4 class="text-xl font-semibold mb-2">Contacto</h4>
-                        <p class="text-gray-600">+506 2222-3333<br>reservas@sunsets-tarbaca.com</p>
+                        <p class="text-gray-600">+506 6171-4020<br>sunsetstarbaca@gmail.com</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <img src="sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mb-4">
-                    <h4 class="text-xl font-bold mb-4">Sunset's Tarbaca</h4>
-                    <p class="text-gray-300">Sabor mediterráneo en cada bocado</p>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Enlaces Rápidos</h5>
-                    <ul class="space-y-2">
-                        <li><a href="menu.html" class="text-gray-300 hover:text-white transition">Menú</a></li>
-                        <li><a href="reservaciones.html" class="text-gray-300 hover:text-white transition">Reservaciones</a></li>
-                        <li><a href="about.html" class="text-gray-300 hover:text-white transition">Nosotros</a></li>
-                        <li><a href="contacto.html" class="text-gray-300 hover:text-white transition">Contacto</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Redes Sociales</h5>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-instagram text-xl"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
-                    </div>
-                </div>
-                <div>
-                    <h5 class="font-semibold mb-4">Newsletter</h5>
-                    <p class="text-gray-300 mb-2">Suscríbete para recibir ofertas especiales</p>
-                    <input type="email" placeholder="Tu email" class="w-full px-3 py-2 rounded text-gray-800">
-                    <button class="bg-orange-600 text-white px-4 py-2 rounded mt-2 hover:bg-orange-700 transition">Suscribirse</button>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
-                <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
         let currentDate = new Date();
@@ -331,17 +245,25 @@
                 date.setDate(startDate.getDate() + i);
                 
                 const dayElement = document.createElement('div');
-                dayElement.className = 'text-center py-2 cursor-pointer hover:bg-orange-100 rounded transition';
+                dayElement.className = 'text-center py-2 cursor-pointer rounded transition';
                 
                 if (date.getMonth() === month) {
                     dayElement.textContent = date.getDate();
                     
-                    // Disable past dates
                     if (date < new Date().setHours(0, 0, 0, 0)) {
                         dayElement.classList.add('text-gray-300', 'cursor-not-allowed');
-                        dayElement.classList.remove('hover:bg-orange-100');
                     } else {
                         dayElement.addEventListener('click', () => selectDate(date));
+                        dayElement.addEventListener('mouseenter', function() {
+                            this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+                            this.style.color = 'white';
+                        });
+                        dayElement.addEventListener('mouseleave', function() {
+                            if (!this.classList.contains('selected')) {
+                                this.style.background = '';
+                                this.style.color = '';
+                            }
+                        });
                     }
                 } else {
                     dayElement.classList.add('text-gray-300');
@@ -355,24 +277,32 @@
             selectedDate = date;
             document.getElementById('selectedDate').textContent = date.toLocaleDateString('es-ES');
             
-            // Update calendar display
             document.querySelectorAll('#calendar > div').forEach(day => {
-                day.classList.remove('bg-orange-600', 'text-white');
+                day.classList.remove('selected');
+                day.style.background = '';
+                day.style.color = '';
             });
-            event.target.classList.add('bg-orange-600', 'text-white');
+            
+            const selectedDay = event.target;
+            selectedDay.classList.add('selected');
+            selectedDay.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+            selectedDay.style.color = 'white';
         }
 
         function selectTime(time) {
             selectedTime = time;
             document.getElementById('selectedTime').textContent = time;
             
-            // Update time slots display
             document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('bg-orange-600', 'text-white');
-                slot.classList.add('bg-gray-100', 'text-gray-700');
+                slot.classList.remove('selected');
+                slot.style.background = '';
+                slot.style.color = '';
             });
-            event.target.classList.remove('bg-gray-100', 'text-gray-700');
-            event.target.classList.add('bg-orange-600', 'text-white');
+            
+            const selectedSlot = event.target;
+            selectedSlot.classList.add('selected');
+            selectedSlot.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+            selectedSlot.style.color = 'white';
         }
 
         function previousMonth() {
@@ -385,15 +315,44 @@
             generateCalendar();
         }
 
-        // Initialize calendar
         generateCalendar();
 
-        // Add event listeners to time slots
         document.querySelectorAll('.time-slot').forEach(slot => {
             slot.addEventListener('click', () => selectTime(slot.dataset.time));
+            
+            slot.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('selected')) {
+                    this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
+                    this.style.color = 'white';
+                }
+            });
+            slot.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('selected')) {
+                    this.style.background = '';
+                    this.style.color = '';
+                }
+            });
         });
 
-        // Handle form submission
+        function filterTablePreference() {
+            document.querySelectorAll('.table-preference').forEach(preference => {
+                const radio = preference.querySelector('input[type="radio"]');
+                const span = preference.querySelector('span');
+                
+                if (radio.checked) {
+                    preference.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                    preference.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+                    span.classList.remove('text-gray-700');
+                    span.classList.add('text-white');
+                } else {
+                    preference.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+                    preference.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                    span.classList.remove('text-white');
+                    span.classList.add('text-gray-700');
+                }
+            });
+        }
+
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -413,7 +372,6 @@
             alert('¡Reservación confirmada! Recibirás un correo de confirmación pronto.');
         });
 
-        // Handle party size change
         document.querySelector('select').addEventListener('change', function() {
             document.getElementById('selectedPeople').textContent = this.value ? this.value + ' persona(s)' : 'No seleccionado';
         });

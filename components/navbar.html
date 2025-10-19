@@ -1,0 +1,419 @@
+<!-- Navbar Component for Sunset's Tarbaca -->
+<header class="bg-gray-800 text-white shadow-lg">
+    <nav class="bg-gray-900 px-4 py-3">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="/" class="group flex items-center space-x-4 transition">
+                    <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto">
+                      <div class="flex flex-col">
+                          <span class="text-2xl font-bold text-gray-300 group-hover:text-white transition">Sunset's Tarbaca</span>
+                          <span class="text-sm bg-gradient-to-r from-orange-500 to-red-500 px-2 py-1 rounded text-center text-white">Pizzería & Restaurante</span>
+                      </div>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/menu.html" class="text-gray-300 hover:text-white transition">Menú</a>
+                    <a href="/reservaciones.html" class="text-gray-300 hover:text-white transition">Reservaciones</a>
+                    <a href="/about.html" class="text-gray-300 hover:text-white transition">Nosotros</a>
+                    <a href="/contacto.html" class="text-gray-300 hover:text-white transition">Contacto</a>
+                </div>
+            </div>
+
+            <!-- User Actions -->
+            <div class="hidden md:flex items-center space-x-4">
+                <div id="userNotLoggedIn">
+                    <button onclick="openLoginModal()" class="text-gray-300 hover:text-white transition group">
+                        <i class="fas fa-user text-xl group-hover:text-white"></i>
+                    </button>
+                </div>
+                <div id="userLoggedIn" class="hidden">
+                    <!-- User Dropdown -->
+                    <div class="relative">
+                        <button id="userDropdownBtn" onclick="toggleUserDropdown()" class="flex items-center space-x-2 text-sm hover:text-white transition">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                                <i class="fas fa-user text-sm"></i>
+                            </div>
+                            <span class="user-name font-semibold"></span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border" style="z-index: 99999;">
+                            <div class="px-4 py-2 border-b border-gray-200">
+                                <p class="text-sm font-medium text-gray-900 user-name">-</p>
+                                <p class="text-xs text-gray-500 user-email">-</p>
+                            </div>
+                            
+                            <!-- Dashboard Links (based on user role) -->
+                            <div id="dashboardLink">
+                                <!-- Will be populated by JavaScript based on user role -->
+                            </div>
+                            
+                            <!-- Role-specific menu items -->
+                            <div id="roleSpecificMenu">
+                                <!-- Will be populated by JavaScript based on user role -->
+                            </div>
+                            
+                            <hr class="my-1">
+                            <button onclick="logout()" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="md:hidden hidden mt-4 pb-4">
+            <div class="flex flex-col space-y-3">
+                <a href="/menu.html" class="text-gray-300 hover:text-white transition">Menú</a>
+                <a href="/reservaciones.html" class="text-gray-300 hover:text-white transition">Reservaciones</a>
+                <a href="/about.html" class="text-gray-300 hover:text-white transition">Nosotros</a>
+                <a href="/contacto.html" class="text-gray-300 hover:text-white transition">Contacto</a>
+                <div class="pt-2 border-t border-gray-600">
+                    <div id="mobileUserNotLoggedIn">
+                        <button onclick="openLoginModal()" class="block text-gray-300 hover:text-white transition text-center w-full group">
+                            <i class="fas fa-user text-xl group-hover:text-white"></i>
+                        </button>
+                    </div>
+                    <div id="mobileUserLoggedIn" class="hidden">
+                        <!-- Mobile User Info -->
+                        <div class="text-center text-sm mb-3 p-3 bg-gray-700 rounded">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-name font-semibold"></div>
+                            <div class="user-email text-xs text-gray-400"></div>
+                        </div>
+                        
+                        <!-- Mobile Menu Options -->
+                        <div class="space-y-2">
+                            <div id="mobileDashboardLink">
+                                <!-- Will be populated by JavaScript based on user role -->
+                            </div>
+                            <div id="mobileRoleSpecificMenu">
+                                <!-- Will be populated by JavaScript based on user role -->
+                            </div>
+                            <button onclick="logout()" class="block bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition text-center w-full">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full modal-content">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Mensaje de error -->
+                <div id="loginErrorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <span id="loginErrorText"></span>
+                </div>
+
+                <!-- Mensaje de éxito -->
+                <div id="loginSuccessMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <span id="loginSuccessText"></span>
+                </div>
+
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                        <input type="email" id="loginEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                        <div class="relative">
+                            <input type="password" id="loginPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••">
+                            <button type="button" onclick="toggleLoginPassword()" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye" id="loginPasswordIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-end">
+                        <button type="button" onclick="openForgotPasswordModal()" class="text-sm text-orange-600 hover:text-orange-500 bg-transparent border-none cursor-pointer">¿Olvidaste tu contraseña?</button>
+                    </div>
+                    
+                    <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="loginBtnText">Iniciar Sesión</span>
+                        <i id="loginBtnSpinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">O continúa con</span>
+                        </div>
+                    </div>
+
+                    <!-- Social Login -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" class="w-full inline-flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fab fa-google text-red-500 mr-2 text-base"></i>
+                            Google
+                        </button>
+                        <button type="button" class="w-full inline-flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fab fa-facebook text-blue-500 mr-2 text-base"></i>
+                            Facebook
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿No tienes cuenta? 
+                        <button onclick="switchToRegister()" class="text-orange-600 hover:text-orange-500 font-semibold">Regístrate aquí</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto modal-content">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
+                <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Mensaje de error -->
+                <div id="registerErrorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <span id="registerErrorText"></span>
+                </div>
+
+                <!-- Mensaje de éxito -->
+                <div id="registerSuccessMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <span id="registerSuccessText"></span>
+                </div>
+
+                <form id="registerForm" class="space-y-4">
+                    <!-- Personal Information -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Información Personal</h3>
+                        
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                                        <input type="text" id="registerNombre" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
+                                            <input type="email" id="registerEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Número de Teléfono *</label>
+                                            <input type="tel" id="registerTelefono" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                        </div>
+                                    </div>
+                                </div>
+                    </div>
+
+                    <!-- Security Information -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Seguridad</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+                                <div class="relative">
+                                    <input type="password" id="registerPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••">
+                                    <button type="button" onclick="toggleRegisterPassword('registerPassword')" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye" id="registerPasswordIcon"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, incluir mayúsculas y números</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+                                <div class="relative">
+                                    <input type="password" id="registerConfirmPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••">
+                                    <button type="button" onclick="toggleRegisterPassword('registerConfirmPassword')" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye" id="registerConfirmPasswordIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferences -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Preferencias</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <input type="checkbox" id="registerNotificacionesActivas" class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1">
+                                <label class="ml-2 block text-sm text-gray-700">
+                                    Quiero recibir notificaciones sobre promociones y ofertas especiales
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <button type="submit" id="registerBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="registerBtnText">Crear Cuenta</span>
+                        <i id="registerBtnSpinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿Ya tienes cuenta? 
+                        <button onclick="switchToLogin()" class="text-orange-600 hover:text-orange-500 font-semibold">Inicia sesión aquí</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Olvidé mi Contraseña -->
+<div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="forgotPasswordModalContent">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Recuperar Contraseña</h3>
+                    <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <hr class="border-gray-200 mb-6">
+                
+                <!-- Form -->
+                <form id="forgotPasswordForm">
+                    <div class="space-y-4">
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                            <input type="email" id="forgotPasswordEmail" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="Ingresa tu correo electrónico">
+                        </div>
+                        
+                        <!-- Nueva Contraseña -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña</label>
+                            <div class="relative">
+                                <input type="password" id="forgotPasswordNewPassword" required
+                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Nueva contraseña">
+                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordNewPassword', 'forgotPasswordNewPasswordIcon')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye" id="forgotPasswordNewPasswordIcon"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, incluir mayúsculas y números</p>
+                        </div>
+                        
+                        <!-- Confirmar Nueva Contraseña -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nueva Contraseña</label>
+                            <div class="relative">
+                                <input type="password" id="forgotPasswordConfirmPassword" required
+                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Confirma tu nueva contraseña">
+                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordConfirmPassword', 'forgotPasswordConfirmPasswordIcon')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye" id="forgotPasswordConfirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="mt-6">
+                        <button type="submit" id="forgotPasswordBtn"
+                                class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="forgotPasswordBtnText">Cambiar Contraseña</span>
+                            <span id="forgotPasswordBtnSpinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Cambiando...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Animation Styles */
+.modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* User Dropdown Animation Styles */
+#userDropdown {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+}
+
+#userDropdown:not(.hidden) {
+    pointer-events: auto;
+}
+
+#userDropdown.dropdown-show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#userDropdown.dropdown-hide {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+}
+</style>
+
+
