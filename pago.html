@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .payment-method {
             transition: all 0.3s ease;
@@ -158,8 +159,8 @@
                                 <h2 class="text-xl font-semibold">Información de Transferencia</h2>
                             </div>
                             <div class="p-6">
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                    <h3 class="font-semibold text-blue-800 mb-2">Datos Bancarios</h3>
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                                    <h3 class="font-semibold text-purple-800 mb-2">Datos Bancarios</h3>
                                     <div class="space-y-2 text-sm">
                                         <p><span class="font-semibold">Banco:</span> Banco Nacional de Costa Rica</p>
                                         <p><span class="font-semibold">Cuenta:</span> 200-01-123-456789</p>
@@ -419,7 +420,7 @@
         }
 
         //Procesa el pago
-        function processPayment() {
+        async function processPayment() {
             if (!validatePaymentForm()) {
                 return;
             }
@@ -429,7 +430,7 @@
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
             button.disabled = true;
 
-            setTimeout(() => {
+            try {
                 const paymentData = {
                     method: selectedPaymentMethod,
                     timestamp: new Date().toISOString()
@@ -446,20 +447,68 @@
                     paymentData.sinpeReference = document.getElementById('sinpeReference').value.trim();
                 }
 
-                const completeOrder = {
-                    ...orderData,
+                //Prepara los datos del pedido para enviar al backend
+                const orderPayload = {
+                    items: orderData.items,
+                    customer: orderData.customer,
+                    delivery: orderData.delivery,
                     payment: paymentData,
-                    id: generateOrderId(),
-                    status: 'confirmed',
-                    timestamp: new Date().toISOString()
+                    subtotal: orderData.subtotal,
+                    deliveryFee: orderData.deliveryFee,
+                    taxes: orderData.taxes,
+                    total: orderData.total,
+                    loyaltyPointsUsed: 0
                 };
 
-                localStorage.setItem('sunsets-complete-order', JSON.stringify(completeOrder));
-                localStorage.removeItem('sunsets-order-data');
-                localStorage.removeItem('sunsets-cart');
+                //Envía el pedido al backend
+                const authToken = localStorage.getItem('authToken');
+                const isAuthenticated = authToken && authToken !== 'null' && authToken !== '';
+                
+                //Usar endpoint diferente según si el usuario está autenticado o es invitado
+                const endpoint = isAuthenticated ? '/api/pedidos' : '/api/pedidos/guest';
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                //Solo agregar Authorization header si el usuario está autenticado
+                if (isAuthenticated) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(orderPayload)
+                });
 
-                window.location.href = '/confirmacion.html';
-            }, 2000);
+                const result = await response.json();
+
+                if (result.success) {
+                    const completeOrder = {
+                        ...orderData,
+                        payment: paymentData,
+                        id: result.data.pedidoId,
+                        numeroPedido: result.data.numeroPedido,
+                        status: 'confirmed',
+                        timestamp: new Date().toISOString()
+                    };
+
+                    localStorage.setItem('sunsets-complete-order', JSON.stringify(completeOrder));
+                    localStorage.removeItem('sunsets-order-data');
+                    localStorage.removeItem('sunsets-cart');
+
+                    window.location.href = '/confirmacion.html';
+                } else {
+                    throw new Error(result.message || 'Error al procesar el pedido');
+                }
+
+            } catch (error) {
+                console.error('Error al procesar pago:', error);
+                alert('Error al procesar el pedido: ' + error.message);
+                
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
         }
 
         //Genera un ID aleatorio para el pedido

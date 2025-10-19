@@ -22,8 +22,8 @@
                         <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
             <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
             <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
-                </div>
-
+            </div>
+            
 
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -46,24 +46,24 @@
                                     <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
                                     <div class="mt-2">
                                         <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
-                    </div>
-                </div>
-            </div>
-            
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div>
                                     <h4 class="font-semibold">Cumpleaños Ana</h4>
                                     <p class="text-sm text-gray-600">25 Dic 2024 • 8:00 PM • 6 personas</p>
                                     <p class="text-sm text-gray-600">Terraza, decoración especial</p>
-                    </div>
+                                </div>
                                 <div class="text-right">
                                     <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
                                     <div class="mt-2">
                                         <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
-                    </div>
-                </div>
-            </div>
-                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="mt-6 text-center">
                             <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
                                 <i class="fas fa-calendar-alt"></i>
@@ -79,57 +79,31 @@
                         <h2 class="text-xl font-semibold">Pedidos Recientes</h2>
                     </div>
                     <div class="p-6">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Margherita + Limonada</h4>
-                                        <p class="text-sm text-gray-600">Orden #12345 • 15 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡10,300</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
+                        <!-- Loading State -->
+                        <div id="recentOrdersLoading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                            <p class="mt-2 text-gray-600">Cargando pedidos recientes...</p>
+                        </div>
+
+                        <!-- Orders Container -->
+                        <div id="recentOrdersContainer" class="space-y-4 hidden">
+                            <!-- Orders will be loaded here dynamically -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="recentOrdersEmpty" class="text-center py-8 hidden">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
                             </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-utensils text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pasta Carbonara + Tiramisú</h4>
-                                        <p class="text-sm text-gray-600">Orden #12344 • 12 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡11,000</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Pepperoni</h4>
-                                        <p class="text-sm text-gray-600">Orden #12343 • 10 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡9,200</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes pedidos recientes</h3>
+                            <p class="text-gray-600 mb-4">¡Haz tu primer pedido y aparecerá aquí!</p>
+                            <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                                <i class="fas fa-plus"></i>
+                                Hacer Pedido
+                            </a>
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
+                            <a href="/cliente/mis-pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
                         </div>
                     </div>
                 </div>
@@ -180,6 +154,7 @@
                         </div>
                     </div>
                     
+                    
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">Próximo nivel:</span>
@@ -219,8 +194,10 @@
             });
             
             loadUserProfile();
+            loadRecentOrders(); // Cargar pedidos recientes
         });
 
+        //Carga el perfil del usuario
         async function loadUserProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -290,6 +267,7 @@
             }
         }
 
+        //Carga la dirección principal del usuario
         async function loadMainAddress() {
             try {
                 console.log('Iniciando carga de dirección principal...');
@@ -414,6 +392,7 @@
 
         window.testAddressAPI = testAddressAPI;
 
+        //Actualiza el progreso de lealtad
         function updateLoyaltyProgress(puntos) {
             const progresoBar = document.getElementById('progresoBar');
             const progresoText = document.getElementById('progresoText');
@@ -455,6 +434,151 @@
         //Función para formatear números con comas
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        //Función para cargar los últimos 3 pedidos del cliente
+        async function loadRecentOrders() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    showRecentOrdersError();
+                    return;
+                }
+
+                const response = await fetch('/api/pedidos?limit=3', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const orders = result.pedidos || [];
+                    renderRecentOrders(orders);
+                } else {
+                    console.error('Error al cargar pedidos recientes:', result.message);
+                    showRecentOrdersError();
+                }
+            } catch (error) {
+                console.error('Error al cargar pedidos recientes:', error);
+                showRecentOrdersError();
+            }
+        }
+
+        //Función para renderizar los pedidos recientes
+        function renderRecentOrders(orders) {
+            const loadingElement = document.getElementById('recentOrdersLoading');
+            const containerElement = document.getElementById('recentOrdersContainer');
+            const emptyElement = document.getElementById('recentOrdersEmpty');
+
+            // Ocultar loading
+            loadingElement.classList.add('hidden');
+
+            if (orders.length === 0) {
+                // Mostrar estado vacío
+                emptyElement.classList.remove('hidden');
+                return;
+            }
+
+            // Mostrar contenedor y renderizar pedidos
+            containerElement.classList.remove('hidden');
+            containerElement.innerHTML = '';
+
+            orders.forEach(order => {
+                const orderElement = createRecentOrderElement(order);
+                containerElement.appendChild(orderElement);
+            });
+        }
+
+        //Función para crear elemento HTML de pedido reciente
+        function createRecentOrderElement(order) {
+            const orderDiv = document.createElement('div');
+            orderDiv.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer';
+            orderDiv.onclick = () => window.location.href = '/cliente/mis-pedidos.html';
+
+            const orderNumber = `#${order.id_pedido.toString().padStart(6, '0')}`;
+            const orderDate = formatDate(order.fecha_pedido);
+            const orderTotal = `₡${order.total.toLocaleString()}`;
+            const statusInfo = getStatusInfo(order.estado_pedido);
+            
+            let itemsSummary = '';
+            if (order.items && order.items.length > 0) {
+                const firstTwoItems = order.items.slice(0, 2);
+                itemsSummary = firstTwoItems.map(item => item.producto_nombre || `Producto #${item.id_producto || 'N/A'}`).join(' + ');
+                if (order.items.length > 2) {
+                    itemsSummary += ` +${order.items.length - 2} más`;
+                }
+            } else {
+                itemsSummary = 'Pedido sin items';
+            }
+
+            orderDiv.innerHTML = `
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-utensils text-white"></i>
+                        </div>
+                    <div>
+                        <h4 class="font-semibold">${itemsSummary}</h4>
+                        <p class="text-sm text-gray-600">${orderNumber} • ${orderDate}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-semibold">${orderTotal}</p>
+                    <span class="text-sm ${statusInfo.class} px-2 py-1 rounded">${statusInfo.text}</span>
+            </div>
+            `;
+
+            return orderDiv;
+        }
+
+        //Función para mostrar error en pedidos recientes
+        function showRecentOrdersError() {
+            const loadingElement = document.getElementById('recentOrdersLoading');
+            const containerElement = document.getElementById('recentOrdersContainer');
+            const emptyElement = document.getElementById('recentOrdersEmpty');
+
+            loadingElement.classList.add('hidden');
+            containerElement.classList.add('hidden');
+            emptyElement.classList.remove('hidden');
+            
+            emptyElement.innerHTML = `
+                <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar pedidos</h3>
+                <p class="text-gray-600 mb-4">No se pudieron cargar tus pedidos recientes</p>
+                <button onclick="loadRecentOrders()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    Reintentar
+                </button>
+            `;
+        }
+
+        //Función para obtener información del estado (reutilizada de mis-pedidos.html)
+        function getStatusInfo(estado) {
+            const statusMap = {
+                'pendiente': { text: 'Pendiente', class: 'bg-yellow-100 text-yellow-800' },
+                'confirmado': { text: 'Confirmado', class: 'bg-blue-100 text-blue-800' },
+                'preparando': { text: 'Preparando', class: 'bg-orange-100 text-orange-800' },
+                'listo': { text: 'Listo', class: 'bg-green-100 text-green-800' },
+                'en_camino': { text: 'En Camino', class: 'bg-purple-100 text-purple-800' },
+                'entregado': { text: 'Entregado', class: 'bg-green-100 text-green-800' },
+                'cancelado': { text: 'Cancelado', class: 'bg-red-100 text-red-800' }
+            };
+            return statusMap[estado] || { text: 'Desconocido', class: 'bg-gray-100 text-gray-800' };
+        }
+
+        //Función para formatear fecha (reutilizada de mis-pedidos.html)
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
         }
     </script>
 

@@ -453,6 +453,7 @@ window.addToCart = function(name, price, buttonElement) {
         existingItem.quantity += 1;
     } else {
         cart.push({
+            id: product.id,
             name: name,
             price: price,
             quantity: 1,

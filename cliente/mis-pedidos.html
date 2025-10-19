@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <style>
+        .order-card {
+            transition: all 0.3s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmado { background-color: #dbeafe; color: #1e40af; }
+        .status-preparando { background-color: #fed7aa; color: #ea580c; }
+        .status-listo { background-color: #bbf7d0; color: #166534; }
+        .status-en_camino { background-color: #c7d2fe; color: #3730a3; }
+        .status-entregado { background-color: #dcfce7; color: #166534; }
+        .status-cancelado { background-color: #fecaca; color: #dc2626; }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem 2rem 1rem 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Mis Pedidos</h1>
+                    <p class="text-gray-600">Gestiona y revisa el historial de tus pedidos</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+                    <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="preparando">Preparando</option>
+                        <option value="listo">Listo</option>
+                        <option value="en_camino">En Camino</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                    <select id="sortFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="fecha_desc">Más recientes</option>
+                        <option value="fecha_asc">Más antiguos</option>
+                        <option value="total_desc">Mayor monto</option>
+                        <option value="total_asc">Menor monto</option>
+                    </select>
+                </div>
+                
+                <button onclick="clearFilters()" class="text-sm text-gray-600 hover:text-gray-800 underline">
+                    Limpiar filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- Orders Container -->
+        <div id="orders-container">
+            <!-- Loading State -->
+            <div id="loading-state" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="loading-skeleton h-6 w-1/3 rounded mb-4"></div>
+                    <div class="loading-skeleton h-4 w-1/2 rounded mb-2"></div>
+                    <div class="loading-skeleton h-4 w-1/4 rounded"></div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="loading-skeleton h-6 w-1/3 rounded mb-4"></div>
+                    <div class="loading-skeleton h-4 w-1/2 rounded mb-2"></div>
+                    <div class="loading-skeleton h-4 w-1/4 rounded"></div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-16 hidden">
+                <div class="bg-white rounded-lg shadow-md p-12">
+                    <i class="fas fa-shopping-bag text-6xl text-gray-300 mb-6"></i>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">No tienes pedidos aún</h2>
+                    <p class="text-gray-600 mb-8">¡Haz tu primer pedido y descubre nuestros deliciosos platos!</p>
+                    <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Hacer Pedido
+                    </a>
+                </div>
+            </div>
+
+            <!-- Orders List -->
+            <div id="orders-list" class="space-y-6 hidden">
+                <!-- Los pedidos se cargarán dinámicamente aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+        <!-- Order Details Modal -->
+        <div id="orderDetailsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="text-xl font-semibold text-gray-800" id="modalOrderNumber">#000000</h3>
+                    <button type="button" class="modal-close" onclick="closeOrderDetailsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div id="modalLoadingState" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <p class="mt-2 text-gray-600">Cargando detalles del pedido...</p>
+                </div>
+
+                <!-- Order Content -->
+                <div id="modalOrderContent" class="hidden">
+                    <!-- Order Info -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm text-gray-500" id="modalOrderDate">Fecha del pedido</span>
+                            <div id="modalOrderStatus" class="status-badge">Pendiente</div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Items del Pedido</h4>
+                        <div id="modalOrderItems" class="space-y-3">
+                            <!-- Items will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Resumen del Pedido</h4>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Subtotal:</span>
+                                    <span id="modalSubtotal">₡0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Impuestos:</span>
+                                    <span id="modalTaxes">₡0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Descuentos:</span>
+                                    <span id="modalDiscounts">₡0</span>
+                                </div>
+                                <hr class="my-2">
+                                <div class="flex justify-between font-semibold text-lg">
+                                    <span>Total:</span>
+                                    <span id="modalTotal">₡0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Información de Pago</h4>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-credit-card text-blue-600"></i>
+                                <div>
+                                    <div class="font-semibold text-blue-800">Método de Pago</div>
+                                    <div class="text-blue-700" id="modalPaymentMethod">Efectivo</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loyalty Points -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Puntos de Lealtad</h4>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-star text-green-600"></i>
+                                <div>
+                                    <div class="font-semibold text-green-800">Puntos Ganados</div>
+                                    <div class="text-green-700" id="modalLoyaltyPoints">0 puntos</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Notes -->
+                    <div id="modalSpecialNotes" class="mb-6 hidden">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Notas Especiales</h4>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-sticky-note text-yellow-600 mt-1"></i>
+                                <div>
+                                    <div class="font-semibold text-yellow-800">Instrucciones</div>
+                                    <div class="text-yellow-700" id="modalNotesText">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex justify-end pt-4">
+                        <button id="modalReorderBtn" onclick="reorderFromModal()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold hidden">
+                            <i class="fas fa-redo mr-2"></i>
+                            Pedir de Nuevo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        let allOrders = [];
+        let filteredOrders = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            setupFilters();
+            setupModalEventListeners();
+        });
+
+        //Configura los event listeners del modal de detalles del pedido
+        function setupModalEventListeners() {
+            document.getElementById('orderDetailsModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeOrderDetailsModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    const modal = document.getElementById('orderDetailsModal');
+                    if (modal.classList.contains('show')) {
+                        closeOrderDetailsModal();
+                    }
+                }
+            });
+        }
+
+        //Carga los pedidos del cliente autenticado
+        async function loadOrders() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/pedidos', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    allOrders = result.pedidos || [];
+                    filteredOrders = [...allOrders];
+                    displayOrders();
+                } else {
+                    console.error('Error al cargar pedidos:', result.message);
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error al cargar pedidos:', error);
+                showEmptyState();
+            }
+        }
+
+        //Muestra los pedidos en la lista
+        function displayOrders() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const ordersList = document.getElementById('orders-list');
+
+            loadingState.classList.add('hidden');
+
+            if (filteredOrders.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            ordersList.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            ordersList.innerHTML = filteredOrders.map(order => createOrderCard(order)).join('');
+        }
+
+        //Crea el card del pedido
+        function createOrderCard(order) {
+            const statusInfo = getStatusInfo(order.estado_pedido);
+            const formattedDate = formatDate(order.fecha_pedido);
+            const orderNumber = `#${order.id_pedido.toString().padStart(6, '0')}`;
+
+            return `
+                <div class="order-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-receipt text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">${orderNumber}</h3>
+                                <p class="text-sm text-gray-600">${formattedDate}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="status-badge ${statusInfo.class}">${statusInfo.text}</div>
+                            <p class="text-lg font-bold text-gray-800 mt-2">₡${order.total.toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-600">Items</div>
+                            <div class="font-semibold">${order.total_items || 0}</div>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-600">Método de Pago</div>
+                            <div class="font-semibold">${getPaymentMethodText(order.metodo_pago)}</div>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-600">Puntos Ganados</div>
+                            <div class="font-semibold">${order.puntos_otorgados || 0}</div>
+                        </div>
+                    </div>
+
+                    ${order.notas_especiales ? `
+                        <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-sticky-note text-yellow-600 mt-1"></i>
+                                <div>
+                                    <div class="text-sm font-medium text-yellow-800">Notas Especiales</div>
+                                    <div class="text-sm text-yellow-700">${order.notas_especiales}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between">
+                        <button onclick="viewOrderDetails(${order.id_pedido})" class="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-2">
+                            <i class="fas fa-eye"></i>
+                            Ver Detalles
+                        </button>
+                        
+                        ${order.estado_pedido === 'entregado' ? `
+                            <button onclick="reorderItems(${order.id_pedido})" class="bg-orange-100 text-orange-700 hover:bg-orange-200 px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2">
+                                <i class="fas fa-redo"></i>
+                                Pedir de Nuevo
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        //Obtiene la información del estado del pedido
+        function getStatusInfo(status) {
+            const statusMap = {
+                'pendiente': { text: 'Pendiente', class: 'status-pendiente' },
+                'confirmado': { text: 'Confirmado', class: 'status-confirmado' },
+                'preparando': { text: 'Preparando', class: 'status-preparando' },
+                'listo': { text: 'Listo', class: 'status-listo' },
+                'en_camino': { text: 'En Camino', class: 'status-en_camino' },
+                'entregado': { text: 'Entregado', class: 'status-entregado' },
+                'cancelado': { text: 'Cancelado', class: 'status-cancelado' }
+            };
+            return statusMap[status] || { text: status, class: 'status-pendiente' };
+        }
+
+        //Obtiene el texto del método de pago
+        function getPaymentMethodText(method) {
+            const methodMap = {
+                'efectivo': 'Efectivo',
+                'tarjeta': 'Tarjeta',
+                'transferencia': 'Transferencia',
+                'sinpe': 'SINPE Móvil'
+            };
+            return methodMap[method] || method;
+        }
+
+        //Formatea la fecha del pedido
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        //Muestra el estado vacío de la lista de pedidos
+        function showEmptyState() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const ordersList = document.getElementById('orders-list');
+
+            loadingState.classList.add('hidden');
+            ordersList.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+        }
+
+        //Configura los filtros de la lista de pedidos
+        function setupFilters() {
+            const statusFilter = document.getElementById('statusFilter');
+            const sortFilter = document.getElementById('sortFilter');
+
+            statusFilter.addEventListener('change', applyFilters);
+            sortFilter.addEventListener('change', applyFilters);
+        }
+
+        //Aplica los filtros a la lista de pedidos
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            filteredOrders = allOrders.filter(order => {
+                if (!statusFilter) return true;
+                return order.estado_pedido === statusFilter;
+            });
+
+            filteredOrders.sort((a, b) => {
+                switch (sortFilter) {
+                    case 'fecha_desc':
+                        return new Date(b.fecha_pedido) - new Date(a.fecha_pedido);
+                    case 'fecha_asc':
+                        return new Date(a.fecha_pedido) - new Date(b.fecha_pedido);
+                    case 'total_desc':
+                        return b.total - a.total;
+                    case 'total_asc':
+                        return a.total - b.total;
+                    default:
+                        return 0;
+                }
+            });
+
+            displayOrders();
+        }
+
+        //Limpia los filtros de la lista de pedidos
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sortFilter').value = 'fecha_desc';
+            filteredOrders = [...allOrders];
+            displayOrders();
+        }
+
+        //Muestra los detalles del pedido en el modal
+        async function viewOrderDetails(orderId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const modal = document.getElementById('orderDetailsModal');
+                modal.classList.add('show');
+                document.getElementById('modalLoadingState').classList.remove('hidden');
+                document.getElementById('modalOrderContent').classList.add('hidden');
+
+                const response = await fetch(`/api/pedidos/${orderId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const order = result.pedido;
+                    populateOrderDetailsModal(order);
+                    document.getElementById('modalLoadingState').classList.add('hidden');
+                    document.getElementById('modalOrderContent').classList.remove('hidden');
+                } else {
+                    console.error('Error al cargar detalles del pedido:', result.message);
+                    alert('Error al cargar los detalles del pedido');
+                    closeOrderDetailsModal();
+                }
+            } catch (error) {
+                console.error('Error al cargar detalles del pedido:', error);
+                alert('Error al cargar los detalles del pedido');
+                closeOrderDetailsModal();
+            }
+        }
+
+        //Llena el modal con los detalles del pedido
+        function populateOrderDetailsModal(order) {
+            document.getElementById('modalOrderNumber').textContent = `Pedido #${order.id_pedido.toString().padStart(6, '0')}`;
+            document.getElementById('modalOrderDate').textContent = formatDate(order.fecha_pedido);
+
+            const statusInfo = getStatusInfo(order.estado_pedido);
+            const statusElement = document.getElementById('modalOrderStatus');
+            statusElement.textContent = statusInfo.text;
+            statusElement.className = `status-badge ${statusInfo.class}`;
+
+            const itemsContainer = document.getElementById('modalOrderItems');
+            if (order.items && order.items.length > 0) {
+                itemsContainer.innerHTML = order.items.map(item => {
+                    const productName = item.producto_nombre || `Producto #${item.id_producto || 'N/A'}`;
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-utensils text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-sm">${productName}</div>
+                                    ${item.producto_descripcion ? `<div class="text-xs text-gray-600">${item.producto_descripcion}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-sm">Cantidad: ${item.cantidad}</div>
+                                <div class="text-xs text-gray-600">₡${item.precio_unitario.toLocaleString()} c/u</div>
+                                <div class="font-semibold text-orange-600 text-sm">₡${item.subtotal_item.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                itemsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No hay items disponibles</p>';
+            }
+
+            document.getElementById('modalSubtotal').textContent = `₡${order.subtotal.toLocaleString()}`;
+            document.getElementById('modalTaxes').textContent = `₡${order.impuestos.toLocaleString()}`;
+            document.getElementById('modalDiscounts').textContent = `₡${(order.descuentos || 0).toLocaleString()}`;
+            document.getElementById('modalTotal').textContent = `₡${order.total.toLocaleString()}`;
+
+            document.getElementById('modalPaymentMethod').textContent = getPaymentMethodText(order.metodo_pago);
+
+            const specialNotesDiv = document.getElementById('modalSpecialNotes');
+            const notesText = document.getElementById('modalNotesText');
+            if (order.notas_especiales && order.notas_especiales.trim()) {
+                notesText.textContent = order.notas_especiales;
+                specialNotesDiv.classList.remove('hidden');
+            } else {
+                specialNotesDiv.classList.add('hidden');
+            }
+
+            document.getElementById('modalLoyaltyPoints').textContent = `${order.puntos_otorgados || 0} puntos`;
+
+            const reorderBtn = document.getElementById('modalReorderBtn');
+            if (order.estado_pedido === 'entregado') {
+                reorderBtn.classList.remove('hidden');
+                reorderBtn.setAttribute('data-order-id', order.id_pedido);
+            } else {
+                reorderBtn.classList.add('hidden');
+            }
+        }
+
+        //Cierra el modal de detalles del pedido
+        function closeOrderDetailsModal() {
+            const modal = document.getElementById('orderDetailsModal');
+            modal.classList.remove('show');
+            
+            document.getElementById('modalLoadingState').classList.remove('hidden');
+            document.getElementById('modalOrderContent').classList.add('hidden');
+        }
+
+        //Reordena los items del pedido desde el modal
+        function reorderFromModal() {
+            const orderId = document.getElementById('modalReorderBtn').getAttribute('data-order-id');
+            if (orderId) {
+                reorderItems(orderId);
+                closeOrderDetailsModal();
+            }
+        }
+
+        //Reordena los items del pedido
+        function reorderItems(orderId) {
+            alert(`Reordenar items del pedido #${orderId.toString().padStart(6, '0')}`);
+        }
+    </script>
+</body>
+</html>

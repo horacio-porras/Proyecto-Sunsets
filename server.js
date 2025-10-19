@@ -9,6 +9,7 @@ const { testConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +66,7 @@ app.use(express.static('.'));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/cliente', clienteRoutes);
+app.use('/api/pedidos', pedidosRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

@@ -16,7 +16,7 @@ router.get('/puntos', authenticateToken, async (req, res) => {
             WHERE id_usuario = ?
         `;
         
-        const [clienteRows] = await db.execute(clienteQuery, [userId]);
+        const [clienteRows] = await pool.execute(clienteQuery, [userId]);
         
         if (clienteRows.length === 0) {
             return res.status(404).json({
@@ -53,7 +53,7 @@ router.post('/puntos/actualizar', authenticateToken, async (req, res) => {
             WHERE id_usuario = ?
         `;
         
-        const [clienteRows] = await db.execute(clienteQuery, [userId]);
+        const [clienteRows] = await pool.execute(clienteQuery, [userId]);
         
         if (clienteRows.length === 0) {
             return res.status(404).json({
@@ -73,7 +73,7 @@ router.post('/puntos/actualizar', authenticateToken, async (req, res) => {
             WHERE id_cliente = ?
         `;
         
-        await db.execute(updateQuery, [nuevosPuntos, cliente.id_cliente]);
+        await pool.execute(updateQuery, [nuevosPuntos, cliente.id_cliente]);
         
         res.json({
             success: true,

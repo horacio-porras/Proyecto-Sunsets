@@ -15,6 +15,7 @@ function loadNavbar(currentPage = null) {
         .then(html => {
             navbarContainer.innerHTML = html;
             initializeNavbar();
+            initializeForgotPasswordModal();
             if (currentPage) {
                 highlightCurrentPage(currentPage);
             }
@@ -174,7 +175,7 @@ function configureRoleSpecificMenus() {
                 <a href="/cliente/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-user mr-2 text-gray-700"></i>Mi Perfil
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                <a href="/cliente/mis-pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-shopping-bag mr-2 text-gray-700"></i>Mis Pedidos
                 </a>
             `;
@@ -182,7 +183,7 @@ function configureRoleSpecificMenus() {
                 <a href="/cliente/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-user mr-2"></i>Mi Perfil
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                <a href="/cliente/mis-pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
                 </a>
             `;
@@ -549,13 +550,11 @@ async function handleRegister() {
         const data = await response.json();
 
         if (data.success) {
-            //Guarda el token en localStorage
             localStorage.setItem('authToken', data.data.token);
             localStorage.setItem('userData', JSON.stringify(data.data.user));
             
             showRegisterMessage('¡Cuenta creada exitosamente! Redirigiendo...', false);
             
-            //Cierra el modal y actualiza el navbar
             setTimeout(() => {
                 closeRegisterModal();
                 updateAuthState();
@@ -663,8 +662,6 @@ function getCurrentUser() {
     return null;
 }
 
-//Función para logout - usar la definida en auth.js
-
 //Funciones para manejar modales de login y registro
 function openLoginModal() {
     const modal = document.getElementById('loginModal');
@@ -679,17 +676,48 @@ function openLoginModal() {
 function closeLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
-        modal.classList.add('hidden');
-        setNavbarIconGradient(false);
-        enableChatAndCartButtons();
+        const modalContent = modal.querySelector('.modal-content');
         
-        const form = document.getElementById('loginForm');
-        if (form) form.reset();
-        
-        const errorDiv = document.getElementById('loginErrorMessage');
-        const successDiv = document.getElementById('loginSuccessMessage');
-        if (errorDiv) errorDiv.classList.add('hidden');
-        if (successDiv) successDiv.classList.add('hidden');
+        if (modalContent) {
+            modal.style.transition = 'opacity 0.3s ease-out';
+            modalContent.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                setNavbarIconGradient(false);
+                enableChatAndCartButtons();
+                
+                const form = document.getElementById('loginForm');
+                if (form) form.reset();
+                
+                const errorDiv = document.getElementById('loginErrorMessage');
+                const successDiv = document.getElementById('loginSuccessMessage');
+                if (errorDiv) errorDiv.classList.add('hidden');
+                if (successDiv) successDiv.classList.add('hidden');
+                
+                modal.style.transition = '';
+                modal.style.opacity = '';
+                modalContent.style.transition = '';
+                modalContent.style.transform = '';
+                modalContent.style.opacity = '';
+            }, 300);
+        } else {
+            modal.classList.add('hidden');
+            setNavbarIconGradient(false);
+            enableChatAndCartButtons();
+            
+            const form = document.getElementById('loginForm');
+            if (form) form.reset();
+            
+            const errorDiv = document.getElementById('loginErrorMessage');
+            const successDiv = document.getElementById('loginSuccessMessage');
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (successDiv) successDiv.classList.add('hidden');
+        }
     }
 }
 
@@ -698,7 +726,7 @@ function openRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
         modal.classList.remove('hidden');
-        setNavbarIconGradient(true); // Activar gradiente del icono
+        setNavbarIconGradient(true);
         disableChatAndCartButtons();
         console.log('Register modal opened');
     } else {
@@ -710,17 +738,48 @@ function openRegisterModal() {
 function closeRegisterModal() {
     const modal = document.getElementById('registerModal');
     if (modal) {
-        modal.classList.add('hidden');
-        setNavbarIconGradient(false);
-        enableChatAndCartButtons();
+        const modalContent = modal.querySelector('.modal-content');
         
-        const form = document.getElementById('registerForm');
-        if (form) form.reset();
-        
-        const errorDiv = document.getElementById('registerErrorMessage');
-        const successDiv = document.getElementById('registerSuccessMessage');
-        if (errorDiv) errorDiv.classList.add('hidden');
-        if (successDiv) successDiv.classList.add('hidden');
+        if (modalContent) {
+            modal.style.transition = 'opacity 0.3s ease-out';
+            modalContent.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                setNavbarIconGradient(false);
+                enableChatAndCartButtons();
+                
+                const form = document.getElementById('registerForm');
+                if (form) form.reset();
+                
+                const errorDiv = document.getElementById('registerErrorMessage');
+                const successDiv = document.getElementById('registerSuccessMessage');
+                if (errorDiv) errorDiv.classList.add('hidden');
+                if (successDiv) successDiv.classList.add('hidden');
+                
+                modal.style.transition = '';
+                modal.style.opacity = '';
+                modalContent.style.transition = '';
+                modalContent.style.transform = '';
+                modalContent.style.opacity = '';
+            }, 300);
+        } else {
+            modal.classList.add('hidden');
+            setNavbarIconGradient(false);
+            enableChatAndCartButtons();
+            
+            const form = document.getElementById('registerForm');
+            if (form) form.reset();
+            
+            const errorDiv = document.getElementById('registerErrorMessage');
+            const successDiv = document.getElementById('registerSuccessMessage');
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (successDiv) successDiv.classList.add('hidden');
+        }
     }
 }
 
@@ -830,6 +889,290 @@ window.toggleRegisterPassword = toggleRegisterPassword;
 window.setNavbarIconGradient = setNavbarIconGradient;
 window.disableChatAndCartButtons = disableChatAndCartButtons;
 window.enableChatAndCartButtons = enableChatAndCartButtons;
+
+//Funciones para el modal de olvidé mi contraseña
+function openForgotPasswordModal() {
+    console.log('Abriendo modal de olvidé mi contraseña...');
+    
+    const loginModal = document.getElementById('loginModal');
+    const forgotModal = document.getElementById('forgotPasswordModal');
+    const forgotModalContent = document.getElementById('forgotPasswordModalContent');
+    
+    if (!forgotModal) {
+        console.error('Modal no encontrado');
+        return;
+    }
+    
+    disableChatAndCartButtons();
+    
+    if (loginModal && !loginModal.classList.contains('hidden')) {
+        const loginModalContent = loginModal.querySelector('.modal-content');
+        
+        if (loginModalContent) {
+            loginModalContent.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            loginModalContent.style.transform = 'scale(0.95)';
+            loginModalContent.style.opacity = '0';
+            
+            setTimeout(() => {
+                loginModal.classList.add('hidden');
+                
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) loginForm.reset();
+                
+                const errorDiv = document.getElementById('loginErrorMessage');
+                const successDiv = document.getElementById('loginSuccessMessage');
+                if (errorDiv) errorDiv.classList.add('hidden');
+                if (successDiv) successDiv.classList.add('hidden');
+                
+                loginModalContent.style.transition = '';
+                loginModalContent.style.transform = '';
+                loginModalContent.style.opacity = '';
+                
+                forgotModal.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    forgotModalContent.classList.remove('scale-95', 'opacity-0');
+                    forgotModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+                
+                const form = document.getElementById('forgotPasswordForm');
+                if (form) {
+                    form.reset();
+                }
+            }, 300);
+        } else {
+            closeLoginModal();
+            forgotModal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                forgotModalContent.classList.remove('scale-95', 'opacity-0');
+                forgotModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            
+            const form = document.getElementById('forgotPasswordForm');
+            if (form) {
+                form.reset();
+            }
+        }
+    } else {
+        forgotModal.classList.remove('hidden');
+        
+        setTimeout(() => {
+            forgotModalContent.classList.remove('scale-95', 'opacity-0');
+            forgotModalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        
+        const form = document.getElementById('forgotPasswordForm');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+//Función para cerrar el modal de olvidé mi contraseña
+function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    const modalContent = document.getElementById('forgotPasswordModalContent');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        enableChatAndCartButtons();
+        openLoginModal();
+    }, 300);
+}
+
+//Función para mostrar/ocultar contraseña en el modal de olvidé mi contraseña
+function toggleForgotPasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+//Función para procesar el cambio de contraseña
+async function processForgotPassword(email, newPassword) {
+    try {
+        const btn = document.getElementById('forgotPasswordBtn');
+        const btnText = document.getElementById('forgotPasswordBtnText');
+        const btnSpinner = document.getElementById('forgotPasswordBtnSpinner');
+        
+        btn.disabled = true;
+        btnText.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+        
+        const response = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                newPassword: newPassword
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al cambiar la contraseña');
+        }
+        
+        const modal = document.getElementById('forgotPasswordModal');
+        const modalContent = document.getElementById('forgotPasswordModalContent');
+        
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            enableChatAndCartButtons();
+        }, 300);
+        
+        await Swal.fire({
+            title: '¡Contraseña Cambiada!',
+            html: `
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                        <i class="fas fa-check text-white text-2xl"></i>
+                    </div>
+                    <p class="text-gray-700 text-lg">Tu contraseña ha sido cambiada exitosamente</p>
+                    <p class="text-gray-600 text-sm mt-2">Ya puedes iniciar sesión con tu nueva contraseña</p>
+                </div>
+            `,
+            confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
+            confirmButtonColor: '#10b981',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition'
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        
+        await Swal.fire({
+            title: 'Error',
+            html: `
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                        <i class="fas fa-times text-white text-2xl"></i>
+                    </div>
+                    <p class="text-gray-700 text-lg">Error al cambiar la contraseña</p>
+                    <p class="text-gray-600 text-sm mt-2">${error.message}</p>
+                </div>
+            `,
+            confirmButtonText: '<i class="fas fa-times mr-2"></i>Entendido',
+            confirmButtonColor: '#ef4444',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition'
+            }
+        });
+    } finally {
+        const btn = document.getElementById('forgotPasswordBtn');
+        const btnText = document.getElementById('forgotPasswordBtnText');
+        const btnSpinner = document.getElementById('forgotPasswordBtnSpinner');
+        
+        if (btn && btnText && btnSpinner) {
+            btn.disabled = false;
+            btnText.classList.remove('hidden');
+            btnSpinner.classList.add('hidden');
+        }
+    }
+}
+
+
+//Inicializar el modal de olvidé mi contraseña
+function initializeForgotPasswordModal() {
+    const form = document.getElementById('forgotPasswordForm');
+    const modal = document.getElementById('forgotPasswordModal');
+    
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotPasswordEmail').value.trim();
+            const newPassword = document.getElementById('forgotPasswordNewPassword').value;
+            const confirmPassword = document.getElementById('forgotPasswordConfirmPassword').value;
+            
+            if (!email) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Por favor ingresa tu correo electrónico.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+            
+            if (!newPassword) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Por favor ingresa una nueva contraseña.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Las contraseñas no coinciden.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'La contraseña debe tener al menos 8 caracteres.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+            
+            if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'La contraseña debe incluir al menos una mayúscula y un número.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+            
+            await processForgotPassword(email, newPassword);
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeForgotPasswordModal();
+            }
+        });
+    }
+}
+
+//Funciones globales
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.closeForgotPasswordModal = closeForgotPasswordModal;
+window.toggleForgotPasswordVisibility = toggleForgotPasswordVisibility;
 
 //Carga el navbar automáticamente cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {

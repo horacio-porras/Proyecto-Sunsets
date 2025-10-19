@@ -22,5 +22,8 @@ router.get('/profile', authenticateToken, authController.getProfile);
 //Ruta para actualizar perfil
 router.put('/profile', authenticateToken, profileUpdateValidation, authController.updateProfile);
 
+//Ruta para olvidé mi contraseña (sin autenticación requerida)
+router.post('/forgot-password', authController.forgotPassword);
+
 module.exports = router;
 

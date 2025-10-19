@@ -79,7 +79,7 @@ function renderOrderCart() {
             ${imageHtml}
             <div class="flex-1 min-w-0">
                 <h3 class="font-semibold">${item.name}</h3>
-                <p class="text-sm text-gray-600 max-w-xs truncate" title="${item.description || 'Producto delicioso'}">${item.description || 'Producto delicioso'}</p>
+                <p class="text-sm text-gray-600 max-w-xs truncate" title="${item.description || 'No hay descripción'}">${item.description || 'No hay descripción'}</p>
                 <div class="flex items-center space-x-2 mt-2">
                     ${dietaryBadges}
                 </div>
