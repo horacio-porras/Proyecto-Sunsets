@@ -96,6 +96,7 @@ CREATE TABLE inventario (
     costo_unitario DECIMAL(10,2),
     ultima_actualizacion DATETIME,
     id_responsable INT,
+    area VARCHAR(50),
     FOREIGN KEY (id_responsable) REFERENCES empleado(id_empleado)
 );
 
