@@ -13,6 +13,9 @@ const pedidosRoutes = require('./routes/pedidosRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
 const inventarioRoutes = require('./routes/inventarioRoutes');
 
+//Importa las rutas del chatbot
+const chatbotRoutes = require('./routes/chatbotRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -71,6 +74,7 @@ app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/empleados', empleadoRoutes);
 app.use('/api/inventario', inventarioRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
