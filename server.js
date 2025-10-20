@@ -8,6 +8,9 @@ require('dotenv').config({ path: './config.env' });
 const { testConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 
+//Importa las rutas del chatbot
+const chatbotRoutes = require('./routes/chatbotRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -61,6 +64,7 @@ app.use(express.static('.'));
 
 //Rutas de API
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
