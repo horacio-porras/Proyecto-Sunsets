@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-boxes mr-3"></i>Gestión de Inventario
+                    </h1>
+                    <p class="text-orange-100">Controla y monitorea el inventario por área de trabajo</p>
+                </div>
+                <div class="text-right">
+                    <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                        <div class="text-2xl font-bold" id="totalItems">-</div>
+                        <div class="text-sm text-orange-100">Total de Items</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <label for="areaSelector" class="font-semibold text-gray-700">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Área:
+                    </label>
+                    <select id="areaSelector" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                        <option value="">Seleccionar área...</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Stock Normal</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Stock Medio</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Stock Bajo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Main Inventory List -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold flex items-center">
+                            <i class="fas fa-list mr-2"></i>
+                            Inventario - <span id="currentArea">Selecciona un área</span>
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="inventarioContainer" class="space-y-4">
+                            <div class="text-center text-gray-500 py-12">
+                                <i class="fas fa-boxes text-4xl mb-4"></i>
+                                <p class="text-lg">Selecciona un área para ver el inventario</p>
+                            </div>
+                        </div>
+                        <div id="permisoDenegado" class="hidden mt-4 p-6 bg-red-50 border border-red-200 text-red-700 rounded-lg text-center">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-3"></i>
+                            <p class="font-semibold">Permiso denegado</p>
+                            <p class="text-sm">No tienes permisos para ver el inventario de esta área.</p>
+                        </div>
+                        <div id="loadingContainer" class="hidden text-center py-8">
+                            <i class="fas fa-spinner fa-spin text-2xl text-orange-500 mb-2"></i>
+                            <p class="text-gray-600">Cargando inventario...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-bar mr-2"></i>Estadísticas
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-sm font-medium">Stock Normal</span>
+                            </div>
+                            <span class="font-bold text-green-600" id="normalStock">0</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i>
+                                <span class="text-sm font-medium">Stock Medio</span>
+                            </div>
+                            <span class="font-bold text-yellow-600" id="mediumStock">0</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                                <span class="text-sm font-medium">Stock Bajo</span>
+                            </div>
+                            <span class="font-bold text-red-600" id="lowStock">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-bolt mr-2"></i>Acciones Rápidas
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="refreshInventory()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-sync-alt mr-2"></i>Actualizar
+                        </button>
+                        <button onclick="exportInventory()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-download mr-2"></i>Exportar
+                        </button>
+                        <button onclick="reportProblem()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-flag mr-2"></i>Reportar Problema
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-user mr-2"></i>Información
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-user text-gray-400"></i>
+                            <span class="text-sm user-name">-</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-briefcase text-gray-400"></i>
+                            <span class="text-sm" id="userArea">-</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-shield-alt text-gray-400"></i>
+                            <span class="text-sm user-role">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
+            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentArea = '';
+        let inventoryData = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNavbar('inventario');
+            loadUserProfile();
+            loadAreas();
+        });
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const userData = data.data.user;
+                    document.querySelectorAll('.user-name').forEach(el => {
+                        el.textContent = userData.nombre || 'Empleado';
+                    });
+                    document.querySelectorAll('.user-email').forEach(el => {
+                        el.textContent = userData.correo || '-';
+                    });
+                    document.querySelectorAll('.user-role').forEach(el => {
+                        el.textContent = userData.tipoUsuario || '-';
+                    });
+                    document.getElementById('userArea').textContent = userData.area_trabajo || '-';
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                } else {
+                    console.error('Error al cargar perfil:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar perfil:', error);
+            }
+        }
+
+        // Load available areas
+        async function loadAreas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/inventario/areas', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const areaSelector = document.getElementById('areaSelector');
+                    areaSelector.innerHTML = '<option value="">Seleccionar área...</option>';
+                    
+                    data.data.areas.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area.nombre;
+                        option.textContent = `${area.nombre.charAt(0).toUpperCase() + area.nombre.slice(1)} (${area.total_items} items)`;
+                        option.disabled = !area.accesible;
+                        areaSelector.appendChild(option);
+                    });
+
+                    // Add event listener
+                    areaSelector.addEventListener('change', (e) => {
+                        if (e.target.value) {
+                            loadInventory(e.target.value);
+                        } else {
+                            resetInventoryView();
+                        }
+                    });
+                } else {
+                    console.error('Error al cargar áreas:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar áreas:', error);
+            }
+        }
+
+        // Load inventory for specific area
+        async function loadInventory(area) {
+            currentArea = area;
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            const permisoDenegado = document.getElementById('permisoDenegado');
+            const loadingContainer = document.getElementById('loadingContainer');
+            const currentAreaSpan = document.getElementById('currentArea');
+
+            // Show loading
+            inventarioContainer.classList.add('hidden');
+            permisoDenegado.classList.add('hidden');
+            loadingContainer.classList.remove('hidden');
+            currentAreaSpan.textContent = area.charAt(0).toUpperCase() + area.slice(1);
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/inventario?area=${area}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    inventoryData = data.data.items;
+                    renderInventory(data.data.items);
+                    updateStats(data.data);
+                    updateTotalItems(data.data.total_items);
+                } else if (response.status === 403) {
+                    showPermissionDenied();
+                } else {
+                    showError(data.message || 'Error al cargar inventario');
+                }
+            } catch (error) {
+                console.error('Error al cargar inventario:', error);
+                showError('Error de conexión al cargar inventario');
+            } finally {
+                loadingContainer.classList.add('hidden');
+            }
+        }
+
+        // Render inventory items
+        function renderInventory(items) {
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            
+            if (!items || items.length === 0) {
+                inventarioContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-12">
+                        <i class="fas fa-box-open text-4xl mb-4"></i>
+                        <p class="text-lg">No hay productos en el inventario de esta área</p>
+                    </div>
+                `;
+                inventarioContainer.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            items.forEach(item => {
+                const isLowStock = item.stock_bajo;
+                const isMediumStock = item.stock_medio;
+                const stockClass = isLowStock ? 'bg-red-50 border-red-200' : 
+                                 isMediumStock ? 'bg-yellow-50 border-yellow-200' : 
+                                 'bg-green-50 border-green-200';
+                const textClass = isLowStock ? 'text-red-600' : 
+                                isMediumStock ? 'text-yellow-600' : 
+                                'text-green-600';
+                const iconClass = isLowStock ? 'fa-exclamation-triangle text-red-500' : 
+                                isMediumStock ? 'fa-exclamation-circle text-yellow-500' : 
+                                'fa-check-circle text-green-500';
+                const alertBadge = isLowStock ? '<span class="ml-2 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">Stock Bajo</span>' : 
+                               isMediumStock ? '<span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">Stock Medio</span>' : '';
+
+                html += `
+                    <div class="flex items-center justify-between p-4 border-l-4 rounded-lg ${stockClass} hover:shadow-md transition">
+                        <div class="flex items-center space-x-4">
+                            <i class="fas ${iconClass} text-xl"></i>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${item.nombre_item}</h4>
+                                <p class="text-sm text-gray-600">
+                                    Stock: <span class="${textClass} font-semibold">${item.cantidad_actual} ${item.unidad_medida}</span>
+                                    ${alertBadge}
+                                </p>
+                                <p class="text-xs text-gray-500">Mínimo: ${item.cantidad_minima} ${item.unidad_medida}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500 mb-2">Última actualización:</p>
+                            <p class="text-sm font-medium">${item.ultima_actualizacion}</p>
+                            <button onclick="updateItemQuantity(${item.id}, '${item.nombre_item}', ${item.cantidad_actual})" 
+                                    class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition">
+                                <i class="fas fa-edit mr-1"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            inventarioContainer.innerHTML = html;
+            inventarioContainer.classList.remove('hidden');
+        }
+
+        // Update statistics
+        function updateStats(data) {
+            const normalStock = data.items.filter(item => !item.stock_bajo && !item.stock_medio).length;
+            const mediumStock = data.items.filter(item => item.stock_medio).length;
+            const lowStock = data.items.filter(item => item.stock_bajo).length;
+
+            document.getElementById('normalStock').textContent = normalStock;
+            document.getElementById('mediumStock').textContent = mediumStock;
+            document.getElementById('lowStock').textContent = lowStock;
+        }
+
+        // Update total items
+        function updateTotalItems(total) {
+            document.getElementById('totalItems').textContent = total;
+        }
+
+        // Show permission denied
+        function showPermissionDenied() {
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            const permisoDenegado = document.getElementById('permisoDenegado');
+            
+            inventarioContainer.classList.add('hidden');
+            permisoDenegado.classList.remove('hidden');
+        }
+
+        // Show error
+        function showError(message) {
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            inventarioContainer.innerHTML = `
+                <div class="text-center text-red-600 py-8">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p class="font-semibold">Error</p>
+                    <p class="text-sm">${message}</p>
+                </div>
+            `;
+            inventarioContainer.classList.remove('hidden');
+        }
+
+        // Reset inventory view
+        function resetInventoryView() {
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            const permisoDenegado = document.getElementById('permisoDenegado');
+            const currentAreaSpan = document.getElementById('currentArea');
+            
+            inventarioContainer.innerHTML = `
+                <div class="text-center text-gray-500 py-12">
+                    <i class="fas fa-boxes text-4xl mb-4"></i>
+                    <p class="text-lg">Selecciona un área para ver el inventario</p>
+                </div>
+            `;
+            inventarioContainer.classList.remove('hidden');
+            permisoDenegado.classList.add('hidden');
+            currentAreaSpan.textContent = 'Selecciona un área';
+            
+            // Reset stats
+            document.getElementById('normalStock').textContent = '0';
+            document.getElementById('mediumStock').textContent = '0';
+            document.getElementById('lowStock').textContent = '0';
+            document.getElementById('totalItems').textContent = '-';
+        }
+
+        // Update item quantity
+        async function updateItemQuantity(itemId, itemName, currentQuantity) {
+            const { value: newQuantity } = await Swal.fire({
+                title: `Actualizar ${itemName}`,
+                text: `Cantidad actual: ${currentQuantity}`,
+                input: 'number',
+                inputValue: currentQuantity,
+                inputAttributes: {
+                    min: 0,
+                    step: 0.1
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#ef4444',
+                inputValidator: (value) => {
+                    if (!value || value < 0) {
+                        return 'La cantidad debe ser un número positivo';
+                    }
+                }
+            });
+
+            if (newQuantity !== null && newQuantity !== currentQuantity) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`/api/inventario/${itemId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            nueva_cantidad: parseFloat(newQuantity)
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            title: '¡Actualizado!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981'
+                        });
+                        
+                        // Reload inventory
+                        if (currentArea) {
+                            loadInventory(currentArea);
+                        }
+                    } else {
+                        await Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar cantidad:', error);
+                    await Swal.fire({
+                        title: 'Error',
+                        text: 'Error de conexión al actualizar la cantidad',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            }
+        }
+
+        // Refresh inventory
+        function refreshInventory() {
+            if (currentArea) {
+                loadInventory(currentArea);
+            } else {
+                Swal.fire({
+                    title: 'Información',
+                    text: 'Selecciona un área para actualizar el inventario',
+                    icon: 'info',
+                    confirmButtonColor: '#3b82f6'
+                });
+            }
+        }
+
+        // Export inventory
+        function exportInventory() {
+            if (!currentArea || !inventoryData.length) {
+                Swal.fire({
+                    title: 'Información',
+                    text: 'No hay datos de inventario para exportar',
+                    icon: 'info',
+                    confirmButtonColor: '#3b82f6'
+                });
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = "Item,Cantidad Actual,Cantidad Mínima,Unidad,Estado,Última Actualización\n";
+            inventoryData.forEach(item => {
+                const estado = item.stock_bajo ? 'Stock Bajo' : 
+                             item.stock_medio ? 'Stock Medio' : 'Stock Normal';
+                csvContent += `"${item.nombre_item}",${item.cantidad_actual},${item.cantidad_minima},"${item.unidad_medida}","${estado}","${item.ultima_actualizacion}"\n`;
+            });
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventario_${currentArea}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            Swal.fire({
+                title: '¡Exportado!',
+                text: 'El inventario ha sido exportado exitosamente',
+                icon: 'success',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        // Report problem
+        function reportProblem() {
+            Swal.fire({
+                title: 'Reportar Problema',
+                input: 'textarea',
+                inputPlaceholder: 'Describe el problema encontrado en el inventario...',
+                showCancelButton: true,
+                confirmButtonText: 'Enviar Reporte',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#f97316',
+                cancelButtonColor: '#ef4444',
+                inputValidator: (value) => {
+                    if (!value || value.trim().length < 10) {
+                        return 'Por favor describe el problema con al menos 10 caracteres';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Reporte Enviado!',
+                        text: 'El administrador será notificado del problema reportado',
+                        icon: 'success',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

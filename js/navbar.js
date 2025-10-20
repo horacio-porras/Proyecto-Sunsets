@@ -196,7 +196,7 @@ function configureRoleSpecificMenus() {
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-list mr-2 text-gray-700"></i>Gestionar Pedidos
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                <a href="/empleado/inventario.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-boxes mr-2 text-gray-700"></i>Inventario
                 </a>
             `;
@@ -207,7 +207,7 @@ function configureRoleSpecificMenus() {
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-list mr-2"></i>Gestionar Pedidos
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                <a href="/empleado/inventario.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-boxes mr-2"></i>Inventario
                 </a>
             `;

@@ -65,6 +65,11 @@
                             <i class="fas fa-exclamation-triangle mr-2"></i>
                             Permiso denegado para ver el inventario de esta área.
                         </div>
+                        <div class="mt-6 text-center">
+                            <a href="/empleado/inventario.html" class="text-orange-600 hover:text-orange-700 font-semibold">
+                                <i class="fas fa-external-link-alt mr-2"></i>Ver inventario completo
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -223,25 +228,22 @@
 
             try {
                 const token = localStorage.getItem('authToken');
-                // Simulación de llamada a API (reemplazar por endpoint real)
-                // const response = await fetch(`/api/inventario?area=${area}`, {
-                //     method: 'GET',
-                //     headers: { 'Authorization': `Bearer ${token}` }
-                // });
-                // const data = await response.json();
-
-                // Simulación de datos de inventario
-                const data = mockInventario(area);
+                const response = await fetch(`/api/inventario?area=${area}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
 
                 if (data.success) {
-                    renderInventario(data.items, inventarioContainer);
-                } else if (data.permisoDenegado) {
+                    renderInventario(data.data.items, inventarioContainer);
+                } else if (response.status === 403) {
                     inventarioContainer.innerHTML = '';
                     permisoDenegado.classList.remove('hidden');
                 } else {
                     inventarioContainer.innerHTML = '<div class="text-center text-red-600">Error al cargar inventario.</div>';
                 }
             } catch (error) {
+                console.error('Error al cargar inventario:', error);
                 inventarioContainer.innerHTML = '<div class="text-center text-red-600">Error al cargar inventario.</div>';
             }
         }
@@ -276,34 +278,6 @@
             });
         }
 
-        // Simulación de datos de inventario (reemplazar por llamada real al backend)
-        function mockInventario(area) {
-            // Simular restricción de acceso
-            const user = JSON.parse(localStorage.getItem('userData') || '{}');
-            if (user.tipoUsuario !== 'Empleado') {
-                return { success: false, permisoDenegado: true };
-            }
-            // Simular inventario por área
-            const inventarios = {
-                cocina: [
-                    { nombre_item: 'Mozzarella Fresca', cantidad_actual: 2, cantidad_minima: 5, unidad_medida: 'kg', ultima_actualizacion: '2025-10-13' },
-                    { nombre_item: 'Harina de Trigo', cantidad_actual: 15, cantidad_minima: 10, unidad_medida: 'kg', ultima_actualizacion: '2025-10-13' },
-                    { nombre_item: 'Tomates Frescos', cantidad_actual: 8, cantidad_minima: 5, unidad_medida: 'kg', ultima_actualizacion: '2025-10-13' }
-                ],
-                bebidas: [
-                    { nombre_item: 'Jugo de Naranja', cantidad_actual: 3, cantidad_minima: 5, unidad_medida: 'L', ultima_actualizacion: '2025-10-13' },
-                    { nombre_item: 'Agua Mineral', cantidad_actual: 20, cantidad_minima: 10, unidad_medida: 'botellas', ultima_actualizacion: '2025-10-13' }
-                ],
-                postres: [
-                    { nombre_item: 'Tiramisú', cantidad_actual: 1, cantidad_minima: 2, unidad_medida: 'unidad', ultima_actualizacion: '2025-10-13' },
-                    { nombre_item: 'Helado Vainilla', cantidad_actual: 6, cantidad_minima: 5, unidad_medida: 'unidad', ultima_actualizacion: '2025-10-13' }
-                ],
-                almacen: [
-                    { nombre_item: 'Cajas para pizza', cantidad_actual: 50, cantidad_minima: 30, unidad_medida: 'unidad', ultima_actualizacion: '2025-10-13' }
-                ]
-            };
-            return { success: true, items: inventarios[area] || [] };
-        }
 
         //Función para actualizar estado de pedido
         async function cargarPedidosAsignados() {
