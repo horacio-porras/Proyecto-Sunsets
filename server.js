@@ -10,7 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
-const inventarioRoutes = require('./routes/inventarioRoutes');
+const empleadoRoutes = require('./routes/empleadoRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,16 +68,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
-app.use('/api/inventario', inventarioRoutes);
-
-
-app.use('/api/empleado', empleadoRoutes);
-app.use('/api/producto', productoRoutes);
-
-
-// Rutas protegidas solo para admin
-//app.use('/api/empleados', authMiddleware, isAdmin, empleadoRoutes);
-//app.use('/api/productos', authMiddleware, isAdmin, productoRoutes);
+app.use('/api/empleados', empleadoRoutes);
 
 
 //Ruta de salud del servidor

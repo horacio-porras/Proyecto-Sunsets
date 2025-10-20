@@ -67,7 +67,7 @@ const authorizeRoles = (...roles) => {
             });
         }
 
-        if (!roles.includes(req.user.tipo_usuario)) {
+        if (!roles.includes(req.user.tipoUsuario)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permisos para acceder a este recurso'
@@ -79,13 +79,13 @@ const authorizeRoles = (...roles) => {
 };
 
 //Middleware para verificar si es administrador
-const requireAdmin = authorizeRoles('administrador');
+const requireAdmin = authorizeRoles('Administrador');
 
 //Middleware para verificar si es empleado o administrador
-const requireEmployee = authorizeRoles('empleado', 'administrador');
+const requireEmployee = authorizeRoles('Empleado', 'Administrador');
 
 //Middleware para verificar si es cliente, empleado o administrador
-const requireUser = authorizeRoles('cliente', 'empleado', 'administrador');
+const requireUser = authorizeRoles('Cliente', 'Empleado', 'Administrador');
 
 module.exports = {
     authenticateToken,

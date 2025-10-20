@@ -202,7 +202,7 @@
                             </div>
                         </div>
                        <div class="mt-6 text-center">
-    <a id="btnEmpleados" href="/admin/gestionPersonal.html"
+    <a id="btnEmpleados" href="/admin/gestionar-personal.html"
        class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md transition">
         Gestionar Personal
     </a>
@@ -466,46 +466,80 @@
             loadAdminProfile();
         });
     </script>
-    <script type="module">
-import { obtenerEmpleados } from '/js/services/empleadoService.js';
+    <script>
+        // Cargar empleados desde la API
+        async function cargarEmpleados() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
 
-async function cargarEmpleados() {
-    try {
-        const empleados = await obtenerEmpleados();
-        console.log("Empleados cargados:", empleados);
+                const response = await fetch('/api/empleados', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-        const contenedor = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-4');
-        if (contenedor && empleados.length > 0) {
-            contenedor.innerHTML = empleados.map(e => `
-                <div class="border border-gray-200 rounded-lg p-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user text-orange-600 text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold">${e.nombre}</h4>
-                            <p class="text-sm text-gray-600">${e.puesto || 'Sin puesto'}</p>
-                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                const data = await response.json();
+
+                if (data.success) {
+                    const empleados = data.data.empleados;
+                    console.log("Empleados cargados:", empleados);
+
+                    const contenedor = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-4');
+                    if (contenedor && empleados.length > 0) {
+                        contenedor.innerHTML = empleados.slice(0, 4).map(e => {
+                            const estadoClass = e.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                            const areaText = getAreaText(e.area_trabajo);
+                            
+                            return `
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-orange-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold">${e.nombre}</h4>
+                                            <p class="text-sm text-gray-600">${areaText}</p>
+                                            <span class="text-sm ${estadoClass} px-2 py-1 rounded">${e.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    console.error('Error al cargar empleados:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+            }
         }
 
-    } catch (error) {
-        console.error('Error al cargar empleados:', error);
-    }
-}
+        function getAreaText(area) {
+            const areas = {
+                'cocina': 'Cocina',
+                'bebidas': 'Bebidas',
+                'postres': 'Postres',
+                'almacen': 'Almacén',
+                'todas': 'Todas las áreas'
+            };
+            return areas[area] || area;
+        }
 
-document.addEventListener('DOMContentLoaded', cargarEmpleados);
-</script>
+        document.addEventListener('DOMContentLoaded', cargarEmpleados);
+    </script>
    <script>
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btnEmpleados');
     if(btn){
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = '/admin/gestionarPersonal.html';
+            window.location.href = '/admin/gestionar-personal.html';
         });
     }
 });
