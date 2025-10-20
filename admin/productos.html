@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.disabled {
+            background-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Header -->
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-utensils mr-3"></i>Gestión de Productos
+                        </h1>
+                        <p class="text-gray-300">Administra los productos disponibles en el menú del restaurante</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-2xl font-bold" id="totalProductos">-</div>
+                            <div class="text-sm text-gray-300">Total Productos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <button id="btnNuevoProducto" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <i class="fas fa-plus"></i>Nuevo Producto
+                        </button>
+                        <a href="/admin/inventario.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <i class="fas fa-boxes"></i>Inventario
+                        </a>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" id="buscarProducto" placeholder="Buscar producto..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <select id="filtroCategoria" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                        <select id="filtroEstado" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todos los estados</option>
+                            <option value="disponible">Disponibles</option>
+                            <option value="no_disponible">No Disponibles</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Producto</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Precio</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductos" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Cargando productos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Producto -->
+    <div id="modalProducto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitulo" class="text-xl font-semibold text-gray-800">Nuevo Producto</h3>
+                <button type="button" class="modal-close" id="btnCerrarModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="formProducto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Producto *</label>
+                        <input type="text" id="nombre" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               placeholder="Ej: Pizza Margherita">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Categoría *</label>
+                        <select id="categoria" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Seleccionar categoría...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Precio *</label>
+                        <input type="number" id="precio" required min="0" step="0.01"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
+                        <select id="disponible" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="1">Disponible</option>
+                            <option value="0">No Disponible</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea id="descripcion" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              placeholder="Descripción del producto..."></textarea>
+                </div>
+                
+                <!-- Sección de Imagen -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Imagen del Producto</label>
+                    
+                    <!-- Vista previa de imagen -->
+                    <div id="imagenPreview" class="mb-4 hidden">
+                        <div class="relative inline-block">
+                            <img id="previewImg" src="" alt="Vista previa" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <button type="button" id="btnEliminarImagen" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Placeholder cuando no hay imagen -->
+                    <div id="imagenPlaceholder" class="mb-4">
+                        <div class="w-32 h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-image text-2xl mb-2"></i>
+                                <p class="text-sm">Sin imagen</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Opciones de carga de imagen -->
+                    <div class="space-y-3">
+                        <!-- URL de imagen -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">URL de imagen</label>
+                            <input type="url" id="imagenUrl" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="https://ejemplo.com/imagen.jpg">
+                        </div>
+                        
+                        <!-- Subir archivo -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Subir archivo</label>
+                            <input type="file" id="imagenFile" accept="image/*" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex justify-end mt-6">
+                    <button type="submit" id="btnGuardar"
+                            class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2">
+                        <i class="fas fa-plus" id="btnGuardarIcon"></i>
+                        <span id="btnGuardarText">Agregar</span>
+                        <i id="btnGuardarSpinner" class="fas fa-spinner fa-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+
+    <script>
+        let productos = [];
+        let categorias = [];
+        let productoEditando = null;
+        let imagenActual = null;
+
+        //Carga los datos al inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+            cargarCategorias();
+            cargarProductos();
+            setupEventListeners();
+        });
+
+        //Configura event listeners
+        function setupEventListeners() {
+            const btnNuevoProducto = document.getElementById('btnNuevoProducto');
+            if (btnNuevoProducto) {
+                btnNuevoProducto.addEventListener('click', abrirModalProducto);
+            }
+
+            const btnCerrarModal = document.getElementById('btnCerrarModal');
+            const modalProducto = document.getElementById('modalProducto');
+            const formProducto = document.getElementById('formProducto');
+            
+            if (btnCerrarModal) {
+                btnCerrarModal.addEventListener('click', cerrarModalProducto);
+            }
+            if (modalProducto) {
+                modalProducto.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        cerrarModalProducto();
+                    }
+                });
+            }
+            if (formProducto) {
+                formProducto.addEventListener('submit', handleSubmitProducto);
+            }
+
+            //Filtros
+            const filtroCategoria = document.getElementById('filtroCategoria');
+            const filtroEstado = document.getElementById('filtroEstado');
+            const buscarProducto = document.getElementById('buscarProducto');
+            
+            if (filtroCategoria) {
+                filtroCategoria.addEventListener('change', filtrarProductos);
+            }
+            if (filtroEstado) {
+                filtroEstado.addEventListener('change', filtrarProductos);
+            }
+            if (buscarProducto) {
+                buscarProducto.addEventListener('input', filtrarProductos);
+            }
+
+            //Controles de imagen
+            const btnEliminarImagen = document.getElementById('btnEliminarImagen');
+            const imagenFile = document.getElementById('imagenFile');
+            const imagenUrl = document.getElementById('imagenUrl');
+            
+            if (btnEliminarImagen) {
+                btnEliminarImagen.addEventListener('click', eliminarImagen);
+            }
+            if (imagenFile) {
+                imagenFile.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        mostrarVistaPrevia(e.target.files[0]);
+                    }
+                });
+            }
+            if (imagenUrl) {
+                imagenUrl.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        mostrarVistaPrevia(this.value);
+                    }
+                });
+            }
+        }
+
+        //Carga los productos
+        async function cargarProductos() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/inventario/productos', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    productos = data.data.productos;
+                    console.log('Productos cargados desde API:', productos);
+                    renderizarProductos(productos);
+                    actualizarEstadisticas();
+                } else {
+                    throw new Error(data.message || 'Error al cargar productos');
+                }
+            } catch (error) {
+                console.error('Error al cargar productos:', error);
+                mostrarError('Error al cargar productos: ' + error.message);
+            }
+        }
+
+        //Carga las categorías desde la base de datos
+        async function cargarCategorias() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/inventario/categorias', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    categorias = data.data.categorias;
+                    console.log('Categorías cargadas desde API:', categorias);
+                    llenarSelectCategorias();
+                } else {
+                    throw new Error(data.message || 'Error al cargar categorías');
+                }
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+                mostrarError('Error al cargar categorías: ' + error.message);
+            }
+        }
+
+        //Llena los selects de categorías
+        function llenarSelectCategorias() {
+            const selectCategoria = document.getElementById('categoria');
+            const selectFiltroCategoria = document.getElementById('filtroCategoria');
+
+            if (selectCategoria) {
+                selectCategoria.innerHTML = '<option value="">Seleccionar categoría...</option>';
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id;
+                    option.textContent = categoria.nombre;
+                    selectCategoria.appendChild(option);
+                });
+            }
+
+            if (selectFiltroCategoria) {
+                selectFiltroCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id;
+                    option.textContent = categoria.nombre;
+                    selectFiltroCategoria.appendChild(option);
+                });
+            }
+        }
+
+        //Renderiza los productos
+        function renderizarProductos(productosFiltrados) {
+            const tbody = document.getElementById('tablaProductos');
+            
+            if (productosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-utensils text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg font-medium">No hay productos</p>
+                            <p class="text-gray-500">Comienza agregando un nuevo producto al menú</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = productosFiltrados.map(producto => {
+                const estadoClass = producto.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const estadoText = producto.disponible ? 'Disponible' : 'No Disponible';
+                const categoriaText = getCategoriaText(producto.categoria_id);
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-utensils text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${producto.nombre}</div>
+                                    <div class="text-sm text-gray-500">ID: ${producto.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-tag mr-2 text-gray-400"></i>
+                                <span class="text-sm text-gray-900">${categoriaText}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">₡${parseFloat(producto.precio).toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
+                                ${estadoText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 max-w-xs truncate">${producto.descripcion || 'Sin descripción'}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center items-center space-x-3">
+                                <label class="switch" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
+                                    <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
+                                           onchange="toggleDisponibilidad(${producto.id}, this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                                <button onclick="editarProducto(${producto.id})" 
+                                        class="text-blue-600 hover:text-blue-900 transition p-1 rounded hover:bg-blue-50"
+                                        title="Editar producto">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="eliminarProducto(${producto.id}, '${producto.nombre}')" 
+                                        class="text-red-600 hover:text-red-900 transition p-1 rounded hover:bg-red-50"
+                                        title="Eliminar producto">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        //Abre el modal para nuevo producto
+        function abrirModalProducto() {
+            productoEditando = null;
+            document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
+            document.getElementById('formProducto').reset();
+            
+            eliminarImagen();
+            
+            document.getElementById('btnGuardarText').textContent = 'Agregar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
+            
+            const modal = document.getElementById('modalProducto');
+            modal.classList.add('show');
+        }
+
+        //Edita el producto
+        function editarProducto(id) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) {
+                mostrarError('Producto no encontrado');
+                return;
+            }
+
+            productoEditando = producto;
+            document.getElementById('modalTitulo').textContent = 'Editar Producto';
+            
+            document.getElementById('nombre').value = producto.nombre;
+            document.getElementById('categoria').value = producto.categoria_id;
+            document.getElementById('precio').value = producto.precio;
+            document.getElementById('disponible').value = producto.disponible ? '1' : '0';
+            document.getElementById('descripcion').value = producto.descripcion || '';
+
+            //Debug
+            console.log('Producto encontrado:', producto);
+            console.log('Categoría del producto:', producto.categoria);
+            console.log('Valor del select categoría:', document.getElementById('categoria').value);
+
+            document.getElementById('imagenFile').value = '';
+            document.getElementById('imagenUrl').value = '';
+
+            cargarImagenProducto(id);
+
+            document.getElementById('btnGuardarText').textContent = 'Actualizar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-edit';
+
+            const modal = document.getElementById('modalProducto');
+            modal.classList.add('show');
+        }
+
+        //Cierra el modal producto
+        function cerrarModalProducto() {
+            const modal = document.getElementById('modalProducto');
+            modal.classList.remove('show');
+            document.getElementById('formProducto').reset();
+            productoEditando = null;
+            
+            eliminarImagen();
+            
+            document.getElementById('btnGuardarText').textContent = 'Agregar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
+        }
+
+        //Maneja el envío del formulario de producto
+        async function handleSubmitProducto(e) {
+            e.preventDefault();
+
+            const btnGuardar = document.getElementById('btnGuardar');
+            const btnGuardarText = document.getElementById('btnGuardarText');
+            const btnGuardarSpinner = document.getElementById('btnGuardarSpinner');
+
+            btnGuardar.disabled = true;
+            btnGuardarText.classList.add('hidden');
+            document.getElementById('btnGuardarIcon').classList.add('hidden');
+            btnGuardarSpinner.classList.remove('hidden');
+
+            try {
+                const formData = {
+                    nombre: document.getElementById('nombre').value,
+                    categoria: document.getElementById('categoria').value,
+                    precio: parseFloat(document.getElementById('precio').value),
+                    disponible: document.getElementById('disponible').value === '1',
+                    descripcion: document.getElementById('descripcion').value
+                };
+
+                console.log('Datos del formulario:', formData);
+
+                if (imagenActual) {
+                    formData.imagen = imagenActual;
+                }
+
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                let response;
+                if (productoEditando) {
+                    response = await fetch(`/api/inventario/productos/${productoEditando.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('/api/inventario/productos', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const data = await response.json();
+                console.log('Respuesta del servidor:', data);
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: productoEditando ? 'Producto actualizado correctamente' : 'Producto creado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    cerrarModalProducto();
+                    cargarProductos();
+                } else {
+                    throw new Error(data.message || 'Error al procesar producto');
+                }
+            } catch (error) {
+                console.error('Error al procesar producto:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error al procesar producto'
+                });
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardarText.classList.remove('hidden');
+                document.getElementById('btnGuardarIcon').classList.remove('hidden');
+                btnGuardarSpinner.classList.add('hidden');
+            }
+        }
+
+        //Toggle disponibilidad
+        async function toggleDisponibilidad(id, disponible) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/inventario/productos/${id}/disponibilidad`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ disponible: disponible })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: disponible ? 'Producto activado correctamente' : 'Producto desactivado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    cargarProductos();
+                } else {
+                    throw new Error(data.message || 'Error al cambiar disponibilidad');
+                }
+            } catch (error) {
+                console.error('Error al cambiar disponibilidad:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error al cambiar disponibilidad del producto'
+                });
+                
+                cargarProductos();
+            }
+        }
+
+        //Elimina el producto
+        async function eliminarProducto(id, nombre) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        throw new Error('No hay token de autenticación');
+                    }
+
+                    const response = await fetch(`/api/inventario/productos/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Producto eliminado correctamente',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        cargarProductos();
+                    } else {
+                        throw new Error(data.message || 'Error al eliminar producto');
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar producto:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Error al eliminar producto'
+                    });
+                }
+            }
+        }
+
+        //Filtra los productos
+        function filtrarProductos() {
+            const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
+
+            let productosFiltrados = productos.filter(producto => {
+                const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
+                const coincideEstado = !filtroEstado || 
+                    (filtroEstado === 'disponible' && producto.disponible) ||
+                    (filtroEstado === 'no_disponible' && !producto.disponible);
+                const coincideBusqueda = !buscarProducto || 
+                    producto.nombre.toLowerCase().includes(buscarProducto) ||
+                    (producto.descripcion && producto.descripcion.toLowerCase().includes(buscarProducto));
+
+                return coincideCategoria && coincideEstado && coincideBusqueda;
+            });
+
+            renderizarProductos(productosFiltrados);
+        }
+
+        //Actualiza las estadísticas
+        function actualizarEstadisticas() {
+            document.getElementById('totalProductos').textContent = productos.length;
+        }
+
+        //Funciones auxiliares
+        function getCategoriaText(categoriaId) {
+            const categoria = categorias.find(cat => cat.id == categoriaId);
+            return categoria ? categoria.nombre : 'Categoría no encontrada';
+        }
+
+        function mostrarError(mensaje) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje
+            });
+        }
+
+        //Funciones para manejo de imágenes
+        function mostrarVistaPrevia(imagen) {
+            console.log('=== MOSTRAR VISTA PREVIA ===');
+            console.log('Tipo de imagen:', typeof imagen);
+            console.log('Imagen:', imagen);
+            
+            const preview = document.getElementById('imagenPreview');
+            const placeholder = document.getElementById('imagenPlaceholder');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (typeof imagen === 'string') {
+                console.log('Procesando URL de imagen:', imagen);
+                previewImg.src = imagen;
+                imagenActual = imagen;
+            } else {
+                console.log('Procesando archivo de imagen:', imagen.name);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('Archivo leído exitosamente');
+                    previewImg.src = e.target.result;
+                    imagenActual = e.target.result;
+                };
+                reader.onerror = function(e) {
+                    console.error('Error al leer archivo:', e);
+                };
+                reader.readAsDataURL(imagen);
+            }
+            
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            console.log('Vista previa mostrada');
+        }
+
+        function eliminarImagen() {
+            const preview = document.getElementById('imagenPreview');
+            const placeholder = document.getElementById('imagenPlaceholder');
+            const imagenFile = document.getElementById('imagenFile');
+            const imagenUrl = document.getElementById('imagenUrl');
+            
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            imagenActual = null;
+            
+            imagenFile.value = '';
+            imagenUrl.value = '';
+        }
+
+        function cargarImagenProducto(productoId) {
+            try {
+                const producto = productos.find(p => p.id === productoId);
+                if (producto && producto.imagen_url) {
+                    mostrarVistaPrevia(producto.imagen_url);
+                } else {
+                    eliminarImagen();
+                }
+            } catch (error) {
+                console.error('Error al cargar imagen del producto:', error);
+                eliminarImagen();
+            }
+        }
+    </script>
+</body>
+</html>

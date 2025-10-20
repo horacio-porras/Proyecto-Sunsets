@@ -1,12 +1,11 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-// Función para obtener todos los empleados (solo administradores)
+//Función para obtener todos los empleados (solo administradores)
 const getEmpleados = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Verificar que el usuario sea administrador
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
             FROM usuario u 
@@ -32,7 +31,6 @@ const getEmpleados = async (req, res) => {
             });
         }
 
-        // Obtener todos los empleados
         const empleadosQuery = `
             SELECT 
                 u.id_usuario as id,
@@ -54,7 +52,6 @@ const getEmpleados = async (req, res) => {
 
         const [empleadosRows] = await pool.execute(empleadosQuery);
 
-        // Formatear la respuesta
         const empleados = empleadosRows.map(empleado => ({
             id: empleado.id,
             nombre: empleado.nombre,
@@ -88,13 +85,12 @@ const getEmpleados = async (req, res) => {
     }
 };
 
-// Función para crear un nuevo empleado
+//Función para crear un nuevo empleado
 const crearEmpleado = async (req, res) => {
     try {
         const userId = req.user.id;
         const { nombre, correo, telefono, area_trabajo, tipoUsuario, contrasena } = req.body;
 
-        // Verificar que el usuario sea administrador
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
             FROM usuario u 
@@ -120,7 +116,6 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
-        // Validar datos de entrada
         if (!nombre || !correo || !telefono || !area_trabajo || !tipoUsuario || !contrasena) {
             return res.status(400).json({
                 success: false,
@@ -128,7 +123,6 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
-        // Validar tipo de usuario
         const tiposValidos = ['Empleado', 'Administrador'];
         if (!tiposValidos.includes(tipoUsuario)) {
             return res.status(400).json({
@@ -137,7 +131,6 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
-        // Validar área de trabajo
         const areasValidas = ['cocina', 'bebidas', 'postres', 'almacen', 'todas'];
         if (!areasValidas.includes(area_trabajo)) {
             return res.status(400).json({
@@ -146,7 +139,6 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
-        // Verificar si el correo ya existe
         const correoQuery = `
             SELECT id_usuario FROM usuario WHERE correo = ?
         `;
@@ -160,11 +152,9 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
-        // Hash de la contraseña
         const saltRounds = 12;
         const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
 
-        // Obtener ID del rol
         const [roleResult] = await pool.execute(
             'SELECT id_rol FROM rol WHERE nombre_rol = ?',
             [tipoUsuario]
@@ -179,7 +169,6 @@ const crearEmpleado = async (req, res) => {
 
         const roleId = roleResult[0].id_rol;
 
-        // Crear el empleado
         const insertQuery = `
             INSERT INTO usuario (
                 nombre, 
@@ -202,7 +191,6 @@ const crearEmpleado = async (req, res) => {
 
         const newUserId = result.insertId;
 
-        // Si es empleado, insertar en tabla empleado
         if (tipoUsuario === 'Empleado') {
             await pool.execute(
                 'INSERT INTO empleado (id_usuario, area_trabajo, fecha_contratacion, archivado) VALUES (?, ?, NOW(), FALSE)',
@@ -232,14 +220,13 @@ const crearEmpleado = async (req, res) => {
     }
 };
 
-// Función para actualizar un empleado
+//Función para actualizar un empleado
 const actualizarEmpleado = async (req, res) => {
     try {
         const userId = req.user.id;
         const { empleadoId } = req.params;
         const { nombre, correo, telefono, area_trabajo, tipoUsuario, estado } = req.body;
 
-        // Verificar que el usuario sea administrador
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
             FROM usuario u 
@@ -265,7 +252,6 @@ const actualizarEmpleado = async (req, res) => {
             });
         }
 
-        // Verificar que el empleado existe
         const empleadoQuery = `
             SELECT u.id_usuario, u.nombre, u.correo 
             FROM usuario u 
@@ -284,7 +270,6 @@ const actualizarEmpleado = async (req, res) => {
 
         const empleado = empleadoRows[0];
 
-        // Verificar si el correo ya existe en otro usuario
         if (correo && correo !== empleado.correo) {
             const correoQuery = `
                 SELECT id_usuario FROM usuario WHERE correo = ? AND id_usuario != ?
@@ -300,7 +285,6 @@ const actualizarEmpleado = async (req, res) => {
             }
         }
 
-        // Validar tipo de usuario si se proporciona
         if (tipoUsuario) {
             const tiposValidos = ['Empleado', 'Administrador'];
             if (!tiposValidos.includes(tipoUsuario)) {
@@ -311,7 +295,6 @@ const actualizarEmpleado = async (req, res) => {
             }
         }
 
-        // Validar área de trabajo si se proporciona
         if (area_trabajo) {
             const areasValidas = ['cocina', 'bebidas', 'postres', 'almacen', 'todas'];
             if (!areasValidas.includes(area_trabajo)) {
@@ -322,7 +305,6 @@ const actualizarEmpleado = async (req, res) => {
             }
         }
 
-        // Validar estado si se proporciona
         if (estado) {
             const estadosValidos = ['activo', 'inactivo'];
             if (!estadosValidos.includes(estado)) {
@@ -333,7 +315,6 @@ const actualizarEmpleado = async (req, res) => {
             }
         }
 
-        // Construir query de actualización dinámicamente
         const updateFields = [];
         const updateValues = [];
 
@@ -349,12 +330,7 @@ const actualizarEmpleado = async (req, res) => {
             updateFields.push('telefono = ?');
             updateValues.push(telefono);
         }
-        if (area_trabajo) {
-            updateFields.push('area_trabajo = ?');
-            updateValues.push(area_trabajo);
-        }
         if (tipoUsuario) {
-            // Obtener ID del rol
             const [roleResult] = await pool.execute(
                 'SELECT id_rol FROM rol WHERE nombre_rol = ?',
                 [tipoUsuario]
@@ -369,22 +345,34 @@ const actualizarEmpleado = async (req, res) => {
             updateValues.push(estado === 'activo' ? 1 : 0);
         }
 
-        if (updateFields.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'No hay campos para actualizar'
-            });
+        if (updateFields.length > 0) {
+            updateValues.push(empleadoId);
+            const updateQuery = `
+                UPDATE usuario 
+                SET ${updateFields.join(', ')}
+                WHERE id_usuario = ?
+            `;
+            await pool.execute(updateQuery, updateValues);
         }
 
-        updateValues.push(empleadoId);
+        if (area_trabajo) {
+            const [empleadoCheck] = await pool.execute(
+                'SELECT id_empleado FROM empleado WHERE id_usuario = ?',
+                [empleadoId]
+            );
 
-        const updateQuery = `
-            UPDATE usuario 
-            SET ${updateFields.join(', ')}
-            WHERE id_usuario = ?
-        `;
-
-        await pool.execute(updateQuery, updateValues);
+            if (empleadoCheck.length > 0) {
+                await pool.execute(
+                    'UPDATE empleado SET area_trabajo = ? WHERE id_usuario = ?',
+                    [area_trabajo, empleadoId]
+                );
+            } else {
+                await pool.execute(
+                    'INSERT INTO empleado (id_usuario, area_trabajo, fecha_contratacion, archivado) VALUES (?, ?, NOW(), 0)',
+                    [empleadoId, area_trabajo]
+                );
+            }
+        }
 
         res.json({
             success: true,
@@ -405,13 +393,12 @@ const actualizarEmpleado = async (req, res) => {
     }
 };
 
-// Función para eliminar un empleado (cambiar estado a inactivo)
+//Función para eliminar un empleado (cambiar estado a inactivo)
 const eliminarEmpleado = async (req, res) => {
     try {
         const userId = req.user.id;
         const { empleadoId } = req.params;
 
-        // Verificar que el usuario sea administrador
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
             FROM usuario u 
@@ -437,7 +424,6 @@ const eliminarEmpleado = async (req, res) => {
             });
         }
 
-        // Verificar que el empleado existe
         const empleadoQuery = `
             SELECT u.id_usuario, u.nombre, r.nombre_rol 
             FROM usuario u 
@@ -456,7 +442,6 @@ const eliminarEmpleado = async (req, res) => {
 
         const empleado = empleadoRows[0];
 
-        // No permitir eliminar al propio administrador
         if (parseInt(empleadoId) === parseInt(userId)) {
             return res.status(400).json({
                 success: false,
@@ -464,7 +449,6 @@ const eliminarEmpleado = async (req, res) => {
             });
         }
 
-        // Cambiar estado a inactivo
         const updateQuery = `
             UPDATE usuario 
             SET activo = 0
@@ -491,12 +475,11 @@ const eliminarEmpleado = async (req, res) => {
     }
 };
 
-// Función para obtener estadísticas de empleados
+//Función para obtener estadísticas de empleados
 const getEstadisticasEmpleados = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Verificar que el usuario sea administrador
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
             FROM usuario u 
@@ -522,7 +505,6 @@ const getEstadisticasEmpleados = async (req, res) => {
             });
         }
 
-        // Obtener estadísticas
         const statsQuery = `
             SELECT 
                 COUNT(*) as total_empleados,

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administrador - Sunset's Tarbaca</title>
+    <title>Dashboard - Sunset's Tarbaca</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
@@ -28,34 +29,10 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center">
                     <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">24</h3>
-                        <p class="text-gray-600">Pedidos Hoy</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">₡245,000</h3>
-                        <p class="text-gray-600">Ventas Hoy</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-users text-purple-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">12</h3>
+                        <h3 class="text-lg font-semibold text-gray-900" id="totalEmpleados">-</h3>
                         <p class="text-gray-600">Empleados Activos</p>
                     </div>
                 </div>
@@ -63,12 +40,36 @@
             
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center">
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i class="fas fa-star text-orange-600 text-xl"></i>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-boxes text-green-600 text-xl"></i>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">4.8</h3>
-                        <p class="text-gray-600">Rating Promedio</p>
+                        <h3 class="text-lg font-semibold text-gray-900" id="totalInventario">-</h3>
+                        <p class="text-gray-600">Items en Inventario</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-utensils text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900" id="totalProductos">-</h3>
+                        <p class="text-gray-600">Productos del Menú</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900" id="alertasInventario">-</h3>
+                        <p class="text-gray-600">Alertas de Stock</p>
                     </div>
                 </div>
             </div>
@@ -137,7 +138,7 @@
                             </div>
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="#orders" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
+                            <a href="/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
                         </div>
                     </div>
                 </div>
@@ -201,12 +202,12 @@
                                 </div>
                             </div>
                         </div>
-                       <div class="mt-6 text-center">
-    <a id="btnEmpleados" href="/admin/gestionar-personal.html"
+                        <div class="mt-6 text-center">
+    <a id="btnEmpleados" href="/admin/personal.html"
        class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md transition">
         Gestionar Personal
     </a>
-</div>
+                        </div>
 
                     </div>
                 </div>
@@ -241,7 +242,7 @@
                             </div>
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="#inventory" class="text-orange-600 hover:text-orange-700 font-semibold">Ver inventario completo</a>
+                            <a href="/admin/inventario.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver inventario completo</a>
                         </div>
                     </div>
                 </div>
@@ -254,24 +255,24 @@
                     <h3 class="text-lg font-semibold mb-4">Acciones Rápidas</h3>
                     
                     <div class="space-y-3">
-                        <a href="#products" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <a href="/admin/personal.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-users text-orange-600"></i>
+                            <span>Gestionar Personal</span>
+                        </a>
+                        
+                        <a href="/admin/inventario.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-boxes text-orange-600"></i>
+                            <span>Gestionar Inventario</span>
+                        </a>
+                        
+                        <a href="/admin/productos.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                             <i class="fas fa-utensils text-orange-600"></i>
                             <span>Gestionar Productos</span>
                         </a>
                         
-                        <a href="#promotions" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-tag text-orange-600"></i>
-                            <span>Crear Promociones</span>
-                        </a>
-                        
-                        <a href="#reports" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-chart-bar text-orange-600"></i>
-                            <span>Generar Reportes</span>
-                        </a>
-                        
-                        <a href="#reviews" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-star text-orange-600"></i>
-                            <span>Moderar Opiniones</span>
+                        <a href="/admin/perfil.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-user-shield text-orange-600"></i>
+                            <span>Mi Perfil</span>
                         </a>
                     </div>
                 </div>
@@ -416,13 +417,8 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
-            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
         //Carga los datos del perfil del administrador
@@ -539,11 +535,132 @@
     if(btn){
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = '/admin/gestionar-personal.html';
+            window.location.href = '/admin/personal.html';
         });
     }
 });
 
     </script>
+    <script>
+        //Carga las estadísticas del dashboard
+        async function cargarEstadisticas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                //Carga las estadísticas de empleados
+                const empleadosResponse = await fetch('/api/empleados/estadisticas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (empleadosResponse.ok) {
+                    const empleadosData = await empleadosResponse.json();
+                    if (empleadosData.success) {
+                        document.getElementById('totalEmpleados').textContent = empleadosData.data.total_activos || 0;
+                    }
+                }
+
+                //Carga las estadísticas de inventario
+                const inventarioResponse = await fetch('/api/inventario/estadisticas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (inventarioResponse.ok) {
+                    const inventarioData = await inventarioResponse.json();
+                    if (inventarioData.success) {
+                        document.getElementById('totalInventario').textContent = inventarioData.data.total_items || 0;
+                        document.getElementById('alertasInventario').textContent = inventarioData.data.items_bajo_stock || 0;
+                    }
+                }
+
+                //Carga las estadísticas de productos
+                const productosResponse = await fetch('/api/inventario/productos', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (productosResponse.ok) {
+                    const productosData = await productosResponse.json();
+                    if (productosData.success) {
+                        document.getElementById('totalProductos').textContent = productosData.data.productos.length || 0;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+            }
+        }
+
+        //Carga las alertas de inventario reales
+        async function cargarAlertasInventario() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                const response = await fetch('/api/inventario', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const items = data.data.items;
+                        const alertasContainer = document.querySelector('.space-y-4');
+                        
+                        if (alertasContainer && items.length > 0) {
+                            const alertas = items.filter(item => item.cantidad_actual <= item.cantidad_minima);
+                            
+                            if (alertas.length > 0) {
+                                alertasContainer.innerHTML = alertas.slice(0, 2).map(item => {
+                                    const isCritical = item.cantidad_actual === 0;
+                                    const bgClass = isCritical ? 'bg-red-50 border-red-400' : 'bg-yellow-50 border-yellow-400';
+                                    const textClass = isCritical ? 'text-red-800' : 'text-yellow-800';
+                                    const subtextClass = isCritical ? 'text-red-600' : 'text-yellow-600';
+                                    const iconClass = isCritical ? 'text-red-500' : 'text-yellow-500';
+                                    const buttonClass = isCritical ? 'bg-red-600 hover:bg-red-700' : 'bg-yellow-600 hover:bg-yellow-700';
+                                    const buttonText = isCritical ? 'Urgente' : 'Revisar';
+                                    
+                                    return `
+                                        <div class="flex items-center justify-between p-4 ${bgClass} border-l-4 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fas fa-exclamation-triangle ${iconClass}"></i>
+                                                <div>
+                                                    <h4 class="font-semibold ${textClass}">${item.nombre}</h4>
+                                                    <p class="text-sm ${subtextClass}">Stock: ${item.cantidad_actual} ${item.unidad_medida} (mín: ${item.cantidad_minima})</p>
+                                                </div>
+                                            </div>
+                                            <button class="${buttonClass} text-white px-3 py-1 rounded text-sm">${buttonText}</button>
+                                        </div>
+                                    `;
+                                }).join('');
+                            } else {
+                                alertasContainer.innerHTML = `
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                                        <p>No hay alertas de inventario</p>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar alertas de inventario:', error);
+            }
+        }
+
+        //Inicializa el dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEstadisticas();
+            cargarAlertasInventario();
+        });
+    </script>
 </body>
-</html>
+</html> 

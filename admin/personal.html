@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Personal - Sunset's Tarbaca</title>
+    <title>Personal - Sunset's Tarbaca</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -11,26 +11,105 @@
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
     <!-- Main Content -->
+    <div class="main-content">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-6 mb-8">
+        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold mb-2">
                         <i class="fas fa-users mr-3"></i>Gestión de Personal
                     </h1>
-                    <p class="text-orange-100">Administra el personal del restaurante</p>
+                    <p class="text-gray-300">Administra el personal del restaurante</p>
                 </div>
-                <div class="text-right">
-                    <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="text-center">
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4">
                         <div class="text-2xl font-bold" id="totalEmpleados">-</div>
-                        <div class="text-sm text-orange-100">Total Empleados</div>
+                        <div class="text-sm text-gray-300">Total Empleados</div>
                     </div>
                 </div>
             </div>
@@ -91,14 +170,11 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div class="flex items-center space-x-4">
-                    <button id="btnNuevoEmpleado" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-lg transition flex items-center">
-                <i class="fas fa-user-plus mr-2"></i>Nuevo Empleado
+                    <button id="btnNuevoEmpleado" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i>Nuevo Empleado
             </button>
-                    <button id="btnActualizar" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center">
-                        <i class="fas fa-sync-alt mr-2"></i>Actualizar
-                    </button>
-                </div>
-                
+        </div>
+
                 <div class="flex items-center space-x-4">
                     <div class="relative">
                         <input type="text" id="buscarEmpleado" placeholder="Buscar empleado..." 
@@ -120,21 +196,21 @@
             <table class="min-w-full table-auto">
                 <thead class="bg-gray-800 text-white">
                     <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Empleado</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Contacto</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Rol</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Área</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold">Empleado</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold">Contacto</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold">Rol</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold">Área</th>
                         <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
                         <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tablaEmpleados" class="divide-y divide-gray-200">
-                        <tr>
-                            <td colspan="6" class="text-center py-8 text-gray-500">
-                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                                <p>Cargando empleados...</p>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Cargando empleados...</p>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             </div>
@@ -142,42 +218,42 @@
     </div>
 
     <!-- Modal de empleado -->
-    <div id="modalEmpleado" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
-        <div class="bg-white rounded-lg w-full max-w-2xl p-6 shadow-lg max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h2 id="modalTitulo" class="text-2xl font-semibold text-gray-800">Nuevo Empleado</h2>
-                <button id="btnCerrarModal" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="modalEmpleado" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitulo" class="text-xl font-semibold text-gray-800">Nuevo Empleado</h3>
+                <button type="button" class="modal-close" id="btnCerrarModal">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form id="formEmpleado" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form id="formEmpleado">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
                         <input type="text" id="nombre" required 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                placeholder="Nombre completo del empleado">
                     </div>
                     
-                    <div>
+                <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
                         <input type="email" id="correo" required 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                placeholder="correo@ejemplo.com">
-                    </div>
+                </div>
                     
                 <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
                         <input type="tel" id="telefono" required 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                placeholder="8888-8888">
                 </div>
                     
                 <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Área de Trabajo *</label>
                         <select id="area_trabajo" required 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
                             <option value="">Seleccionar área...</option>
                             <option value="cocina">Cocina</option>
                             <option value="bebidas">Bebidas</option>
@@ -190,90 +266,78 @@
                 <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuario *</label>
                         <select id="tipoUsuario" required 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
                             <option value="">Seleccionar tipo...</option>
                             <option value="Empleado">Empleado</option>
                             <option value="Administrador">Administrador</option>
                         </select>
                 </div>
                     
-                <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                        <input type="password" id="contrasena" required 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                <div id="contrasenaField">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="contrasenaLabel">Contraseña *</span>
+                        </label>
+                        <input type="password" id="contrasena" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                placeholder="Contraseña temporal">
+                        <p id="contrasenaHelp" class="text-xs text-gray-500 mt-1 hidden">
+                            Deja vacío para mantener la contraseña actual
+                        </p>
                     </div>
                 </div>
                 
-                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                    <button type="button" id="btnCancelar" 
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg transition">
-                        Cancelar
-                    </button>
-                    <button type="submit" id="btnGuardar" 
-                            class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-lg transition">
-                        <span id="btnGuardarText">Guardar</span>
-                        <i id="btnGuardarSpinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
+                <!-- Form Actions -->
+                <div class="flex justify-end mt-6">
+                    <button type="submit" id="btnGuardar"
+                            class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2">
+                        <i class="fas fa-plus" id="btnGuardarIcon"></i>
+                        <span id="btnGuardarText">Agregar</span>
+                        <i id="btnGuardarSpinner" class="fas fa-spinner fa-spin hidden"></i>
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
-            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
-        // Variables globales
+        //Variables globales
         let empleados = [];
         let empleadoEditando = null;
 
-        // Inicialización
+        //Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            loadNavbar('gestionar-personal');
+            loadNavbar('personal');
             cargarEmpleados();
             cargarEstadisticas();
             setupEventListeners();
         });
 
-        // Configurar event listeners
+        //Configura event listeners
         function setupEventListeners() {
-            // Botón nuevo empleado
             document.getElementById('btnNuevoEmpleado').addEventListener('click', () => {
                 abrirModalEmpleado();
             });
 
-            // Botón actualizar
-            document.getElementById('btnActualizar').addEventListener('click', () => {
-                cargarEmpleados();
-                cargarEstadisticas();
-            });
 
-            // Modal
             document.getElementById('btnCerrarModal').addEventListener('click', cerrarModal);
-            document.getElementById('btnCancelar').addEventListener('click', cerrarModal);
 
-            // Formulario
             document.getElementById('formEmpleado').addEventListener('submit', handleSubmitEmpleado);
 
-            // Filtros
             document.getElementById('buscarEmpleado').addEventListener('input', filtrarEmpleados);
             document.getElementById('filtroEstado').addEventListener('change', filtrarEmpleados);
 
-            // Cerrar modal al hacer clic fuera
             document.getElementById('modalEmpleado').addEventListener('click', (e) => {
-                if (e.target.id === 'modalEmpleado') {
+                if (e.target.classList.contains('modal')) {
                     cerrarModal();
                 }
             });
         }
 
-        // Cargar empleados desde la API
+        //Carga los empleados desde la API
         async function cargarEmpleados() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -291,32 +355,32 @@
 
                 const data = await response.json();
 
-        if (data.success) {
-            empleados = data.data.empleados;
-            renderizarEmpleados(empleados);
-        } else {
-            throw new Error(data.message || 'Error al cargar empleados');
-        }
-    } catch (error) {
-        console.error('Error al cargar empleados:', error);
-        let errorMessage = 'Error al cargar empleados';
-        
-        if (error.message.includes('No tienes permisos')) {
-            errorMessage = 'No tienes permisos para ver la información de empleados. Solo los administradores pueden acceder a esta sección.';
-        } else if (error.message.includes('Token')) {
-            errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
-        } else if (error.message.includes('servidor')) {
-            errorMessage = 'Error del servidor. Por favor, verifica que la base de datos esté configurada correctamente.';
-        } else {
-            errorMessage = 'Error al cargar empleados: ' + error.message;
-        }
-        
-        mostrarError(errorMessage);
-        renderizarEmpleados([]);
-        }
+                if (data.success) {
+                    empleados = data.data.empleados;
+                    renderizarEmpleados(empleados);
+                } else {
+                    throw new Error(data.message || 'Error al cargar empleados');
+                }
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+                let errorMessage = 'Error al cargar empleados';
+                
+                if (error.message.includes('No tienes permisos')) {
+                    errorMessage = 'No tienes permisos para ver la información de empleados. Solo los administradores pueden acceder a esta sección.';
+                } else if (error.message.includes('Token')) {
+                    errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+                } else if (error.message.includes('servidor')) {
+                    errorMessage = 'Error del servidor. Por favor, verifica que la base de datos esté configurada correctamente.';
+                } else {
+                    errorMessage = 'Error al cargar empleados: ' + error.message;
+                }
+                
+                mostrarError(errorMessage);
+                renderizarEmpleados([]);
+            }
         }
 
-        // Cargar estadísticas
+        //Carga estadísticas
         async function cargarEstadisticas() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -346,7 +410,6 @@
                 }
             } catch (error) {
                 console.error('Error al cargar estadísticas:', error);
-                // No mostrar error para estadísticas, solo usar datos por defecto
                 document.getElementById('totalEmpleados').textContent = '-';
                 document.getElementById('empleadosActivos').textContent = '-';
                 document.getElementById('empleadosInactivos').textContent = '-';
@@ -355,7 +418,7 @@
             }
         }
 
-        // Renderizar empleados en la tabla
+        //Renderiza empleados en la tabla
         function renderizarEmpleados(empleadosParaMostrar) {
             const tbody = document.getElementById('tablaEmpleados');
             
@@ -385,8 +448,8 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                    <i class="fas fa-user text-orange-600"></i>
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-white"></i>
                                 </div>
                                 <div>
                                     <div class="font-semibold text-gray-900">${empleado.nombre}</div>
@@ -399,7 +462,7 @@
                             <div class="text-sm text-gray-500">${empleado.telefono}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${rolClass}">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${rolClass}">
                                 ${empleado.tipoUsuario}
                             </span>
                         </td>
@@ -410,20 +473,18 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${estadoClass}">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
                                 ${empleado.estado === 'activo' ? 'Activo' : 'Inactivo'}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex justify-center space-x-2">
+                            <div class="flex items-center justify-center space-x-2">
                                 <button onclick="editarEmpleado(${empleado.id})" 
-                                        class="text-blue-600 hover:text-blue-800 transition" 
-                                        title="Editar empleado">
+                                        class="text-blue-600 hover:text-blue-800 transition">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="eliminarEmpleado(${empleado.id}, '${empleado.nombre}')" 
-                                        class="text-red-600 hover:text-red-800 transition" 
-                                        title="Eliminar empleado">
+                                        class="text-red-600 hover:text-red-800 transition">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -433,35 +494,45 @@
             }).join('');
         }
 
-        // Filtrar empleados
+        //Filtra empleados
         function filtrarEmpleados() {
             const busqueda = document.getElementById('buscarEmpleado').value.toLowerCase();
             const filtroEstado = document.getElementById('filtroEstado').value;
 
             let empleadosFiltrados = empleados.filter(empleado => {
-                const coincideBusqueda = !busqueda || 
-                    empleado.nombre.toLowerCase().includes(busqueda) ||
-                    empleado.correo.toLowerCase().includes(busqueda) ||
-                    empleado.telefono.includes(busqueda);
-
+                const coincideBusqueda = empleado.nombre.toLowerCase().includes(busqueda) ||
+                                       empleado.correo.toLowerCase().includes(busqueda);
                 const coincideEstado = !filtroEstado || empleado.estado === filtroEstado;
-
+                
                 return coincideBusqueda && coincideEstado;
             });
 
             renderizarEmpleados(empleadosFiltrados);
         }
 
-        // Abrir modal para nuevo empleado
+        //Abre el modal para nuevo empleado
         function abrirModalEmpleado() {
             empleadoEditando = null;
             document.getElementById('modalTitulo').textContent = 'Nuevo Empleado';
             document.getElementById('formEmpleado').reset();
-            document.getElementById('modalEmpleado').classList.remove('hidden');
-            document.getElementById('modalEmpleado').classList.add('flex');
+            
+            const contrasenaField = document.getElementById('contrasena');
+            const contrasenaLabel = document.getElementById('contrasenaLabel');
+            const contrasenaHelp = document.getElementById('contrasenaHelp');
+            
+            contrasenaField.required = true;
+            contrasenaLabel.textContent = 'Contraseña *';
+            contrasenaHelp.classList.add('hidden');
+            contrasenaField.placeholder = 'Contraseña temporal';
+            
+            document.getElementById('btnGuardarText').textContent = 'Agregar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
+            
+            const modal = document.getElementById('modalEmpleado');
+            modal.classList.add('show');
         }
 
-        // Editar empleado
+        //Edita empleado
         function editarEmpleado(id) {
             const empleado = empleados.find(e => e.id === id);
             if (!empleado) {
@@ -472,29 +543,44 @@
             empleadoEditando = empleado;
             document.getElementById('modalTitulo').textContent = 'Editar Empleado';
             
-            // Llenar formulario
+            const contrasenaField = document.getElementById('contrasena');
+            const contrasenaLabel = document.getElementById('contrasenaLabel');
+            const contrasenaHelp = document.getElementById('contrasenaHelp');
+            
+            contrasenaField.required = false;
+            contrasenaLabel.textContent = 'Nueva Contraseña (opcional)';
+            contrasenaHelp.classList.remove('hidden');
+            contrasenaField.placeholder = 'Contraseña temporal';
+            contrasenaField.value = '';
+            
             document.getElementById('nombre').value = empleado.nombre;
             document.getElementById('correo').value = empleado.correo;
             document.getElementById('telefono').value = empleado.telefono;
             document.getElementById('area_trabajo').value = empleado.area_trabajo;
             document.getElementById('tipoUsuario').value = empleado.tipoUsuario;
             document.getElementById('contrasena').value = '';
-            document.getElementById('contrasena').required = false; // No requerir contraseña para edición
+            document.getElementById('contrasena').required = false;
 
-            document.getElementById('modalEmpleado').classList.remove('hidden');
-            document.getElementById('modalEmpleado').classList.add('flex');
+            document.getElementById('btnGuardarText').textContent = 'Actualizar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-edit';
+
+            const modal = document.getElementById('modalEmpleado');
+            modal.classList.add('show');
         }
 
-        // Cerrar modal
+        //Cierra el modal
         function cerrarModal() {
-            document.getElementById('modalEmpleado').classList.add('hidden');
-            document.getElementById('modalEmpleado').classList.remove('flex');
+            const modal = document.getElementById('modalEmpleado');
+            modal.classList.remove('show');
             empleadoEditando = null;
             document.getElementById('formEmpleado').reset();
-            document.getElementById('contrasena').required = true; // Restaurar requerimiento de contraseña
+            document.getElementById('contrasena').required = true;
+            
+            document.getElementById('btnGuardarText').textContent = 'Agregar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
         }
 
-        // Manejar envío del formulario
+        //Maneja el envío del formulario
         async function handleSubmitEmpleado(e) {
             e.preventDefault();
 
@@ -502,9 +588,9 @@
             const btnGuardarText = document.getElementById('btnGuardarText');
             const btnGuardarSpinner = document.getElementById('btnGuardarSpinner');
 
-            // Deshabilitar botón y mostrar spinner
             btnGuardar.disabled = true;
             btnGuardarText.classList.add('hidden');
+            document.getElementById('btnGuardarIcon').classList.add('hidden');
             btnGuardarSpinner.classList.remove('hidden');
 
             try {
@@ -513,9 +599,13 @@
                     correo: document.getElementById('correo').value,
                     telefono: document.getElementById('telefono').value,
                     area_trabajo: document.getElementById('area_trabajo').value,
-                    tipoUsuario: document.getElementById('tipoUsuario').value,
-                    contrasena: document.getElementById('contrasena').value
+                    tipoUsuario: document.getElementById('tipoUsuario').value
                 };
+
+                const contrasena = document.getElementById('contrasena').value;
+                if (!empleadoEditando || contrasena.trim() !== '') {
+                    formData.contrasena = contrasena;
+                }
 
                 const token = localStorage.getItem('authToken');
                 if (!token) {
@@ -524,7 +614,6 @@
 
                 let response;
                 if (empleadoEditando) {
-                    // Actualizar empleado existente
                     response = await fetch(`/api/empleados/${empleadoEditando.id}`, {
                         method: 'PUT',
                         headers: {
@@ -534,7 +623,6 @@
                         body: JSON.stringify(formData)
                     });
                 } else {
-                    // Crear nuevo empleado
                     response = await fetch('/api/empleados', {
                         method: 'POST',
                         headers: {
@@ -570,14 +658,14 @@
                     text: error.message || 'Error al procesar empleado'
                 });
             } finally {
-                // Restaurar botón
                 btnGuardar.disabled = false;
                 btnGuardarText.classList.remove('hidden');
+                document.getElementById('btnGuardarIcon').classList.remove('hidden');
                 btnGuardarSpinner.classList.add('hidden');
             }
         }
 
-        // Eliminar empleado
+        //Elimina empleado
         async function eliminarEmpleado(id, nombre) {
             const result = await Swal.fire({
                 title: '¿Estás seguro?',
@@ -616,8 +704,7 @@
                             showConfirmButton: false
                         });
 
-                        cargarEmpleados();
-                        cargarEstadisticas();
+                        window.location.reload();
                     } else {
                         throw new Error(data.message || 'Error al eliminar empleado');
                     }
@@ -632,7 +719,7 @@
             }
         }
 
-        // Funciones auxiliares
+        //Funciones auxiliares
         function getAreaIcon(area) {
             const icons = {
                 'cocina': 'fas fa-utensils text-orange-500',

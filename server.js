@@ -11,6 +11,7 @@ const menuRoutes = require('./routes/menuRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
+const inventarioRoutes = require('./routes/inventarioRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,7 +70,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/empleados', empleadoRoutes);
-
+app.use('/api/inventario', inventarioRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

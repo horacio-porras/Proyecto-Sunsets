@@ -215,13 +215,16 @@ function configureRoleSpecificMenus() {
         case 'Administrador':
             roleMenuItems = `
                 <a href="/admin/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-user-shield mr-2 text-gray-700"></i>Privacidad
+                    <i class="fas fa-user-shield mr-2 text-gray-700"></i>Mi Perfil
                 </a>
-                <a href="/admin/gestionar-personal.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-users mr-2 text-gray-700"></i>Gestionar Personal
+                <a href="/admin/personal.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-users mr-2 text-gray-700"></i>Personal
                 </a>
                 <a href="/admin/inventario.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-boxes mr-2 text-gray-700"></i>Inventario
+                </a>
+                <a href="/admin/productos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-utensils mr-2 text-gray-700"></i>Productos
                 </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
@@ -232,13 +235,16 @@ function configureRoleSpecificMenus() {
             `;
             mobileRoleMenuItems = `
                 <a href="/admin/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                    <i class="fas fa-user-shield mr-2"></i>Mi Perfil
                 </a>
-                <a href="/admin/gestionar-personal.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-users mr-2"></i>Gestionar Personal
+                <a href="/admin/personal.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-users mr-2"></i>Personal
                 </a>
                 <a href="/admin/inventario.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-boxes mr-2"></i>Inventario
+                </a>
+                <a href="/admin/productos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-utensils mr-2"></i>Productos
                 </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes
