@@ -96,6 +96,7 @@ CREATE TABLE inventario (
     costo_unitario DECIMAL(10,2),
     ultima_actualizacion DATETIME,
     id_responsable INT,
+    area VARCHAR(50),
     FOREIGN KEY (id_responsable) REFERENCES empleado(id_empleado)
 );
 
@@ -104,18 +105,21 @@ CREATE TABLE movimiento_inventario (
     id_movimiento INT PRIMARY KEY AUTO_INCREMENT,
     id_inventario INT,
     id_responsable INT,
+    tipo_responsable ENUM('empleado', 'administrador') DEFAULT 'empleado',
     tipo_movimiento VARCHAR(50),
     cantidad INT,
     motivo TEXT,
     fecha_movimiento DATETIME,
-    FOREIGN KEY (id_inventario) REFERENCES inventario(id_inventario),
-    FOREIGN KEY (id_responsable) REFERENCES empleado(id_empleado)
+    FOREIGN KEY (id_inventario) REFERENCES inventario(id_inventario)
 );
 
 -- Tabla PEDIDO
 CREATE TABLE pedido (
     id_pedido INT PRIMARY KEY AUTO_INCREMENT,
     id_cliente INT,
+    cliente_invitado_nombre VARCHAR(100),
+    cliente_invitado_telefono VARCHAR(20),
+    cliente_invitado_email VARCHAR(100),
     id_direccion INT,
     id_empleado_asignado INT,
     subtotal DECIMAL(10,2),
@@ -293,17 +297,15 @@ CREATE TABLE configuracion_sistema (
 );
 
 
-
 -- Inserts de roles
 INSERT INTO rol (nombre_rol) VALUES 
 ('Administrador'), 
 ('Empleado'), 
 ('Cliente');
 
-
 -- Creación de usuario admin (tabla usuario)
 INSERT INTO usuario (nombre, correo, telefono, contrasena, id_rol, fecha_registro, activo)
-VALUES ('Christian Armando Jiménez Cerdas', 'admin@sunsets.com', '61319543', 'hashed_password_aqui', 1, NOW(), TRUE);
+VALUES ('Christian Armando Jiménez Cerdas', 'admin@sunsets.com', '61319543', '$2a$12$XN4rbpnZXEwwLDZ2tb0mquhdVcV37ziLilZWBUU2ImwqEKbDKPdtS', 1, NOW(), TRUE);
 
 -- Creación de perfil de admin (tabla administrador)
 INSERT INTO administrador (id_usuario, permisos_especiales)
@@ -311,6 +313,41 @@ VALUES (
  (SELECT id_usuario FROM usuario WHERE correo = 'admin@sunsets.com'), 
  'TODOS'
 );
+
+-- Creación de categorias
+INSERT INTO categoria (nombre_categoria, descripcion, activa) VALUES
+('Pizzas', 'Masa Crunch o Masa Artesanal', 1);
+
+-- Creación de productos existentes (tabla productos)
+INSERT INTO producto (
+    id_categoria,
+    nombre,
+    descripcion,
+    ingredientes,
+    precio,
+    imagen_url,
+    vegetariano,
+    vegano,
+    sin_gluten,
+    disponible,
+    tiempo_preparacion
+) VALUES
+-- PIZZAS
+(1, 'Bacon & tomate', 'Tocino ahumado, tomate, cebolla y orégano', NULL, 6400.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Barbacoa picante', 'Pollo crispy, salsa BBQ, cebolla morada, chile dulce, hongos, chile jalapeño', NULL, 6900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Camarones con Perejil y Ajo', NULL, NULL, 6300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Camarones, piña y perejil', NULL, NULL, 6300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Capresse de queso de bufala', 'Queso de bufala fresco, pesto, tomate cherry y albahaca', NULL, 6500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Chicharrón y Tomate', NULL, NULL, 5800.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Hawaiana', NULL, NULL, 5500.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Jamón y Queso', NULL, NULL, 5300.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Margarita', 'Tomate cherry, queso mozarella, queso parmesano y albahaca', NULL, 5500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Pepperoni', NULL, NULL, 5500.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Pollo crispy picante', 'Pollo Crispy, Jalapeño y Cebolla Morada, hongos', NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Pollos crispy, hongos, cebolla morada, chile dulce', NULL, NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Suprema', 'Peperoni, Jamón, Hongos, Cebolla y Chile dulce', NULL, 5900.00, NULL, 0, 0, 0, 1, NULL),
+(1, 'Tres Quesos', 'Gorgonzola, Mozarella y Parmesano', NULL, 6500.00, NULL, 1, 0, 0, 1, NULL),
+(1, 'Vegetariana', 'Hongos Aceitunas, chile dulce, cebolla morada y Tomate', NULL, 5400.00, NULL, 1, 0, 0, 1, NULL);
 
 
 -- Verificar usuario administrador
@@ -323,5 +360,3 @@ SELECT u.id_usuario, u.nombre, u.correo, a.permisos_especiales
 FROM usuario u
 JOIN administrador a ON u.id_usuario = a.id_usuario
 WHERE u.correo = 'admin@sunsets.com';
-
-

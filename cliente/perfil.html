@@ -7,160 +7,475 @@
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <style>
+        .section-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .section-btn:hover {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+        
+        .section-btn:hover i {
+            color: #ffffff;
+        }
+        
+        .section-btn.active {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .section-btn.active i {
+            color: #ffffff;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        
+        .profile-section {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-section .section-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-section .section-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+        }
+        
+        #addresses-section .section-content {
+            flex: 1;
+            min-height: 0;
+        }
+        
+        #addresses-section.has-addresses .section-content {
+            overflow-y: auto;
+            max-height: 600px;
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 flex flex-col min-h-screen">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
     <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8 flex-1">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">
-                <i class="fas fa-user-circle mr-3 text-orange-500"></i>
                 Mi Perfil
             </h1>
-            <p class="text-gray-600">Gestiona tu información personal, preferencias y seguridad</p>
+            <p class="text-gray-600">Gestiona tu información personal, preferencias, direcciones y seguridad</p>
         </div>
 
-        <!-- Profile Form -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <!-- Success/Error Messages -->
-            <div id="successMessage" class="hidden mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <span id="successText"></span>
+                    <!-- Profile Layout -->
+                    <div class="flex flex-col lg:flex-row gap-8 w-full">
+            <!-- Sidebar Navigation -->
+            <div class="lg:w-1/4">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <nav class="space-y-2">
+                        <button onclick="showSection('personal')" 
+                                class="section-btn w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex items-center"
+                                data-section="personal">
+                            <i class="fas fa-user mr-3 text-orange-500"></i>
+                            <span>Información Personal</span>
+                        </button>
+                        <button onclick="showSection('addresses')" 
+                                class="section-btn w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex items-center"
+                                data-section="addresses">
+                            <i class="fas fa-map-marker-alt mr-3 text-orange-500"></i>
+                            <span>Direcciones</span>
+                        </button>
+                        <button onclick="showSection('security')" 
+                                class="section-btn w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex items-center"
+                                data-section="security">
+                            <i class="fas fa-lock mr-3 text-orange-500"></i>
+                            <span>Seguridad</span>
+                        </button>
+                    </nav>
                 </div>
             </div>
 
-            <div id="errorMessage" class="hidden mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <span id="errorText"></span>
-                </div>
-            </div>
+            <!-- Main Content -->
+            <div class="lg:w-3/4 w-full">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <!-- Success/Error Messages -->
+                    <div id="successMessage" class="hidden mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span id="successText"></span>
+                        </div>
+                    </div>
 
-            <form id="profileForm" class="space-y-6">
+                    <div id="errorMessage" class="hidden mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span id="errorText"></span>
+                        </div>
+                    </div>
+
+                    <form id="profileForm">
                 <!-- Personal Information Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
-                        <i class="fas fa-user mr-2 text-orange-500"></i>
-                        Información Personal
-                    </h2>
+                <div id="personal-section" class="profile-section">
+                    <div class="section-content">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-user mr-2 text-orange-500"></i>
+                            Información Personal
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Nombre -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Nombre Completo *
+                                </label>
+                                <input type="text" id="nombre" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Tu nombre completo">
+                            </div>
+
+                            <!-- Correo -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Correo Electrónico *
+                                </label>
+                                <input type="email" id="correo" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="tu@email.com">
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Número de Teléfono *
+                                </label>
+                                <input type="tel" id="telefono" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="+506 8888-8888">
+                            </div>
+
+                            <!-- Notificaciones Activas -->
+                            <div class="flex items-center space-x-3 md:col-span-2">
+                                <input type="checkbox" id="notificacionesActivas"
+                                       class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500">
+                                <label for="notificacionesActivas" class="text-sm font-medium text-gray-700">
+                                    Recibir notificaciones por correo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Nombre -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Nombre Completo *
-                            </label>
-                            <input type="text" id="nombre" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                   placeholder="Tu nombre completo">
+                    <!-- Action Button for Personal Info -->
+                    <div class="section-footer">
+                        <button type="submit" id="savePersonalBtn"
+                                class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <span id="savePersonalBtnText">
+                                <i class="fas fa-user-edit"></i>
+                                Actualizar Perfil
+                            </span>
+                            <span id="savePersonalBtnSpinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Actualizando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Address Section -->
+                <div id="addresses-section" class="profile-section hidden">
+                    <div class="section-content">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-map-marker-alt mr-2 text-orange-500"></i>
+                            Direcciones
+                        </h2>
+                        
+                        <!-- Add Address Button -->
+                        <div class="mb-6">
+                            <button type="button" id="addAddressBtn" 
+                                    class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                                <i class="fas fa-plus"></i>
+                                Nueva Dirección
+                            </button>
                         </div>
-
-                        <!-- Correo -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Correo Electrónico *
-                            </label>
-                            <input type="email" id="correo" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                   placeholder="tu@email.com">
+                        
+                        <!-- Address List -->
+                        <div id="addressList" class="space-y-4 flex-1 min-h-0">
+                            <!-- Addresses will be loaded here -->
                         </div>
+                        
+                    </div>
+                </div>
 
-                        <!-- Teléfono -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Número de Teléfono *
-                            </label>
-                            <input type="tel" id="telefono" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                   placeholder="+506 8888-8888">
+                <!-- Add Address Modal -->
+                <div id="addressModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">Nueva Dirección</h3>
+                            <button type="button" class="modal-close" onclick="closeAddressModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-
-
-                        <!-- Notificaciones Activas -->
-                        <div class="flex items-center space-x-3 md:col-span-2">
-                            <input type="checkbox" id="notificacionesActivas"
-                                   class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500">
-                            <label for="notificacionesActivas" class="text-sm font-medium text-gray-700">
-                                Recibir notificaciones por correo
-                            </label>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Dirección Completa -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Dirección Completa *
+                                </label>
+                                <textarea id="direccionCompleta" required rows="3"
+                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                         placeholder="Ej: 200 metros norte del parque central, casa/portón X"></textarea>
+                            </div>
+                            
+                            <!-- Provincia -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Provincia *
+                                </label>
+                                <select id="provincia" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                    <option value="">Selecciona una provincia</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Cantón -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Cantón *
+                                </label>
+                                <select id="canton" required disabled
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-100">
+                                    <option value="">Primero selecciona una provincia</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Distrito -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Distrito *
+                                </label>
+                                <select id="distrito" required disabled
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-100">
+                                    <option value="">Primero selecciona un cantón</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Referencia -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Referencia (opcional)
+                                </label>
+                                <input type="text" id="referencia"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Ej: Casa verde, portón azul">
+                            </div>
+                            
+                            <!-- Dirección Principal -->
+                            <div class="md:col-span-2">
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="direccionPrincipal"
+                                           class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500">
+                                    <label for="direccionPrincipal" class="text-sm font-medium text-gray-700">
+                                        Marcar como dirección principal
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="flex justify-end mt-6">
+                            <button type="button" id="saveAddressBtn"
+                                    class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2">
+                                <i class="fas fa-plus" id="saveAddressIcon"></i>
+                                <span id="saveAddressText">Agregar</span>
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Security Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
-                        <i class="fas fa-lock mr-2 text-orange-500"></i>
-                        Seguridad
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <!-- Current Password -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Contraseña Actual (requerida para cambios)
-                            </label>
-                            <input type="password" id="contrasenaActual"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                   placeholder="Ingresa tu contraseña actual">
-                        </div>
-
-                        <!-- New Password -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="security-section" class="profile-section hidden">
+                    <div class="section-content">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-lock mr-2 text-orange-500"></i>
+                            Seguridad
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- Current Password -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Nueva Contraseña
+                                    Contraseña Actual (requerida para cambios)
                                 </label>
-                                <input type="password" id="nuevaContrasena"
+                                <input type="password" id="contrasenaActual"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                       placeholder="Nueva contraseña">
+                                       placeholder="Ingresa tu contraseña actual">
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Confirmar Nueva Contraseña
-                                </label>
-                                <input type="password" id="confirmarNuevaContrasena"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                       placeholder="Confirma tu nueva contraseña">
+                            <!-- New Password -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Nueva Contraseña
+                                    </label>
+                                    <input type="password" id="nuevaContrasena"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                           placeholder="Nueva contraseña">
+                                    <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, incluir mayúsculas y números</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Confirmar Nueva Contraseña
+                                    </label>
+                                    <input type="password" id="confirmarNuevaContrasena"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                           placeholder="Confirma tu nueva contraseña">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="pt-6">
-                    <button type="submit" id="saveBtn"
-                            class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-md transition duration-300 flex items-center justify-center">
-                        <span id="saveBtnText">
-                            <i class="fas fa-save mr-2"></i>
-                            Guardar Cambios
-                        </span>
-                        <span id="saveBtnSpinner" class="hidden">
-                            <i class="fas fa-spinner fa-spin mr-2"></i>
-                            Guardando...
-                        </span>
-                    </button>
+                    
+                    <!-- Action Button for Security -->
+                    <div class="section-footer">
+                        <button type="submit" id="saveSecurityBtn"
+                                class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <span id="saveSecurityBtnText">
+                                <i class="fas fa-shield-alt"></i>
+                                Cambiar Contraseña
+                            </span>
+                            <span id="saveSecurityBtnSpinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Cambiando...
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
+
 
     <script>
         //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             loadUserData();
             
-            //Maneja el envío del formulario
             document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
+            
+            document.getElementById('savePersonalBtn').addEventListener('click', handleProfileUpdate);
+            document.getElementById('saveSecurityBtn').addEventListener('click', handleProfileUpdate);
+            
+            initializeSectionNavigation();
+            setupChangeDetection();
         });
+
+        //Configura la detección de cambios en tiempo real
+        function setupChangeDetection() {
+            const personalFields = ['nombre', 'correo', 'telefono', 'notificacionesActivas'];
+            personalFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateButtonAppearance);
+                    field.addEventListener('change', updateButtonAppearance);
+                }
+            });
+            
+            const securityFields = ['contrasenaActual', 'nuevaContrasena', 'confirmarNuevaContrasena'];
+            securityFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateButtonAppearance);
+                    field.addEventListener('change', updateButtonAppearance);
+                }
+            });
+            
+            updateButtonAppearance();
+        }
 
         //Carga los datos del perfil del usuario en el formulario desde la base de datos
         async function loadUserData() {
@@ -191,7 +506,6 @@
                     
                     document.getElementById('notificacionesActivas').checked = userData.notificaciones_activas || false;
                     
-                    //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     showMessage(data.message || 'Error al cargar datos del perfil', true);
@@ -202,13 +516,113 @@
             }
         }
 
+        //Verifica si hay cambios en los campos del formulario
+        function checkForChanges(currentSection) {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (!userData) return false;
+            
+            if (currentSection && currentSection.id === 'personal-section') {
+                const nombre = document.getElementById('nombre').value;
+                const correo = document.getElementById('correo').value;
+                const telefono = document.getElementById('telefono').value;
+                const notificacionesActivas = document.getElementById('notificacionesActivas').checked;
+                
+                const hasChanges = 
+                    nombre !== userData.nombre ||
+                    correo !== userData.correo ||
+                    telefono !== userData.telefono ||
+                    notificacionesActivas !== (userData.notificaciones_activas === 1);
+                
+                return hasChanges;
+                
+            } else if (currentSection && currentSection.id === 'security-section') {
+                const contrasenaActual = document.getElementById('contrasenaActual').value;
+                const nuevaContrasena = document.getElementById('nuevaContrasena').value;
+                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value;
+                
+                const hasChanges = 
+                    contrasenaActual !== '' ||
+                    nuevaContrasena !== '' ||
+                    confirmarNuevaContrasena !== '';
+                
+                return hasChanges;
+            }
+            
+            return false;
+        }
+
+        //Actualiza la apariencia del botón según si hay cambios
+        function updateButtonAppearance() {
+            const currentSection = document.querySelector('.profile-section:not(.hidden)');
+            if (!currentSection) return;
+            
+            const hasChanges = checkForChanges(currentSection);
+            
+            if (currentSection.id === 'personal-section') {
+                const saveBtn = document.getElementById('savePersonalBtn');
+                if (hasChanges) {
+                    saveBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    saveBtn.classList.add('opacity-100', 'cursor-pointer');
+                } else {
+                    saveBtn.classList.remove('opacity-100', 'cursor-pointer');
+                    saveBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                }
+            } else if (currentSection.id === 'security-section') {
+                const saveBtn = document.getElementById('saveSecurityBtn');
+                if (hasChanges) {
+                    saveBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    saveBtn.classList.add('opacity-100', 'cursor-pointer');
+                } else {
+                    saveBtn.classList.remove('opacity-100', 'cursor-pointer');
+                    saveBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                }
+            }
+        }
+
         //Actualiza el perfil del usuario
         async function handleProfileUpdate(e) {
             e.preventDefault();
             
-            const saveBtn = document.getElementById('saveBtn');
-            const saveBtnText = document.getElementById('saveBtnText');
-            const saveBtnSpinner = document.getElementById('saveBtnSpinner');
+            const currentSection = document.querySelector('.profile-section:not(.hidden)');
+            let saveBtn, saveBtnText, saveBtnSpinner;
+            
+            if (currentSection && currentSection.id === 'personal-section') {
+                saveBtn = document.getElementById('savePersonalBtn');
+                saveBtnText = document.getElementById('savePersonalBtnText');
+                saveBtnSpinner = document.getElementById('savePersonalBtnSpinner');
+            } else if (currentSection && currentSection.id === 'security-section') {
+                saveBtn = document.getElementById('saveSecurityBtn');
+                saveBtnText = document.getElementById('saveSecurityBtnText');
+                saveBtnSpinner = document.getElementById('saveSecurityBtnSpinner');
+            }
+            
+            if (!saveBtn) return;
+            
+            const hasChanges = checkForChanges(currentSection);
+            if (!hasChanges) {
+                await Swal.fire({
+                    title: 'Sin cambios',
+                    html: `
+                        <div class="text-center py-4">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center">
+                                <i class="fas fa-info-circle text-white text-2xl"></i>
+                            </div>
+                            <p class="text-gray-700 text-lg">No se han detectado cambios para guardar</p>
+                            <p class="text-sm text-gray-500 mt-2">Modifica algún campo antes de intentar guardar</p>
+                        </div>
+                    `,
+                    confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-2xl shadow-2xl border-0',
+                        title: 'text-gray-800 font-bold text-xl',
+                        htmlContainer: 'text-center',
+                        confirmButton: 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                    },
+                    backdrop: 'rgba(0, 0, 0, 0.6)'
+                });
+                return;
+            }
             
             saveBtn.disabled = true;
             saveBtnText.classList.add('hidden');
@@ -237,7 +651,6 @@
                     formData.nuevaContrasena = nuevaContrasena;
                 }
 
-                //Hace la llamada a la API
                 const token = localStorage.getItem('authToken');
                 const response = await fetch('/api/auth/profile', {
                     method: 'PUT',
@@ -251,13 +664,34 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage('Perfil actualizado exitosamente', false);
+                    const isPersonalUpdate = currentSection && currentSection.id === 'personal-section';
+                    const isSecurityUpdate = currentSection && currentSection.id === 'security-section';
+                    
+                    await Swal.fire({
+                        title: isPersonalUpdate ? '¡Perfil Actualizado!' : '¡Contraseña Cambiada!',
+                        html: `
+                            <div class="text-center py-4">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                                    <i class="${isPersonalUpdate ? 'fas fa-user-edit' : 'fas fa-shield-alt'} text-white text-2xl"></i>
+                                </div>
+                                <p class="text-gray-700 text-lg">${isPersonalUpdate ? 'Tu información personal ha sido actualizada exitosamente' : 'Tu contraseña ha sido cambiada exitosamente'}</p>
+                            </div>
+                        `,
+                        confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl border-0',
+                            title: 'text-gray-800 font-bold text-xl',
+                            htmlContainer: 'text-center',
+                            confirmButton: 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                        },
+                        backdrop: 'rgba(0, 0, 0, 0.6)'
+                    });
                     
                     //Actualiza el localStorage con los nuevos datos
                     const updatedUserData = { ...JSON.parse(localStorage.getItem('userData')), ...data.data.user };
                     localStorage.setItem('userData', JSON.stringify(updatedUserData));
                     
-                    //Limpia los campos de contraseña
                     document.getElementById('contrasenaActual').value = '';
                     document.getElementById('nuevaContrasena').value = '';
                     document.getElementById('confirmarNuevaContrasena').value = '';
@@ -267,15 +701,57 @@
                         window.AuthUtils.displayUserInfo();
                     }
                 } else {
-                    showMessage(data.message || 'Error al actualizar el perfil', true);
+                    await Swal.fire({
+                        title: 'Error',
+                        html: `
+                            <div class="text-center py-4">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                                    <i class="fas fa-times text-white text-2xl"></i>
+                                </div>
+                                <p class="text-gray-700 text-lg">${data.message || 'Error al actualizar el perfil'}</p>
+                            </div>
+                        `,
+                        confirmButtonText: '<i class="fas fa-times mr-2"></i>Entendido',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl border-0',
+                            title: 'text-gray-800 font-bold text-xl',
+                            htmlContainer: 'text-center',
+                            confirmButton: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                        },
+                        backdrop: 'rgba(0, 0, 0, 0.6)'
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage(error.message || 'Error al actualizar el perfil', true);
+                
+                await Swal.fire({
+                    title: 'Error de conexión',
+                    html: `
+                        <div class="text-center py-4">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                                <i class="fas fa-wifi text-white text-2xl"></i>
+                            </div>
+                            <p class="text-gray-700 text-lg">${error.message || 'Error al actualizar el perfil'}</p>
+                            <p class="text-sm text-gray-500 mt-2">Intenta de nuevo</p>
+                        </div>
+                    `,
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i>Entendido',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-2xl shadow-2xl border-0',
+                        title: 'text-gray-800 font-bold text-xl',
+                        htmlContainer: 'text-center',
+                        confirmButton: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                    },
+                    backdrop: 'rgba(0, 0, 0, 0.6)'
+                });
             } finally {
-                saveBtn.disabled = false;
-                saveBtnText.classList.remove('hidden');
-                saveBtnSpinner.classList.add('hidden');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtnText.classList.remove('hidden');
+                    saveBtnSpinner.classList.add('hidden');
+                }
             }
         }
 
@@ -296,6 +772,1629 @@
         function hideMessages() {
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('successMessage').classList.add('hidden');
+        }
+
+        // ========== ADDRESS MANAGEMENT FUNCTIONS ==========
+        
+        //Variables para almacenar datos geográficos, almacenar las direcciones cargadas y rastrear qué dirección se está editando
+        let provincias = [];
+        let cantones = [];
+        let distritos = [];
+        let addresses = [];
+        let editingAddressId = null;
+        
+        //Carga datos de Costa Rica desde GeoNames API
+        async function loadCostaRicaData() {
+            try {
+                console.log('Cargando datos geográficos de Costa Rica...');
+                
+                console.log('Usando datos de fallback para evitar problemas de CORS...');
+                loadFallbackData();
+                return;
+                
+            } catch (error) {
+                console.error('Error al cargar datos geográficos:', error);
+                loadFallbackData();
+            }
+        }
+        
+        //Datos de fallback para Costa Rica
+        function loadFallbackData() {
+            console.log('Cargando datos de fallback...');
+            provincias = [
+                { name: 'San José', geonameId: 3621849 },
+                { name: 'Alajuela', geonameId: 3624951 },
+                { name: 'Cartago', geonameId: 3624368 },
+                { name: 'Heredia', geonameId: 3623484 },
+                { name: 'Guanacaste', geonameId: 3623580 },
+                { name: 'Puntarenas', geonameId: 3622190 },
+                { name: 'Limón', geonameId: 3623076 }
+            ];
+            console.log('Provincias de fallback cargadas:', provincias.length);
+            console.log('Provincias:', provincias.map(p => p.name));
+            populateProvincias();
+        }
+        
+        //Llena el dropdown de provincias
+        function populateProvincias() {
+            console.log('Llenando dropdown de provincias...');
+            const provinciaSelect = document.getElementById('provincia');
+            
+            if (!provinciaSelect) {
+                console.error('No se encontró el elemento #provincia');
+                return;
+            }
+            
+            console.log('Elemento provincia encontrado:', provinciaSelect);
+            provinciaSelect.innerHTML = '<option value="">Selecciona una provincia</option>';
+            
+            console.log('Agregando', provincias.length, 'provincias al dropdown...');
+            provincias.forEach((provincia, index) => {
+                const option = document.createElement('option');
+                option.value = provincia.geonameId;
+                option.textContent = provincia.name;
+                provinciaSelect.appendChild(option);
+                console.log(`  ${index + 1}. ${provincia.name} (${provincia.geonameId})`);
+            });
+            
+            console.log('Dropdown de provincias llenado exitosamente');
+        }
+        
+        //Carga los cantones cuando se selecciona una provincia
+        async function loadCantones(provinciaId) {
+            console.log('Cargando cantones para provincia ID:', provinciaId);
+            console.log('Tipo de provinciaId:', typeof provinciaId);
+            
+            const cantonSelect = document.getElementById('canton');
+            const distritoSelect = document.getElementById('distrito');
+            
+            if (!cantonSelect) {
+                console.error('No se encontró el elemento #canton');
+                return;
+            }
+            
+            console.log('Estado inicial del dropdown cantón:', {
+                disabled: cantonSelect.disabled,
+                className: cantonSelect.className,
+                innerHTML: cantonSelect.innerHTML
+            });
+            
+            cantonSelect.innerHTML = '<option value="">Cargando cantones...</option>';
+            cantonSelect.disabled = true;
+            distritoSelect.innerHTML = '<option value="">Primero selecciona un cantón</option>';
+            distritoSelect.disabled = true;
+            
+            console.log('Usando datos de fallback para cantones...');
+            cantones = getFallbackCantones(provinciaId);
+            console.log('Cantones de fallback cargados:', cantones.length);
+            console.log('Cantones:', cantones.map(c => c.name));
+            
+            if (cantones.length === 0) {
+                console.warn('No se encontraron cantones para la provincia:', provinciaId);
+                cantonSelect.innerHTML = '<option value="">No hay cantones disponibles</option>';
+                cantonSelect.disabled = true;
+                return;
+            }
+            
+            populateCantones();
+        }
+        
+        //Llena el dropdown de cantones
+        function populateCantones() {
+            console.log('Llenando dropdown de cantones...');
+            console.log('Cantones disponibles:', cantones);
+            console.log('Cantidad de cantones:', cantones.length);
+            
+            const cantonSelect = document.getElementById('canton');
+            
+            if (!cantonSelect) {
+                console.error('No se encontró el elemento #canton en populateCantones');
+                return;
+            }
+            
+            console.log('Elemento canton encontrado:', cantonSelect);
+            console.log('Estado inicial del dropdown:', {
+                disabled: cantonSelect.disabled,
+                className: cantonSelect.className,
+                style: cantonSelect.style.cssText
+            });
+            
+            cantonSelect.innerHTML = '<option value="">Selecciona un cantón</option>';
+            cantonSelect.disabled = false;
+            
+            cantonSelect.classList.remove('bg-gray-100');
+            cantonSelect.style.backgroundColor = '';
+            
+            cantonSelect.style.display = 'none';
+            cantonSelect.offsetHeight;
+            cantonSelect.style.display = '';
+            
+            console.log('Estado después de habilitar:', {
+                disabled: cantonSelect.disabled,
+                className: cantonSelect.className,
+                style: cantonSelect.style.cssText
+            });
+            
+            console.log('Agregando', cantones.length, 'cantones al dropdown...');
+            cantones.forEach((canton, index) => {
+                const option = document.createElement('option');
+                option.value = canton.geonameId;
+                option.textContent = canton.name;
+                cantonSelect.appendChild(option);
+                console.log(`  ${index + 1}. ${canton.name} (${canton.geonameId})`);
+            });
+            
+            console.log('Dropdown de cantones llenado exitosamente');
+            console.log('Estado final del dropdown:', {
+                disabled: cantonSelect.disabled,
+                options: cantonSelect.options.length,
+                value: cantonSelect.value
+            });
+        }
+        
+        //Carga los distritos cuando se selecciona un cantón
+        async function loadDistritos(cantonId) {
+            console.log('Cargando distritos para cantón ID:', cantonId);
+            
+            const distritoSelect = document.getElementById('distrito');
+            
+            if (!distritoSelect) {
+                console.error('No se encontró el elemento #distrito');
+                return;
+            }
+            
+            distritoSelect.innerHTML = '<option value="">Cargando distritos...</option>';
+            distritoSelect.disabled = true;
+            
+            console.log('Usando datos de fallback para distritos...');
+            distritos = getFallbackDistritos(cantonId);
+            console.log('Distritos de fallback cargados:', distritos.length);
+            console.log('Distritos:', distritos.map(d => d.name));
+            populateDistritos();
+        }
+        
+        //Llena el dropdown de distritos
+        function populateDistritos() {
+            console.log('Llenando dropdown de distritos...');
+            console.log('Distritos disponibles:', distritos);
+            console.log('Cantidad de distritos:', distritos.length);
+            
+            const distritoSelect = document.getElementById('distrito');
+            
+            if (!distritoSelect) {
+                console.error('No se encontró el elemento #distrito en populateDistritos');
+                return;
+            }
+            
+            console.log('Elemento distrito encontrado:', distritoSelect);
+            console.log('Estado inicial del dropdown distrito:', {
+                disabled: distritoSelect.disabled,
+                className: distritoSelect.className,
+                style: distritoSelect.style.cssText
+            });
+            
+            distritoSelect.innerHTML = '<option value="">Selecciona un distrito</option>';
+            distritoSelect.disabled = false;
+            
+            distritoSelect.classList.remove('bg-gray-100');
+            distritoSelect.style.backgroundColor = '';
+            
+            distritoSelect.style.display = 'none';
+            distritoSelect.offsetHeight;
+            distritoSelect.style.display = '';
+            
+            console.log('Estado después de habilitar distrito:', {
+                disabled: distritoSelect.disabled,
+                className: distritoSelect.className,
+                style: distritoSelect.style.cssText
+            });
+            
+            console.log('Agregando', distritos.length, 'distritos al dropdown...');
+            distritos.forEach((distrito, index) => {
+                const option = document.createElement('option');
+                option.value = distrito.geonameId;
+                option.textContent = distrito.name;
+                distritoSelect.appendChild(option);
+                console.log(`  ${index + 1}. ${distrito.name} (${distrito.geonameId})`);
+            });
+            
+            console.log('Dropdown de distritos llenado exitosamente');
+            console.log('Estado final del dropdown distrito:', {
+                disabled: distritoSelect.disabled,
+                options: distritoSelect.options.length,
+                value: distritoSelect.value
+            });
+        }
+        
+        //Datos de fallback para cantones
+        function getFallbackCantones(provinciaId) {
+            const fallbackCantones = {
+                '3621849': [ //San José
+                    { name: 'San José', geonameId: '3621849' },
+                    { name: 'Escazú', geonameId: '3621848' },
+                    { name: 'Desamparados', geonameId: '3621847' },
+                    { name: 'Puriscal', geonameId: '3621846' },
+                    { name: 'Tarrazú', geonameId: '3621845' },
+                    { name: 'Aserrí', geonameId: '3621844' },
+                    { name: 'Mora', geonameId: '3621843' },
+                    { name: 'Goicoechea', geonameId: '3621842' },
+                    { name: 'Santa Ana', geonameId: '3621841' },
+                    { name: 'Alajuelita', geonameId: '3621840' },
+                    { name: 'Vázquez de Coronado', geonameId: '3621839' },
+                    { name: 'Acosta', geonameId: '3621838' },
+                    { name: 'Tibás', geonameId: '3621837' },
+                    { name: 'Moravia', geonameId: '3621836' },
+                    { name: 'Montes de Oca', geonameId: '3621835' },
+                    { name: 'Turrubares', geonameId: '3621834' },
+                    { name: 'Dota', geonameId: '3621833' },
+                    { name: 'Curridabat', geonameId: '3621832' },
+                    { name: 'Pérez Zeledón', geonameId: '3621831' },
+                    { name: 'León Cortés Castro', geonameId: '3621830' }
+                ],
+                '3624951': [ //Alajuela
+                    { name: 'Alajuela', geonameId: '3624951' },
+                    { name: 'San Ramón', geonameId: '3624952' },
+                    { name: 'Grecia', geonameId: '3624953' },
+                    { name: 'San Mateo', geonameId: '3624954' },
+                    { name: 'Atenas', geonameId: '3624955' },
+                    { name: 'Naranjo', geonameId: '3624956' },
+                    { name: 'Palmares', geonameId: '3624957' },
+                    { name: 'Poás', geonameId: '3624958' },
+                    { name: 'Orotina', geonameId: '3624959' },
+                    { name: 'San Carlos', geonameId: '3624960' },
+                    { name: 'Zarcero', geonameId: '3624961' },
+                    { name: 'Valverde Vega', geonameId: '3624962' },
+                    { name: 'Upala', geonameId: '3624963' },
+                    { name: 'Los Chiles', geonameId: '3624964' },
+                    { name: 'Guatuso', geonameId: '3624965' }
+                ],
+                '3624368': [ //Cartago
+                    { name: 'Cartago', geonameId: '3624368' },
+                    { name: 'Paraíso', geonameId: '3624367' },
+                    { name: 'La Unión', geonameId: '3624366' },
+                    { name: 'Jiménez', geonameId: '3624365' },
+                    { name: 'Turrialba', geonameId: '3624364' },
+                    { name: 'Alvarado', geonameId: '3624363' },
+                    { name: 'Oreamuno', geonameId: '3624362' },
+                    { name: 'El Guarco', geonameId: '3624361' }
+                ],
+                '3623484': [ //Heredia
+                    { name: 'Heredia', geonameId: '3623484' },
+                    { name: 'Barva', geonameId: '3623483' },
+                    { name: 'Santo Domingo', geonameId: '3623482' },
+                    { name: 'Santa Bárbara', geonameId: '3623481' },
+                    { name: 'San Rafael', geonameId: '3623480' },
+                    { name: 'San Isidro', geonameId: '3623479' },
+                    { name: 'Belén', geonameId: '3623478' },
+                    { name: 'Flores', geonameId: '3623477' },
+                    { name: 'San Pablo', geonameId: '3623476' },
+                    { name: 'Sarapiquí', geonameId: '3623475' }
+                ],
+                '3623580': [ //Guanacaste
+                    { name: 'Liberia', geonameId: '3623580' },
+                    { name: 'Nicoya', geonameId: '3623579' },
+                    { name: 'Santa Cruz', geonameId: '3623578' },
+                    { name: 'Bagaces', geonameId: '3623577' },
+                    { name: 'Carrillo', geonameId: '3623576' },
+                    { name: 'Cañas', geonameId: '3623575' },
+                    { name: 'Abangares', geonameId: '3623574' },
+                    { name: 'Tilarán', geonameId: '3623573' },
+                    { name: 'Nandayure', geonameId: '3623572' },
+                    { name: 'La Cruz', geonameId: '3623571' },
+                    { name: 'Hojancha', geonameId: '3623570' }
+                ],
+                '3622190': [ //Puntarenas
+                    { name: 'Puntarenas', geonameId: '3622190' },
+                    { name: 'Esparza', geonameId: '3622189' },
+                    { name: 'Buenos Aires', geonameId: '3622188' },
+                    { name: 'Montes de Oro', geonameId: '3622187' },
+                    { name: 'Osa', geonameId: '3622186' },
+                    { name: 'Quepos', geonameId: '3622185' },
+                    { name: 'Golfito', geonameId: '3622184' },
+                    { name: 'Coto Brus', geonameId: '3622183' },
+                    { name: 'Parrita', geonameId: '3622182' },
+                    { name: 'Corredores', geonameId: '3622181' },
+                    { name: 'Garabito', geonameId: '3622180' },
+                    { name: 'Monteverde', geonameId: '3622179' },
+                    { name: 'Puerto Jiménez', geonameId: '3622178' }
+                ],
+                '3623076': [ //Limón
+                    { name: 'Limón', geonameId: '3623076' },
+                    { name: 'Pococí', geonameId: '3623075' },
+                    { name: 'Siquirres', geonameId: '3623074' },
+                    { name: 'Talamanca', geonameId: '3623073' },
+                    { name: 'Matina', geonameId: '3623072' },
+                    { name: 'Guácimo', geonameId: '3623071' }
+                ]
+            };
+            return fallbackCantones[provinciaId] || [];
+        }
+        
+        //Datos de fallback para distritos
+        function getFallbackDistritos(cantonId) {
+            console.log('Buscando distritos para cantón ID:', cantonId);
+            console.log('Tipo de cantonId:', typeof cantonId);
+            
+            const fallbackDistritos = {
+                '3621849': [ //San José (Cantón)
+                    { name: 'Carmen', geonameId: '3621849' },
+                    { name: 'Merced', geonameId: '3621850' },
+                    { name: 'Hospital', geonameId: '3621851' },
+                    { name: 'Catedral', geonameId: '3621852' },
+                    { name: 'Zapote', geonameId: '3621853' },
+                    { name: 'San Francisco de Dos Ríos', geonameId: '3621854' },
+                    { name: 'Uruca', geonameId: '3621855' },
+                    { name: 'Mata Redonda', geonameId: '3621856' },
+                    { name: 'Pavas', geonameId: '3621857' },
+                    { name: 'Hatillo', geonameId: '3621858' },
+                    { name: 'San Sebastián', geonameId: '3621859' }
+                ],
+                '3621848': [ //Escazú
+                    { name: 'Escazú', geonameId: '3621848' },
+                    { name: 'San Antonio', geonameId: '3621860' },
+                    { name: 'San Rafael', geonameId: '3621861' }
+                ],
+                '3621847': [ //Desamparados
+                    { name: 'Desamparados', geonameId: '3621847' },
+                    { name: 'San Miguel', geonameId: '3621862' },
+                    { name: 'San Juan de Dios', geonameId: '3621863' },
+                    { name: 'San Rafael Arriba', geonameId: '3621864' },
+                    { name: 'San Antonio', geonameId: '3621865' },
+                    { name: 'Frailes', geonameId: '3621866' },
+                    { name: 'Patarrá', geonameId: '3621867' },
+                    { name: 'San Cristóbal', geonameId: '3621868' },
+                    { name: 'Rosario', geonameId: '3621869' },
+                    { name: 'Damas', geonameId: '3621870' },
+                    { name: 'Gravilias', geonameId: '3621871' },
+                    { name: 'Los Guido', geonameId: '3621872' }
+                ],
+                '3624951': [ //Alajuela (Cantón)
+                    { name: 'Alajuela', geonameId: '3624951' },
+                    { name: 'San José', geonameId: '3624966' },
+                    { name: 'Carrizal', geonameId: '3624967' },
+                    { name: 'San Antonio', geonameId: '3624968' },
+                    { name: 'Guácima', geonameId: '3624969' },
+                    { name: 'San Isidro', geonameId: '3624970' },
+                    { name: 'Sabanilla', geonameId: '3624971' },
+                    { name: 'San Rafael', geonameId: '3624972' },
+                    { name: 'Río Segundo', geonameId: '3624973' },
+                    { name: 'Desamparados', geonameId: '3624974' },
+                    { name: 'Turrúcares', geonameId: '3624975' },
+                    { name: 'Tambor', geonameId: '3624976' },
+                    { name: 'Garita', geonameId: '3624977' },
+                    { name: 'Sarapiquí', geonameId: '3624978' }
+                ],
+                '3624952': [ //San Ramón
+                    { name: 'San Ramón', geonameId: '3624952' },
+                    { name: 'Santiago', geonameId: '3624979' },
+                    { name: 'San Juan', geonameId: '3624980' },
+                    { name: 'Piedades Norte', geonameId: '3624981' },
+                    { name: 'Piedades Sur', geonameId: '3624982' },
+                    { name: 'San Rafael', geonameId: '3624983' },
+                    { name: 'San Isidro', geonameId: '3624984' },
+                    { name: 'Ángeles', geonameId: '3624985' },
+                    { name: 'Alfaro', geonameId: '3624986' },
+                    { name: 'Volio', geonameId: '3624987' },
+                    { name: 'Concepción', geonameId: '3624988' },
+                    { name: 'Zapotal', geonameId: '3624989' },
+                    { name: 'Peñas Blancas', geonameId: '3624990' }
+                ],
+                '3624368': [ //Cartago (Cantón)
+                    { name: 'Oriental', geonameId: '3624368' },
+                    { name: 'Occidental', geonameId: '3624370' },
+                    { name: 'Carmen', geonameId: '3624371' },
+                    { name: 'San Nicolás', geonameId: '3624372' },
+                    { name: 'Aguacaliente', geonameId: '3624373' },
+                    { name: 'Guadalupe', geonameId: '3624374' },
+                    { name: 'Corralillo', geonameId: '3624375' },
+                    { name: 'Tierra Blanca', geonameId: '3624376' },
+                    { name: 'Dulce Nombre', geonameId: '3624377' },
+                    { name: 'Llano Grande', geonameId: '3624378' },
+                    { name: 'Quebradilla', geonameId: '3624379' }
+                ],
+                '3623484': [ //Heredia (Cantón)
+                    { name: 'Heredia', geonameId: '3623484' },
+                    { name: 'Mercedes', geonameId: '3623485' },
+                    { name: 'San Francisco', geonameId: '3623486' },
+                    { name: 'Ulloa', geonameId: '3623487' },
+                    { name: 'Varablanca', geonameId: '3623488' }
+                ],
+                //Agrega más cantones con distritos
+                '3621848': [ //Escazú
+                    { name: 'Escazú', geonameId: '3621848' },
+                    { name: 'San Antonio', geonameId: '3621860' },
+                    { name: 'San Rafael', geonameId: '3621861' }
+                ],
+                '3621847': [ //Desamparados
+                    { name: 'Desamparados', geonameId: '3621847' },
+                    { name: 'San Miguel', geonameId: '3621862' },
+                    { name: 'San Juan de Dios', geonameId: '3621863' },
+                    { name: 'San Rafael Arriba', geonameId: '3621864' },
+                    { name: 'San Antonio', geonameId: '3621865' },
+                    { name: 'Frailes', geonameId: '3621866' },
+                    { name: 'Patarrá', geonameId: '3621867' },
+                    { name: 'San Cristóbal', geonameId: '3621868' },
+                    { name: 'Rosario', geonameId: '3621869' },
+                    { name: 'Damas', geonameId: '3621870' },
+                    { name: 'Gravilias', geonameId: '3621871' },
+                    { name: 'Los Guido', geonameId: '3621872' }
+                ],
+                '3624952': [ //San Ramón
+                    { name: 'San Ramón', geonameId: '3624952' },
+                    { name: 'Santiago', geonameId: '3624979' },
+                    { name: 'San Juan', geonameId: '3624980' },
+                    { name: 'Piedades Norte', geonameId: '3624981' },
+                    { name: 'Piedades Sur', geonameId: '3624982' },
+                    { name: 'San Rafael', geonameId: '3624983' },
+                    { name: 'San Isidro', geonameId: '3624984' },
+                    { name: 'Ángeles', geonameId: '3624985' },
+                    { name: 'Alfaro', geonameId: '3624986' },
+                    { name: 'Volio', geonameId: '3624987' },
+                    { name: 'Concepción', geonameId: '3624988' },
+                    { name: 'Zapotal', geonameId: '3624989' },
+                    { name: 'Peñas Blancas', geonameId: '3624990' }
+                ],
+                '3624953': [ //Grecia
+                    { name: 'Grecia', geonameId: '3624953' },
+                    { name: 'San Isidro', geonameId: '3624991' },
+                    { name: 'San José', geonameId: '3624992' },
+                    { name: 'San Roque', geonameId: '3624993' },
+                    { name: 'Tacares', geonameId: '3624994' },
+                    { name: 'Río Cuarto', geonameId: '3624995' },
+                    { name: 'Puente de Piedra', geonameId: '3624996' },
+                    { name: 'Bolívar', geonameId: '3624997' }
+                ],
+                '3624367': [ //Paraíso
+                    { name: 'Paraíso', geonameId: '3624367' },
+                    { name: 'Santiago', geonameId: '3624998' },
+                    { name: 'Orosi', geonameId: '3624999' },
+                    { name: 'Cachí', geonameId: '3625000' },
+                    { name: 'Llanos de Santa Lucía', geonameId: '3625001' }
+                ],
+                //TODOS LOS CANTONES DE ALAJUELA
+                '3624954': [ //San Mateo
+                    { name: 'San Mateo', geonameId: '3624954' },
+                    { name: 'Desmonte', geonameId: '3625002' },
+                    { name: 'Jesús María', geonameId: '3625003' },
+                    { name: 'Labrador', geonameId: '3625004' }
+                ],
+                '3624955': [ //Atenas
+                    { name: 'Atenas', geonameId: '3624955' },
+                    { name: 'Jesús', geonameId: '3625005' },
+                    { name: 'Mercedes', geonameId: '3625006' },
+                    { name: 'San Isidro', geonameId: '3625007' },
+                    { name: 'Concepción', geonameId: '3625008' },
+                    { name: 'San José', geonameId: '3625009' },
+                    { name: 'Santa Eulalia', geonameId: '3625010' },
+                    { name: 'Escobal', geonameId: '3625011' }
+                ],
+                '3624956': [ //Naranjo
+                    { name: 'Naranjo', geonameId: '3624956' },
+                    { name: 'San Miguel', geonameId: '3625012' },
+                    { name: 'San José', geonameId: '3625013' },
+                    { name: 'Cirrí Sur', geonameId: '3625014' },
+                    { name: 'San Jerónimo', geonameId: '3625015' },
+                    { name: 'San Juan', geonameId: '3625016' },
+                    { name: 'El Rosario', geonameId: '3625017' },
+                    { name: 'Palmitos', geonameId: '3625018' }
+                ],
+                '3624957': [ //Palmares
+                    { name: 'Palmares', geonameId: '3624957' },
+                    { name: 'Zaragoza', geonameId: '3625019' },
+                    { name: 'Buenos Aires', geonameId: '3625020' },
+                    { name: 'Santiago', geonameId: '3625021' },
+                    { name: 'Candelaria', geonameId: '3625022' },
+                    { name: 'Esquipulas', geonameId: '3625023' },
+                    { name: 'La Granja', geonameId: '3625024' }
+                ],
+                '3624958': [ //Poás
+                    { name: 'San Pedro', geonameId: '3624958' },
+                    { name: 'San Juan', geonameId: '3625025' },
+                    { name: 'San Rafael', geonameId: '3625026' },
+                    { name: 'Carrillos', geonameId: '3625027' },
+                    { name: 'Sabana Redonda', geonameId: '3625028' }
+                ],
+                '3624959': [ //Orotina
+                    { name: 'Orotina', geonameId: '3624959' },
+                    { name: 'El Mastate', geonameId: '3625029' },
+                    { name: 'Hacienda Vieja', geonameId: '3625030' },
+                    { name: 'Coyolar', geonameId: '3625031' },
+                    { name: 'La Ceiba', geonameId: '3625032' }
+                ],
+                '3624960': [ //San Carlos
+                    { name: 'Quesada', geonameId: '3624960' },
+                    { name: 'Florencia', geonameId: '3625033' },
+                    { name: 'Buenavista', geonameId: '3625034' },
+                    { name: 'Aguas Zarcas', geonameId: '3625035' },
+                    { name: 'Venecia', geonameId: '3625036' },
+                    { name: 'Pital', geonameId: '3625037' },
+                    { name: 'La Fortuna', geonameId: '3625038' },
+                    { name: 'La Tigra', geonameId: '3625039' },
+                    { name: 'La Palmera', geonameId: '3625040' },
+                    { name: 'Venado', geonameId: '3625041' },
+                    { name: 'Cutris', geonameId: '3625042' },
+                    { name: 'Monterrey', geonameId: '3625043' },
+                    { name: 'Pocosol', geonameId: '3625044' }
+                ],
+                '3624961': [ //Zarcero
+                    { name: 'Zarcero', geonameId: '3624961' },
+                    { name: 'Laguna', geonameId: '3625045' },
+                    { name: 'Tapezco', geonameId: '3625046' },
+                    { name: 'Guadalupe', geonameId: '3625047' },
+                    { name: 'Palmira', geonameId: '3625048' },
+                    { name: 'Zapote', geonameId: '3625049' },
+                    { name: 'Brisas', geonameId: '3625050' }
+                ],
+                '3624962': [ //Valverde Vega
+                    { name: 'Sarchí Norte', geonameId: '3624962' },
+                    { name: 'Sarchí Sur', geonameId: '3625051' },
+                    { name: 'Toro Amarillo', geonameId: '3625052' },
+                    { name: 'San Pedro', geonameId: '3625053' },
+                    { name: 'Rodríguez', geonameId: '3625054' }
+                ],
+                '3624963': [ //Upala
+                    { name: 'Upala', geonameId: '3624963' },
+                    { name: 'Aguas Claras', geonameId: '3625055' },
+                    { name: 'San José (Pizote)', geonameId: '3625056' },
+                    { name: 'Bijagua', geonameId: '3625057' },
+                    { name: 'Delicias', geonameId: '3625058' },
+                    { name: 'Dos Ríos', geonameId: '3625059' },
+                    { name: 'Yolillal', geonameId: '3625060' },
+                    { name: 'Canalete', geonameId: '3625061' }
+                ],
+                '3624964': [ //Los Chiles
+                    { name: 'Los Chiles', geonameId: '3624964' },
+                    { name: 'Caño Negro', geonameId: '3625062' },
+                    { name: 'El Amparo', geonameId: '3625063' },
+                    { name: 'San Jorge', geonameId: '3625064' }
+                ],
+                '3624965': [ //Guatuso
+                    { name: 'San Rafael', geonameId: '3624965' },
+                    { name: 'Buenavista', geonameId: '3625065' },
+                    { name: 'Cote', geonameId: '3625066' },
+                    { name: 'Katira', geonameId: '3625067' }
+                ],
+                //TODOS LOS CANTONES DE CARTAGO
+                '3624366': [ //La Unión
+                    { name: 'Tres Ríos', geonameId: '3624366' },
+                    { name: 'San Diego', geonameId: '3625068' },
+                    { name: 'San Juan', geonameId: '3625069' },
+                    { name: 'San Rafael', geonameId: '3625070' },
+                    { name: 'Concepción', geonameId: '3625071' },
+                    { name: 'Dulce Nombre', geonameId: '3625072' },
+                    { name: 'San Ramón', geonameId: '3625073' },
+                    { name: 'Río Azul', geonameId: '3625074' }
+                ],
+                '3624365': [ //Jiménez
+                    { name: 'Juan Viñas', geonameId: '3624365' },
+                    { name: 'Tucurrique', geonameId: '3625075' },
+                    { name: 'Pejibaye', geonameId: '3625076' }
+                ],
+                '3624364': [ //Turrialba
+                    { name: 'Turrialba', geonameId: '3624364' },
+                    { name: 'La Suiza', geonameId: '3625077' },
+                    { name: 'Peralta', geonameId: '3625078' },
+                    { name: 'Santa Cruz', geonameId: '3625079' },
+                    { name: 'Santa Teresita', geonameId: '3625080' },
+                    { name: 'Pavones', geonameId: '3625081' },
+                    { name: 'Tuis', geonameId: '3625082' },
+                    { name: 'Tayutic', geonameId: '3625083' },
+                    { name: 'Santa Rosa', geonameId: '3625084' },
+                    { name: 'Tres Equis', geonameId: '3625085' },
+                    { name: 'La Isabel', geonameId: '3625086' },
+                    { name: 'Chirripó', geonameId: '3625087' }
+                ],
+                '3624363': [ //Alvarado
+                    { name: 'Pacayas', geonameId: '3624363' },
+                    { name: 'Cervantes', geonameId: '3625088' },
+                    { name: 'Capellades', geonameId: '3625089' }
+                ],
+                '3624362': [ //Oreamuno
+                    { name: 'San Rafael', geonameId: '3624362' },
+                    { name: 'Cot', geonameId: '3625090' },
+                    { name: 'Potrero Cerrado', geonameId: '3625091' },
+                    { name: 'Cipreses', geonameId: '3625092' },
+                    { name: 'Santa Rosa', geonameId: '3625093' }
+                ],
+                '3624361': [ //El Guarco
+                    { name: 'El Tejar', geonameId: '3624361' },
+                    { name: 'San Isidro', geonameId: '3625094' },
+                    { name: 'Tobosi', geonameId: '3625095' },
+                    { name: 'Patio de Agua', geonameId: '3625096' }
+                ],
+                //TODOS LOS CANTONES DE HEREDIA
+                '3623483': [ //Barva
+                    { name: 'Barva', geonameId: '3623483' },
+                    { name: 'San Pedro', geonameId: '3625097' },
+                    { name: 'San Pablo', geonameId: '3625098' },
+                    { name: 'San Roque', geonameId: '3625099' },
+                    { name: 'Santa Lucía', geonameId: '3625100' },
+                    { name: 'San José de la Montaña', geonameId: '3625101' }
+                ],
+                '3623482': [ //Santo Domingo
+                    { name: 'Santo Domingo', geonameId: '3623482' },
+                    { name: 'San Vicente', geonameId: '3625102' },
+                    { name: 'San Miguel', geonameId: '3625103' },
+                    { name: 'Paracito', geonameId: '3625104' },
+                    { name: 'Santo Tomás', geonameId: '3625105' },
+                    { name: 'Santa Rosa', geonameId: '3625106' },
+                    { name: 'Tures', geonameId: '3625107' },
+                    { name: 'Para', geonameId: '3625108' }
+                ],
+                '3623481': [ //Santa Bárbara
+                    { name: 'Santa Bárbara', geonameId: '3623481' },
+                    { name: 'Jesús', geonameId: '3625109' },
+                    { name: 'Purabá', geonameId: '3625110' }
+                ],
+                '3623480': [ //San Rafael
+                    { name: 'San Rafael', geonameId: '3623480' },
+                    { name: 'Santiago', geonameId: '3625111' },
+                    { name: 'Los Ángeles', geonameId: '3625112' },
+                    { name: 'Concepción', geonameId: '3625113' }
+                ],
+                '3623479': [ //San Isidro
+                    { name: 'San Isidro', geonameId: '3623479' },
+                    { name: 'San José', geonameId: '3625114' },
+                    { name: 'Concepción', geonameId: '3625115' },
+                    { name: 'San Francisco', geonameId: '3625116' }
+                ],
+                '3623478': [ //Belén
+                    { name: 'San Antonio', geonameId: '3623478' },
+                    { name: 'La Ribera', geonameId: '3625117' },
+                    { name: 'La Asunción', geonameId: '3625118' }
+                ],
+                '3623477': [ //Flores
+                    { name: 'San Joaquín', geonameId: '3623477' },
+                    { name: 'Barrantes', geonameId: '3625119' },
+                    { name: 'Llorente', geonameId: '3625120' }
+                ],
+                '3623476': [ //San Pablo
+                    { name: 'Rincón de Sabanilla', geonameId: '3623476' },
+                    { name: 'Medio Queso', geonameId: '3625121' },
+                    { name: 'Socorro', geonameId: '3625122' },
+                    { name: 'San Juan Chiquito', geonameId: '3625123' },
+                    { name: 'San Jerónimo', geonameId: '3625124' },
+                    { name: 'San Juan', geonameId: '3625125' },
+                    { name: 'San Roque', geonameId: '3625126' },
+                    { name: 'Cureña', geonameId: '3625127' },
+                    { name: 'Santa Elena', geonameId: '3625128' }
+                ],
+                '3623475': [ //Sarapiquí
+                    { name: 'Puerto Viejo', geonameId: '3623475' },
+                    { name: 'La Virgen', geonameId: '3625129' },
+                    { name: 'Horquetas', geonameId: '3625130' },
+                    { name: 'Llanuras del Gaspar', geonameId: '3625131' },
+                    { name: 'Cureña', geonameId: '3625132' }
+                ],
+                //TODOS LOS CANTONES RESTANTES DE SAN JOSÉ
+                '3621846': [ //Puriscal
+                    { name: 'Santiago', geonameId: '3621846' },
+                    { name: 'Mercedes Sur', geonameId: '3625133' },
+                    { name: 'Barbacoas', geonameId: '3625134' },
+                    { name: 'Grifo Alto', geonameId: '3625135' },
+                    { name: 'San Rafael', geonameId: '3625136' },
+                    { name: 'Candelarita', geonameId: '3625137' },
+                    { name: 'Desamparaditos', geonameId: '3625138' },
+                    { name: 'San Antonio', geonameId: '3625139' },
+                    { name: 'Chires', geonameId: '3625140' }
+                ],
+                '3621845': [ //Tarrazú
+                    { name: 'San Marcos', geonameId: '3621845' },
+                    { name: 'San Lorenzo', geonameId: '3625141' },
+                    { name: 'San Carlos', geonameId: '3625142' }
+                ],
+                '3621844': [ //Aserrí
+                    { name: 'Aserrí', geonameId: '3621844' },
+                    { name: 'Tarbaca', geonameId: '3625143' },
+                    { name: 'Vuelta de Jorco', geonameId: '3625144' },
+                    { name: 'San Gabriel', geonameId: '3625145' },
+                    { name: 'La Legua', geonameId: '3625146' },
+                    { name: 'Monterrey', geonameId: '3625147' },
+                    { name: 'Salitrillos', geonameId: '3625148' }
+                ],
+                '3621843': [ //Mora
+                    { name: 'Colón', geonameId: '3621843' },
+                    { name: 'Guayabo', geonameId: '3625149' },
+                    { name: 'Tabarcia', geonameId: '3625150' },
+                    { name: 'Piedras Negras', geonameId: '3625151' },
+                    { name: 'Picagres', geonameId: '3625152' },
+                    { name: 'Jaris', geonameId: '3625153' }
+                ],
+                '3621842': [ //Goicoechea
+                    { name: 'Guadalupe', geonameId: '3621842' },
+                    { name: 'San Francisco', geonameId: '3625154' },
+                    { name: 'Calle Blancos', geonameId: '3625155' },
+                    { name: 'Mata de Plátano', geonameId: '3625156' },
+                    { name: 'Ipís', geonameId: '3625157' },
+                    { name: 'Rancho Redondo', geonameId: '3625158' },
+                    { name: 'Purral', geonameId: '3625159' }
+                ],
+                '3621841': [ //Santa Ana
+                    { name: 'Santa Ana', geonameId: '3621841' },
+                    { name: 'Salitral', geonameId: '3625160' },
+                    { name: 'Pozos', geonameId: '3625161' },
+                    { name: 'Uruca', geonameId: '3625162' },
+                    { name: 'Piedades', geonameId: '3625163' },
+                    { name: 'Brasil', geonameId: '3625164' }
+                ],
+                '3621840': [ //Alajuelita
+                    { name: 'Alajuelita', geonameId: '3621840' },
+                    { name: 'San Josecito', geonameId: '3625165' },
+                    { name: 'San Antonio', geonameId: '3625166' },
+                    { name: 'Concepción', geonameId: '3625167' },
+                    { name: 'San Felipe', geonameId: '3625168' }
+                ],
+                '3621839': [ //Vázquez de Coronado
+                    { name: 'San Isidro', geonameId: '3621839' },
+                    { name: 'San Rafael', geonameId: '3625169' },
+                    { name: 'Dulce Nombre de Jesús', geonameId: '3625170' },
+                    { name: 'Patalillo', geonameId: '3625171' },
+                    { name: 'Cascajal', geonameId: '3625172' }
+                ],
+                '3621838': [ //Acosta
+                    { name: 'San Ignacio', geonameId: '3621838' },
+                    { name: 'Guaitil', geonameId: '3625173' },
+                    { name: 'Palmichal', geonameId: '3625174' },
+                    { name: 'Cangrejal', geonameId: '3625175' },
+                    { name: 'Sabanillas', geonameId: '3625176' }
+                ],
+                '3621837': [ //Tibás
+                    { name: 'San Juan', geonameId: '3621837' },
+                    { name: 'Cinco Esquinas', geonameId: '3625177' },
+                    { name: 'Anselmo Llorente', geonameId: '3625178' },
+                    { name: 'León XIII', geonameId: '3625179' },
+                    { name: 'Colima', geonameId: '3625180' }
+                ],
+                '3621836': [ //Moravia
+                    { name: 'San Vicente', geonameId: '3621836' },
+                    { name: 'San Jerónimo', geonameId: '3625181' },
+                    { name: 'La Trinidad', geonameId: '3625182' }
+                ],
+                '3621835': [ //Montes de Oca
+                    { name: 'San Pedro', geonameId: '3621835' },
+                    { name: 'Sabanilla', geonameId: '3625183' },
+                    { name: 'Mercedes', geonameId: '3625184' },
+                    { name: 'San Rafael', geonameId: '3625185' }
+                ],
+                '3621834': [ //Turrubares
+                    { name: 'San Pablo', geonameId: '3621834' },
+                    { name: 'San Pedro', geonameId: '3625186' },
+                    { name: 'San Juan de Mata', geonameId: '3625187' },
+                    { name: 'San Luis', geonameId: '3625188' },
+                    { name: 'Carara', geonameId: '3625189' }
+                ],
+                '3621833': [ //Dota
+                    { name: 'Santa María', geonameId: '3621833' },
+                    { name: 'Jardín', geonameId: '3625190' },
+                    { name: 'Copey', geonameId: '3625191' }
+                ],
+                '3621832': [ //Curridabat
+                    { name: 'Curridabat', geonameId: '3621832' },
+                    { name: 'Granadilla', geonameId: '3625192' },
+                    { name: 'Sánchez', geonameId: '3625193' },
+                    { name: 'Tirrases', geonameId: '3625194' }
+                ],
+                '3621831': [ //Pérez Zeledón
+                    { name: 'San Isidro de El General', geonameId: '3621831' },
+                    { name: 'General', geonameId: '3625195' },
+                    { name: 'Daniel Flores', geonameId: '3625196' },
+                    { name: 'Rivas', geonameId: '3625197' },
+                    { name: 'San Pedro', geonameId: '3625198' },
+                    { name: 'Platanares', geonameId: '3625199' },
+                    { name: 'Pejibaye', geonameId: '3625200' },
+                    { name: 'Cajón', geonameId: '3625201' },
+                    { name: 'Barú', geonameId: '3625202' },
+                    { name: 'Río Nuevo', geonameId: '3625203' },
+                    { name: 'Páramo', geonameId: '3625204' },
+                    { name: 'La Amistad', geonameId: '3625205' }
+                ],
+                '3621830': [ //León Cortés Castro
+                    { name: 'San Pablo', geonameId: '3621830' },
+                    { name: 'San Andrés', geonameId: '3625206' },
+                    { name: 'Llano Bonito', geonameId: '3625207' },
+                    { name: 'San Isidro', geonameId: '3625208' },
+                    { name: 'Santa Cruz', geonameId: '3625209' },
+                    { name: 'San Antonio', geonameId: '3625210' }
+                ],
+                //TODOS LOS CANTONES DE GUANACASTE
+                '3623579': [ //Nicoya
+                    { name: 'Nicoya', geonameId: '3623579' },
+                    { name: 'Mansión', geonameId: '3625211' },
+                    { name: 'San Antonio', geonameId: '3625212' },
+                    { name: 'Quebrada Honda', geonameId: '3625213' },
+                    { name: 'Sámara', geonameId: '3625214' },
+                    { name: 'Nosara', geonameId: '3625215' },
+                    { name: 'Belén de Nosarita', geonameId: '3625216' }
+                ],
+                '3623578': [ //Santa Cruz
+                    { name: 'Santa Cruz', geonameId: '3623578' },
+                    { name: 'Bolson', geonameId: '3625217' },
+                    { name: 'Veintisiete de Abril', geonameId: '3625218' },
+                    { name: 'Tempate', geonameId: '3625219' },
+                    { name: 'Cartagena', geonameId: '3625220' },
+                    { name: 'Cuajiniquil', geonameId: '3625221' },
+                    { name: 'Diriá', geonameId: '3625222' },
+                    { name: 'Cabo Velas', geonameId: '3625223' },
+                    { name: 'Tamarindo', geonameId: '3625224' }
+                ],
+                '3623577': [ //Bagaces
+                    { name: 'Bagaces', geonameId: '3623577' },
+                    { name: 'La Fortuna', geonameId: '3625225' },
+                    { name: 'Mogote', geonameId: '3625226' },
+                    { name: 'Río Naranjo', geonameId: '3625227' }
+                ],
+                '3623576': [ //Carrillo
+                    { name: 'Filadelfia', geonameId: '3623576' },
+                    { name: 'Palmira', geonameId: '3625228' },
+                    { name: 'Sardinal', geonameId: '3625229' },
+                    { name: 'Belén', geonameId: '3625230' }
+                ],
+                '3623575': [ //Cañas
+                    { name: 'Cañas', geonameId: '3623575' },
+                    { name: 'Palmira', geonameId: '3625231' },
+                    { name: 'San Miguel', geonameId: '3625232' },
+                    { name: 'Bebedero', geonameId: '3625233' },
+                    { name: 'Porozal', geonameId: '3625234' }
+                ],
+                '3623574': [ //Abangares
+                    { name: 'Las Juntas', geonameId: '3623574' },
+                    { name: 'Sierra', geonameId: '3625235' },
+                    { name: 'San Juan', geonameId: '3625236' },
+                    { name: 'Colorado', geonameId: '3625237' }
+                ],
+                '3623573': [ //Tilarán
+                    { name: 'Tilarán', geonameId: '3623573' },
+                    { name: 'Quebrada Grande', geonameId: '3625238' },
+                    { name: 'Tronadora', geonameId: '3625239' },
+                    { name: 'Santa Rosa', geonameId: '3625240' },
+                    { name: 'Líbano', geonameId: '3625241' },
+                    { name: 'Tierras Morenas', geonameId: '3625242' },
+                    { name: 'Arenal', geonameId: '3625243' }
+                ],
+                '3623572': [ //Nandayure
+                    { name: 'Carmona', geonameId: '3623572' },
+                    { name: 'Santa Rita', geonameId: '3625244' },
+                    { name: 'Zapotal', geonameId: '3625245' },
+                    { name: 'San Pablo', geonameId: '3625246' },
+                    { name: 'Porvenir', geonameId: '3625247' },
+                    { name: 'Bejuco', geonameId: '3625248' }
+                ],
+                '3623571': [ //La Cruz
+                    { name: 'La Cruz', geonameId: '3623571' },
+                    { name: 'Santa Cecilia', geonameId: '3625249' },
+                    { name: 'La Garita', geonameId: '3625250' },
+                    { name: 'Santa Elena', geonameId: '3625251' }
+                ],
+                '3623570': [ //Hojancha
+                    { name: 'Hojancha', geonameId: '3623570' },
+                    { name: 'Monte Romo', geonameId: '3625252' },
+                    { name: 'Puerto Carrillo', geonameId: '3625253' },
+                    { name: 'Huacas', geonameId: '3625254' },
+                    { name: 'Matambú', geonameId: '3625255' }
+                ],
+                //TODOS LOS CANTONES DE PUNTARENAS
+                '3622189': [ //Esparza
+                    { name: 'Esparza', geonameId: '3622189' },
+                    { name: 'San Juan Grande', geonameId: '3625256' },
+                    { name: 'Macacona', geonameId: '3625257' },
+                    { name: 'San Rafael', geonameId: '3625258' },
+                    { name: 'San Jerónimo', geonameId: '3625259' },
+                    { name: 'Caldera', geonameId: '3625260' }
+                ],
+                '3622188': [ //Buenos Aires
+                    { name: 'Buenos Aires', geonameId: '3622188' },
+                    { name: 'Volcán', geonameId: '3625261' },
+                    { name: 'Potrero Grande', geonameId: '3625262' },
+                    { name: 'Boruca', geonameId: '3625263' },
+                    { name: 'Pilas', geonameId: '3625264' },
+                    { name: 'Colinas', geonameId: '3625265' },
+                    { name: 'Chánguena', geonameId: '3625266' },
+                    { name: 'Biolley', geonameId: '3625267' },
+                    { name: 'Brunka', geonameId: '3625268' }
+                ],
+                '3622187': [ //Montes de Oro
+                    { name: 'Miramar', geonameId: '3622187' },
+                    { name: 'La Unión', geonameId: '3625269' },
+                    { name: 'San Isidro', geonameId: '3625270' }
+                ],
+                '3622186': [ //Osa
+                    { name: 'Ciudad Cortés', geonameId: '3622186' },
+                    { name: 'Palmar', geonameId: '3625271' },
+                    { name: 'Sierpe', geonameId: '3625272' },
+                    { name: 'Bahía Ballena', geonameId: '3625273' },
+                    { name: 'Piedras Blancas', geonameId: '3625274' },
+                    { name: 'Bahía Drake', geonameId: '3625275' }
+                ],
+                '3622185': [ //Quepos
+                    { name: 'Quepos', geonameId: '3622185' },
+                    { name: 'Savegre', geonameId: '3625276' },
+                    { name: 'Naranjito', geonameId: '3625277' }
+                ],
+                '3622184': [ //Golfito
+                    { name: 'Golfito', geonameId: '3622184' },
+                    { name: 'Puerto Jiménez', geonameId: '3625278' },
+                    { name: 'Guaycará', geonameId: '3625279' },
+                    { name: 'Pavón', geonameId: '3625280' }
+                ],
+                '3622183': [ //Coto Brus
+                    { name: 'San Vito', geonameId: '3622183' },
+                    { name: 'Sabalito', geonameId: '3625281' },
+                    { name: 'Agua Buena', geonameId: '3625282' },
+                    { name: 'Limoncito', geonameId: '3625283' },
+                    { name: 'Pittier', geonameId: '3625284' },
+                    { name: 'Gutiérrez Braun', geonameId: '3625285' }
+                ],
+                '3622182': [ //Parrita
+                    { name: 'Parrita', geonameId: '3622182' }
+                ],
+                '3622181': [ //Corredores
+                    { name: 'Corredor', geonameId: '3622181' },
+                    { name: 'La Cuesta', geonameId: '3625286' },
+                    { name: 'Canoas', geonameId: '3625287' },
+                    { name: 'Laurel', geonameId: '3625288' }
+                ],
+                '3622180': [ //Garabito
+                    { name: 'Jacó', geonameId: '3622180' },
+                    { name: 'Tárcoles', geonameId: '3625289' }
+                ],
+                '3622179': [ //Monteverde
+                    { name: 'Monteverde', geonameId: '3622179' }
+                ],
+                '3622178': [ //Puerto Jiménez
+                    { name: 'Puerto Jiménez', geonameId: '3622178' }
+                ],
+                //TODOS LOS CANTONES DE LIMÓN
+                '3623075': [ //Pococí
+                    { name: 'Guápiles', geonameId: '3623075' },
+                    { name: 'Jiménez', geonameId: '3625290' },
+                    { name: 'Rita', geonameId: '3625291' },
+                    { name: 'Roxana', geonameId: '3625292' },
+                    { name: 'Cariari', geonameId: '3625293' },
+                    { name: 'Colorado', geonameId: '3625294' },
+                    { name: 'La Colonia', geonameId: '3625295' }
+                ],
+                '3623074': [ //Siquirres
+                    { name: 'Siquirres', geonameId: '3623074' },
+                    { name: 'Pacuarito', geonameId: '3625296' },
+                    { name: 'Florida', geonameId: '3625297' },
+                    { name: 'Germania', geonameId: '3625298' },
+                    { name: 'El Cairo', geonameId: '3625299' },
+                    { name: 'Alegría', geonameId: '3625300' }
+                ],
+                '3623073': [ //Talamanca
+                    { name: 'Bratsi', geonameId: '3623073' },
+                    { name: 'Sixaola', geonameId: '3625301' },
+                    { name: 'Cahuita', geonameId: '3625302' },
+                    { name: 'Telire', geonameId: '3625303' }
+                ],
+                '3623072': [ //Matina
+                    { name: 'Matina', geonameId: '3623072' },
+                    { name: 'Battam', geonameId: '3625304' },
+                    { name: 'Carrandi', geonameId: '3625305' }
+                ],
+                '3623071': [ //Guácimo
+                    { name: 'Guácimo', geonameId: '3623071' },
+                    { name: 'Mercedes', geonameId: '3625306' },
+                    { name: 'Pocora', geonameId: '3625307' },
+                    { name: 'Río Jiménez', geonameId: '3625308' },
+                    { name: 'Duacarí', geonameId: '3625309' }
+                ]
+            };
+            
+            const result = fallbackDistritos[cantonId] || [];
+            console.log('Distritos encontrados para cantón', cantonId, ':', result.length);
+            console.log('Distritos:', result.map(d => d.name));
+            
+            if (result.length === 0) {
+                console.warn('No se encontraron distritos para el cantón ID:', cantonId);
+                console.log('Cantones disponibles en fallback:', Object.keys(fallbackDistritos));
+            }
+            
+            return result;
+        }
+        
+        //Carga las direcciones del cliente
+        async function loadAddresses() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/cliente/direcciones', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addresses = data.direcciones || [];
+                    displayAddresses(addresses);
+                } else {
+                    console.error('Error al cargar direcciones:', response.statusText);
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar direcciones:', error);
+            }
+        }
+        
+        //Muestra las direcciones en la interfaz
+        function displayAddresses(addresses) {
+            const addressList = document.getElementById('addressList');
+            const addressesSection = document.getElementById('addresses-section');
+            addressList.innerHTML = '';
+            
+            if (addresses.length > 0) {
+                addressesSection.classList.add('has-addresses');
+            } else {
+                addressesSection.classList.remove('has-addresses');
+            }
+            
+            if (addresses.length === 0) {
+                addressList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-map-marker-alt text-4xl mb-4"></i>
+                        <p>No tienes direcciones registradas</p>
+                        <p class="text-sm">Agrega una dirección para facilitar tus pedidos</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            addresses.forEach(address => {
+                const addressCard = document.createElement('div');
+                addressCard.className = 'bg-white border border-gray-200 rounded-lg p-4';
+                addressCard.setAttribute('data-address-id', address.id_direccion);
+                addressCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h4 class="font-semibold text-gray-800">${address.direccion_completa}</h4>
+                                ${address.direccion_principal ? '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Principal</span>' : ''}
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                ${address.distrito}, ${address.canton}, ${address.provincia}
+                            </p>
+                            ${address.referencia ? `<p class="text-sm text-gray-500"><i class="fas fa-info-circle mr-1"></i>${address.referencia}</p>` : ''}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editAddress(${address.id_direccion})" 
+                                    class="text-blue-600 hover:text-blue-800 text-sm">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteAddress(${address.id_direccion})" 
+                                    class="text-red-600 hover:text-red-800 text-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                addressList.appendChild(addressCard);
+            });
+        }
+        
+        //Muestra/oculta el formulario de agregar dirección
+        function toggleAddressForm() {
+            const modal = document.getElementById('addressModal');
+            modal.classList.add('show');
+            resetAddressForm();
+        }
+        
+        function closeAddressModal() {
+            const modal = document.getElementById('addressModal');
+            modal.classList.remove('show');
+            resetAddressForm();
+        }
+        
+        //Función unificada para manejar el botón de guardar
+        async function handleSaveAddress() {
+            if (editingAddressId) {
+                await updateAddress(editingAddressId);
+            } else {
+                await saveAddress();
+            }
+        }
+        
+        //Limpia el formulario de dirección
+        function resetAddressForm() {
+            document.getElementById('direccionCompleta').value = '';
+            document.getElementById('provincia').value = '';
+            document.getElementById('canton').innerHTML = '<option value="">Primero selecciona una provincia</option>';
+            document.getElementById('canton').disabled = true;
+            document.getElementById('distrito').innerHTML = '<option value="">Primero selecciona un cantón</option>';
+            document.getElementById('distrito').disabled = true;
+            document.getElementById('referencia').value = '';
+            document.getElementById('direccionPrincipal').checked = false;
+            
+            const modalTitle = document.getElementById('modalTitle');
+            modalTitle.textContent = 'Nueva Dirección';
+            
+            const saveBtn = document.getElementById('saveAddressBtn');
+            const saveBtnText = document.getElementById('saveAddressText');
+            const saveBtnIcon = document.getElementById('saveAddressIcon');
+            
+            if (saveBtnText) saveBtnText.textContent = 'Agregar';
+            if (saveBtnIcon) {
+                saveBtnIcon.className = 'fas fa-plus';
+            }
+            
+            editingAddressId = null;
+        }
+        
+        //Guarda la nueva dirección
+        async function saveAddress() {
+            try {
+                const token = localStorage.getItem('authToken');
+                
+                const addressData = {
+                    direccion_completa: document.getElementById('direccionCompleta').value,
+                    provincia: document.getElementById('provincia').selectedOptions[0]?.textContent,
+                    canton: document.getElementById('canton').selectedOptions[0]?.textContent,
+                    distrito: document.getElementById('distrito').selectedOptions[0]?.textContent,
+                    referencia: document.getElementById('referencia').value,
+                    direccion_principal: document.getElementById('direccionPrincipal').checked
+                };
+                
+                if (!addressData.direccion_completa || !addressData.provincia || !addressData.canton || !addressData.distrito) {
+                    showMessage('Por favor completa todos los campos requeridos', true);
+                    return;
+                }
+                
+                const response = await fetch('/api/cliente/direcciones', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(addressData)
+                });
+                
+                if (response.ok) {
+                    showMessage('Dirección guardada exitosamente', false);
+                    closeAddressModal();
+                    loadAddresses();
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.message || 'Error al guardar dirección', true);
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar dirección:', error);
+                showMessage('Error al guardar dirección', true);
+            }
+        }
+        
+        //Actualiza la dirección existente
+        async function updateAddress(addressId) {
+            const direccionCompleta = document.getElementById('direccionCompleta').value.trim();
+            const provinciaSelect = document.getElementById('provincia');
+            const cantonSelect = document.getElementById('canton');
+            const distritoSelect = document.getElementById('distrito');
+            const referencia = document.getElementById('referencia').value.trim();
+            const direccionPrincipal = document.getElementById('direccionPrincipal').checked;
+            
+            if (!direccionCompleta) {
+                showMessage('La dirección completa es requerida', true);
+                return;
+            }
+            
+            if (!provinciaSelect.value) {
+                showMessage('Debes seleccionar una provincia', true);
+                return;
+            }
+            
+            if (!cantonSelect.value) {
+                showMessage('Debes seleccionar un cantón', true);
+                return;
+            }
+            
+            if (!distritoSelect.value) {
+                showMessage('Debes seleccionar un distrito', true);
+                return;
+            }
+            
+            const provinciaNombre = provinciaSelect.selectedOptions[0].textContent;
+            const cantonNombre = cantonSelect.selectedOptions[0].textContent;
+            const distritoNombre = distritoSelect.selectedOptions[0].textContent;
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/cliente/direcciones/${addressId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        direccion_completa: direccionCompleta,
+                        provincia: provinciaNombre,
+                        canton: cantonNombre,
+                        distrito: distritoNombre,
+                        referencia: referencia,
+                        direccion_principal: direccionPrincipal
+                    })
+                });
+                
+                if (response.ok) {
+                    showMessage('Dirección actualizada exitosamente', false);
+                    
+                    editingAddressId = null;
+                    
+                    closeAddressModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.message || 'Error al actualizar dirección', true);
+                }
+                
+            } catch (error) {
+                console.error('Error al actualizar dirección:', error);
+                showMessage('Error al actualizar dirección', true);
+            }
+        }
+        
+        //Event listeners para las direcciones
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded ejecutado - Iniciando carga de direcciones...');
+            
+            console.log('Llamando a loadCostaRicaData()...');
+            loadCostaRicaData();
+            
+            console.log('Llamando a loadAddresses()...');
+            loadAddresses();
+            
+            document.getElementById('addAddressBtn').addEventListener('click', toggleAddressForm);
+            
+            document.getElementById('addressModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddressModal();
+                }
+            });
+            
+            //Event listener para cerrar el modal con tecla Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('addressModal');
+                    if (modal.classList.contains('show')) {
+                        closeAddressModal();
+                    }
+                }
+            });
+            
+            //Configura el botón de guardar con función unificada
+            const saveBtn = document.getElementById('saveAddressBtn');
+            saveBtn.addEventListener('click', handleSaveAddress);
+            
+            document.getElementById('provincia').addEventListener('change', function() {
+                if (this.value) {
+                    loadCantones(this.value);
+                } else {
+                    document.getElementById('canton').innerHTML = '<option value="">Primero selecciona una provincia</option>';
+                    document.getElementById('canton').disabled = true;
+                    document.getElementById('distrito').innerHTML = '<option value="">Primero selecciona un cantón</option>';
+                    document.getElementById('distrito').disabled = true;
+                }
+            });
+            
+            document.getElementById('canton').addEventListener('change', function() {
+                console.log('Event listener de cantón activado');
+                console.log('Valor seleccionado:', this.value);
+                console.log('Texto seleccionado:', this.selectedOptions[0]?.textContent);
+                
+                if (this.value) {
+                    console.log('Llamando a loadDistritos con valor:', this.value);
+                    loadDistritos(this.value);
+                } else {
+                    console.log('No hay valor seleccionado, limpiando distritos');
+                    document.getElementById('distrito').innerHTML = '<option value="">Primero selecciona un cantón</option>';
+                    document.getElementById('distrito').disabled = true;
+                }
+            });
+        });
+        
+        //Funciones globales para onclick
+        window.editAddress = function(id) {
+            console.log('Editar dirección:', id);
+            
+            editingAddressId = id;
+            
+            const address = addresses.find(addr => addr.id_direccion == id);
+            if (!address) {
+                alert('Dirección no encontrada');
+                editingAddressId = null;
+                return;
+            }
+            
+            //Llena el formulario con los datos de la dirección
+            document.getElementById('direccionCompleta').value = address.direccion_completa;
+            document.getElementById('referencia').value = address.referencia || '';
+            document.getElementById('direccionPrincipal').checked = address.direccion_principal == 1;
+            
+            //Carga los datos geográficos para los dropdowns
+            loadCostaRicaData();
+            
+            //Selecciona la provincia
+            setTimeout(() => {
+                const provinciaSelect = document.getElementById('provincia');
+                const provinciaOption = Array.from(provinciaSelect.options).find(option => 
+                    provincias.find(p => p.geonameId == option.value)?.name === address.provincia
+                );
+                if (provinciaOption) {
+                    provinciaSelect.value = provinciaOption.value;
+                    loadCantones(provinciaOption.value);
+                    
+                    //Selecciona el cantón después de cargar
+                    setTimeout(() => {
+                        const cantonSelect = document.getElementById('canton');
+                        const cantonOption = Array.from(cantonSelect.options).find(option => 
+                            cantones.find(c => c.geonameId == option.value)?.name === address.canton
+                        );
+                        if (cantonOption) {
+                            cantonSelect.value = cantonOption.value;
+                            loadDistritos(cantonOption.value);
+                            
+                            //Selecciona el distrito después de cargar
+                            setTimeout(() => {
+                                const distritoSelect = document.getElementById('distrito');
+                                const distritoOption = Array.from(distritoSelect.options).find(option => 
+                                    distritos.find(d => d.geonameId == option.value)?.name === address.distrito
+                                );
+                                if (distritoOption) {
+                                    distritoSelect.value = distritoOption.value;
+                                }
+                            }, 100);
+                        }
+                    }, 100);
+                }
+            }, 100);
+            
+            const modalTitle = document.getElementById('modalTitle');
+            modalTitle.textContent = 'Editar Dirección';
+            
+            const saveBtn = document.getElementById('saveAddressBtn');
+            const saveBtnText = document.getElementById('saveAddressText');
+            const saveBtnIcon = document.getElementById('saveAddressIcon');
+            
+            if (saveBtnText) saveBtnText.textContent = 'Actualizar';
+            if (saveBtnIcon) {
+                saveBtnIcon.className = 'fas fa-edit';
+            }
+            
+            const modal = document.getElementById('addressModal');
+            modal.classList.add('show');
+            
+            //Busca la dirección específica que se está editando y posicionarse sobre ella
+            const addressCard = document.querySelector(`[data-address-id="${id}"]`);
+            if (addressCard) {
+                addressCard.insertAdjacentElement('afterend', form);
+                addressCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                form.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+        
+        window.deleteAddress = async function(id) {
+            //Busca la dirección para mostrar información en el popup
+            const address = addresses.find(addr => addr.id_direccion == id);
+            const addressInfo = address ? `${address.direccion_completa}, ${address.canton}, ${address.provincia}` : 'esta dirección';
+            
+            const result = await Swal.fire({
+                title: '¿Eliminar dirección?',
+                html: `
+                    <div class="text-center py-4">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                            <i class="fas fa-trash text-white text-2xl"></i>
+                        </div>
+                        <p class="text-gray-700 text-lg mb-2">¿Estás seguro de que quieres eliminar esta dirección?</p>
+                        <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                            <p class="font-medium text-gray-800">${addressInfo}</p>
+                        </div>
+                        <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-trash mr-2"></i>Eliminar',
+                cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl border-0',
+                    title: 'text-gray-800 font-bold text-xl',
+                    htmlContainer: 'text-left',
+                    actions: 'gap-4',
+                    confirmButton: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl',
+                    cancelButton: 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                },
+                reverseButtons: true,
+                focusCancel: true,
+                backdrop: 'rgba(0, 0, 0, 0.6)'
+            });
+            
+            if (result.isConfirmed) {
+                console.log('Eliminando dirección:', id);
+                
+                Swal.fire({
+                    title: 'Eliminando...',
+                    html: `
+                        <div class="text-center py-4">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                                <i class="fas fa-spinner fa-spin text-white text-2xl"></i>
+                            </div>
+                            <p class="text-gray-700 text-lg">Por favor espera</p>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'rounded-2xl shadow-2xl border-0',
+                        title: 'text-gray-800 font-bold text-xl'
+                    },
+                    backdrop: 'rgba(0, 0, 0, 0.6)'
+                });
+                
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`/api/cliente/direcciones/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.close();
+                        
+                        await Swal.fire({
+                            title: '¡Eliminada!',
+                            html: `
+                                <div class="text-center py-4">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                                        <i class="fas fa-check text-white text-2xl"></i>
+                                    </div>
+                                    <p class="text-gray-700 text-lg">La dirección ha sido eliminada exitosamente</p>
+                                </div>
+                            `,
+                            confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
+                            buttonsStyling: false,
+                            customClass: {
+                                popup: 'rounded-2xl shadow-2xl border-0',
+                                title: 'text-gray-800 font-bold text-xl',
+                                htmlContainer: 'text-center',
+                                confirmButton: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                            },
+                            backdrop: 'rgba(0, 0, 0, 0.6)'
+                        });
+                        
+                        loadAddresses();
+                    } else {
+                        Swal.close();
+                        
+                        await Swal.fire({
+                            title: 'Error',
+                            html: `
+                                <div class="text-center py-4">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                                        <i class="fas fa-times text-white text-2xl"></i>
+                                    </div>
+                                    <p class="text-gray-700 text-lg">${data.message || 'No se pudo eliminar la dirección'}</p>
+                                </div>
+                            `,
+                            confirmButtonText: '<i class="fas fa-times mr-2"></i>Entendido',
+                            buttonsStyling: false,
+                            customClass: {
+                                popup: 'rounded-2xl shadow-2xl border-0',
+                                title: 'text-gray-800 font-bold text-xl',
+                                htmlContainer: 'text-center',
+                                confirmButton: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                            },
+                            backdrop: 'rgba(0, 0, 0, 0.6)'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar dirección:', error);
+                    
+                    Swal.close();
+                    
+                    await Swal.fire({
+                        title: 'Error de conexión',
+                        html: `
+                            <div class="text-center py-4">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                                    <i class="fas fa-wifi text-white text-2xl"></i>
+                                </div>
+                                <p class="text-gray-700 text-lg">No se pudo conectar con el servidor</p>
+                                <p class="text-sm text-gray-500 mt-2">Intenta de nuevo</p>
+                            </div>
+                        `,
+                        confirmButtonText: '<i class="fas fa-times mr-2"></i>Entendido',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl border-0',
+                            title: 'text-gray-800 font-bold text-xl',
+                            htmlContainer: 'text-center',
+                            confirmButton: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                        },
+                        backdrop: 'rgba(0, 0, 0, 0.6)'
+                    });
+                }
+            }
+        };
+        
+        // ========== SECTION NAVIGATION FUNCTIONS ==========
+        
+        //Inicializa la navegación de secciones
+        function initializeSectionNavigation() {
+            showSection('personal');
+        }
+        
+        //Muestra una sección específica
+        function showSection(sectionName) {
+            resetAllForms();
+            
+            const sections = document.querySelectorAll('.profile-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            const buttons = document.querySelectorAll('.section-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.section === sectionName) {
+                    button.classList.add('active');
+                }
+            });
+            
+            updateButtonAppearance();
+        }
+        
+        function resetAllForms() {
+            resetPersonalForm();
+            resetSecurityForm();
+            closeAddressModal();
+        }
+        
+        function resetPersonalForm() {
+            //Obtiene los valores originales del usuario (guardados al cargar la página)
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            
+            if (userData.nombre) {
+                document.getElementById('nombre').value = userData.nombre;
+            }
+            if (userData.correo) {
+                document.getElementById('correo').value = userData.correo;
+            }
+            if (userData.telefono) {
+                document.getElementById('telefono').value = userData.telefono;
+            }
+            if (userData.notificaciones_activas !== undefined) {
+                document.getElementById('notificacionesActivas').checked = userData.notificaciones_activas;
+            }
+            
+            const errorElement = document.getElementById('errorText');
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+        }
+        
+        function resetSecurityForm() {
+            document.getElementById('contrasenaActual').value = '';
+            document.getElementById('nuevaContrasena').value = '';
+            document.getElementById('confirmarNuevaContrasena').value = '';
+            
+            const errorElement = document.getElementById('errorText');
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
         }
     </script>
 </body>

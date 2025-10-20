@@ -1,10 +1,111 @@
 //Funciones de autenticación comunes para Sunset's Tarbaca
 
+//Función para limpiar carrito del localStorage
+function clearCartFromStorage() {
+    console.log('🧹 Iniciando limpieza del carrito...');
+    
+    const cartBefore = localStorage.getItem('sunsets-cart');
+    const backupBefore = localStorage.getItem('sunsets-cart-backup');
+    
+    console.log('📦 Carrito antes:', cartBefore);
+    console.log('💾 Backup antes:', backupBefore);
+    
+    localStorage.removeItem('sunsets-cart');
+    localStorage.removeItem('sunsets-cart-backup');
+    
+    const cartAfter = localStorage.getItem('sunsets-cart');
+    const backupAfter = localStorage.getItem('sunsets-cart-backup');
+    
+    console.log('Carrito después:', cartAfter);
+    console.log('Backup después:', backupAfter);
+    console.log('Carrito limpiado del localStorage');
+}
+
+//Función para verificar si el usuario ha cambiado
+function hasUserChanged() {
+    const currentUser = getCurrentUser();
+    const lastUserId = localStorage.getItem('lastUserId');
+    
+    if (!currentUser) {
+        return false;
+    }
+    
+    if (!lastUserId) {
+        localStorage.setItem('lastUserId', currentUser.id.toString());
+        return false;
+    }
+    
+    const userChanged = lastUserId !== currentUser.id.toString();
+    
+    if (userChanged) {
+        console.log('👤 Usuario cambió de', lastUserId, 'a', currentUser.id);
+        localStorage.setItem('lastUserId', currentUser.id.toString());
+    }
+    
+    return userChanged;
+}
+
+//Función para verificar si el token ha expirado
+function isTokenExpired() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return true;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        return payload.exp < currentTime;
+    } catch (error) {
+        console.error('Error al verificar token:', error);
+        return true;
+    }
+}
+
+//Función para manejar cambio de usuario
+function handleUserChange() {
+    if (hasUserChanged()) {
+        console.log('Usuario cambió, limpiando carrito...');
+        clearCartFromStorage();
+    }
+}
+
+//Función para verificar autenticación completa (token válido + usuario)
+function verifyFullAuth() {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (!token || !userData || isTokenExpired()) {
+        console.log('Token expirado o usuario no autenticado, limpiando carrito...');
+        clearCartFromStorage();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('lastUserId');
+        return false;
+    }
+    
+    return true;
+}
+
 //Función para cerrar sesión
 function logout() {
+    console.log('Cerrando sesión...');
+    
+    clearCartFromStorage();
+    
+    const cartBefore = localStorage.getItem('sunsets-cart');
+    console.log('Carrito antes de limpiar:', cartBefore);
+    
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    localStorage.removeItem('lastUserId');
     
+    const cartAfter = localStorage.getItem('sunsets-cart');
+    console.log('Carrito después de limpiar:', cartAfter);
+    
+    if (typeof updateAuthState === 'function') {
+        updateAuthState();
+    }
+    
+    console.log('Sesión cerrada, redirigiendo...');
     window.location.href = '/';
 }
 
@@ -14,6 +115,7 @@ function checkAuth() {
     const userData = localStorage.getItem('userData');
     
     if (!token || !userData) {
+        clearCartFromStorage();
         window.location.href = '/';
         return false;
     }
@@ -130,7 +232,7 @@ function initAuth() {
     }
     
     //Verifica la autenticación si estamos en una página protegida
-    const protectedPages = ['/cliente/dashboard.html', '/empleado/dashboard.html', '/admin/dashboard.html'];
+    const protectedPages = ['/cliente/dashboard.html', '/empleado/dashboard.html', '/admin/dashboard.html', '/cliente/perfil.html', '/empleado/perfil.html', '/admin/perfil.html', '/cliente/pedidos.html'];
     
     if (protectedPages.some(page => currentPage.includes(page))) {
         if (!checkAuth()) {
@@ -139,7 +241,9 @@ function initAuth() {
         
         displayUserInfo();
         
-        addLogoutButton();
+        if (!document.getElementById('navbar-container')) {
+            addLogoutButton();
+        }
         
         //Verifica que el usuario tenga el rol correcto para la página
         if (user && user.id_rol) {

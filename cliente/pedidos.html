@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Pedido - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .cart-btn-increase,
+        .cart-btn-decrease {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            min-height: 24px !important;
+            max-width: 24px !important;
+            max-height: 24px !important;
+            background-color: #e5e7eb !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            font-weight: normal !important;
+            color: #374151 !important;
+        }
+        
+        .cart-btn-remove {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            max-width: 32px !important;
+            max-height: 32px !important;
+            background-color: transparent !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            color: #dc2626 !important;
+        }
+        
+        .cart-btn-increase:hover,
+        .cart-btn-decrease:hover {
+            background-color: #d1d5db !important;
+        }
+        
+        .cart-btn-remove:hover {
+            color: #b91c1c !important;
+        }
+        
+        #order-cart-items {
+            pointer-events: auto !important;
+        }
+        
+        #order-cart-items > div {
+            position: relative !important;
+            z-index: 1 !important;
+            pointer-events: auto !important;
+        }
+        
+        #order-cart-items * {
+            box-sizing: border-box !important;
+        }
+    </style>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/orders.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+
+    <!-- Order Process -->
+    <section class="py-12 flex-grow">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <!-- Progress Steps -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-center space-x-4">
+                        <div class="flex items-center">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+                            <span class="ml-2 text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Información</span>
+                        </div>
+                        <div class="w-16 h-1 bg-gray-300"></div>
+                        <div class="flex items-center">
+                            <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+                            <span class="ml-2 text-sm font-semibold text-gray-600">Pago</span>
+                        </div>
+                        <div class="w-16 h-1 bg-gray-300"></div>
+                        <div class="flex items-center">
+                            <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+                            <span class="ml-2 text-sm font-semibold text-gray-600">Confirmación</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Order Details -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Cart Items -->
+                        <div class="bg-white rounded-lg shadow-md">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <h2 class="text-xl font-semibold">Tu Carrito</h2>
+                                    <button onclick="window.location.href='/menu.html'" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Menú
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-6" id="order-cart-items">
+                                    <!-- Los items del carrito se cargarán dinámicamente aquí -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Information -->
+                        <div class="bg-white rounded-lg shadow-md">
+                            <div class="p-6 border-b border-gray-200">
+                                <h2 class="text-xl font-semibold">Información de Entrega</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                                        <input type="text" id="deliveryName" required readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed" placeholder="Tu nombre completo">
+                                        <p class="text-xs text-gray-500 mt-1">Estos campos se rellenan automáticamente con tu información de perfil.</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                                        <input type="tel" id="deliveryPhone" required readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed" placeholder="+506 8888-8888">
+                                    </div>
+                                    
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Dirección de Entrega *</label>
+                                        <select id="deliveryAddress" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                            <option value="home">Casa - San José, Barrio Escalante</option>
+                                            <option value="work">Trabajo - San José, Centro</option>
+                                        </select>
+                                        <div id="noAddressMessage" class="hidden mt-2 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                            <p class="text-yellow-800 text-sm mb-3">No tienes direcciones guardadas. Agrega una dirección para continuar.</p>
+                                            <a href="/cliente/perfil.html#addresses" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2 text-sm">
+                                                <i class="fas fa-plus"></i>
+                                                Agregar Dirección
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Instrucciones Especiales</label>
+                                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Instrucciones para el repartidor, alergias, etc."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Resumen del Pedido</h3>
+                            
+                            <div class="space-y-3" id="order-summary">
+                                <!-- El resumen del pedido se actualizará dinámicamente aquí -->
+                            </div>
+                            
+                            <div class="mt-6">
+                                <div class="flex items-center space-x-2 mb-4">
+                                    <input type="checkbox" id="loyalty" class="text-orange-600 focus:ring-orange-500">
+                                    <label for="loyalty" class="text-sm text-gray-700">Usar 500 puntos de lealtad (-₡2,500)</label>
+                                </div>
+                                
+                                <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
+                                    <i class="fas fa-check"></i>
+                                    Confirmar Pedido
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <!-- Loyalty Points -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
+                            
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
+                                <div class="text-center">
+                                    <div id="loyalty-points-available" class="text-2xl font-bold">0</div>
+                                    <div class="text-orange-100">Puntos Disponibles</div>
+                                </div>
+                            </div>
+                            
+                            <p id="loyalty-points-to-earn" class="text-sm text-gray-600 mb-4">Ganarás 0 puntos con este pedido</p>
+                            
+                            <div class="text-xs text-gray-500">
+                                <p>• 1 punto por cada ₡100 gastado</p>
+                                <p>• 500 puntos = ₡2,500 de descuento</p>
+                                <p>• Puntos válidos por 1 año</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+    <script>
+        //Auto-rellena la información de entrega con datos del cliente
+        document.addEventListener('DOMContentLoaded', function() {
+            autoFillDeliveryInfo();
+            loadLoyaltyPoints();
+        });
+
+        async function autoFillDeliveryInfo() {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    console.log('No hay datos de usuario disponibles');
+                    return;
+                }
+
+                const user = JSON.parse(userData);
+                console.log('Datos del usuario:', user);
+                console.log('Estructura del usuario:', Object.keys(user));
+
+                const nameField = document.getElementById('deliveryName');
+                if (nameField) {
+                    console.log('Campo de nombre encontrado:', nameField);
+                    
+                    let fullName = '';
+                    if (user.nombre && user.apellido) {
+                        fullName = `${user.nombre} ${user.apellido}`.trim();
+                    } else if (user.nombre) {
+                        fullName = user.nombre;
+                    } else if (user.nombre_completo) {
+                        fullName = user.nombre_completo;
+                    } else if (user.name) {
+                        fullName = user.name;
+                    }
+                    
+                    if (fullName) {
+                        nameField.value = fullName;
+                        console.log('Nombre auto-rellenado:', nameField.value);
+                    } else {
+                        console.log('No se encontraron campos de nombre válidos');
+                        nameField.readOnly = false;
+                        nameField.classList.remove('bg-gray-50', 'text-gray-600', 'cursor-not-allowed');
+                        nameField.classList.add('bg-white', 'text-gray-900');
+                        nameField.placeholder = 'Ingresa tu nombre completo';
+                    }
+                } else {
+                    console.log('Campo de nombre no encontrado');
+                }
+
+                const phoneField = document.getElementById('deliveryPhone');
+                if (phoneField) {
+                    console.log('Campo de teléfono encontrado:', phoneField);
+                    
+                    let phone = '';
+                    if (user.telefono) {
+                        phone = user.telefono;
+                    } else if (user.phone) {
+                        phone = user.phone;
+                    } else if (user.telefono_contacto) {
+                        phone = user.telefono_contacto;
+                    }
+                    
+                    if (phone) {
+                        phoneField.value = phone;
+                        console.log('Teléfono auto-rellenado:', phoneField.value);
+                    } else {
+                        console.log('No se encontraron campos de teléfono válidos');
+                        phoneField.readOnly = false;
+                        phoneField.classList.remove('bg-gray-50', 'text-gray-600', 'cursor-not-allowed');
+                        phoneField.classList.add('bg-white', 'text-gray-900');
+                        phoneField.placeholder = 'Ingresa tu número de teléfono';
+                    }
+                } else {
+                    console.log('Campo de teléfono no encontrado');
+                }
+
+                await loadCustomerAddresses();
+
+            } catch (error) {
+                console.error('Error al auto-rellenar información de entrega:', error);
+            }
+        }
+
+        async function loadCustomerAddresses() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.log('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/cliente/direcciones', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const addressSelect = document.getElementById('deliveryAddress');
+                    const noAddressMessage = document.getElementById('noAddressMessage');
+                    
+                    if (addressSelect && data.direcciones) {
+                        if (data.direcciones.length === 0) {
+                            //No hay direcciones - mostrar mensaje y ocultar dropdown
+                            addressSelect.style.display = 'none';
+                            noAddressMessage.classList.remove('hidden');
+                        } else {
+                            //Hay direcciones - mostrar dropdown y ocultar mensaje
+                            addressSelect.style.display = 'block';
+                            noAddressMessage.classList.add('hidden');
+                            addressSelect.innerHTML = '';
+                            
+                            data.direcciones.forEach((address, index) => {
+                                const option = document.createElement('option');
+                                option.value = address.id_direccion;
+                                
+                                const addressText = `${address.direccion_completa}, ${address.canton}, ${address.provincia}`;
+                                option.textContent = addressText;
+                                
+                                if (address.direccion_principal) {
+                                    option.textContent += ' (Principal)';
+                                    option.selected = true;
+                                }
+                                
+                                addressSelect.appendChild(option);
+                            });
+                        }
+
+                        console.log('Direcciones cargadas:', data.direcciones.length);
+                    }
+                } else {
+                    console.error('Error al cargar direcciones:', response.statusText);
+                }
+
+            } catch (error) {
+                console.error('Error al cargar direcciones del cliente:', error);
+            }
+        }
+
+        //Función para validar el formulario antes de procesar el pedido
+        function validateOrderForm() {
+            const deliveryAddress = document.getElementById('deliveryAddress');
+            const noAddressMessage = document.getElementById('noAddressMessage');
+            
+            //Si no hay direcciones guardadas, mostrar mensaje
+            if (noAddressMessage && !noAddressMessage.classList.contains('hidden')) {
+                alert('Por favor agrega una dirección de entrega en tu perfil antes de continuar.');
+                return false;
+            }
+            
+            //Si hay dropdown pero no hay dirección seleccionada
+            if (deliveryAddress && deliveryAddress.style.display !== 'none' && !deliveryAddress.value) {
+                alert('Por favor selecciona una dirección de entrega.');
+                return false;
+            }
+
+            return true;
+        }
+
+        //Función para obtener los datos del formulario
+        function getOrderData() {
+            const deliveryName = document.getElementById('deliveryName').value.trim();
+            const deliveryPhone = document.getElementById('deliveryPhone').value.trim();
+            const deliveryAddress = document.getElementById('deliveryAddress');
+            const selectedAddress = deliveryAddress.options[deliveryAddress.selectedIndex];
+            const deliveryInstructions = document.querySelector('textarea').value.trim();
+
+            if (!deliveryName) {
+                alert('Por favor ingresa tu nombre completo.');
+                return null;
+            }
+
+            if (!deliveryPhone) {
+                alert('Por favor ingresa tu número de teléfono.');
+                return null;
+            }
+
+            const noAddressMessage = document.getElementById('noAddressMessage');
+            if (noAddressMessage && !noAddressMessage.classList.contains('hidden')) {
+                alert('Por favor agrega una dirección de entrega en tu perfil antes de continuar.');
+                return null;
+            }
+            
+            if (!deliveryAddress.value || !selectedAddress) {
+                alert('Por favor selecciona una dirección de entrega.');
+                return null;
+            }
+
+            return {
+                customer: {
+                    name: deliveryName,
+                    phone: deliveryPhone,
+                    email: ''
+                },
+                delivery: {
+                    addressId: deliveryAddress.value,
+                    addressText: selectedAddress.textContent,
+                    instructions: deliveryInstructions
+                }
+            };
+        }
+
+        //Función para procesar el pedido (sobrescribe la del orders.js)
+        function placeOrder() {
+            if (orderCart.length === 0) {
+                alert('Tu carrito está vacío. Agrega algunos productos antes de continuar.');
+                return;
+            }
+            
+            if (!validateOrderForm()) {
+                return;
+            }
+            
+            const orderData = getOrderData();
+            if (!orderData) {
+                alert('Error al obtener los datos del pedido. Por favor intenta de nuevo.');
+                return;
+            }
+            
+            console.log('Datos del pedido capturados:', orderData);
+            console.log('AddressText enviado:', orderData.delivery.addressText);
+            
+            const order = {
+                items: orderCart,
+                customer: orderData.customer,
+                delivery: orderData.delivery,
+                subtotal: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                deliveryFee: 1500,
+                taxes: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.05,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+            
+            order.total = order.subtotal + order.deliveryFee + order.taxes;
+            
+            console.log('Datos del pedido preparados:', order);
+            
+            localStorage.setItem('sunsets-order-data', JSON.stringify(order));
+            
+            window.location.href = '/pago.html';
+        }
+
+        //Función para cargar los puntos de lealtad del usuario
+        async function loadLoyaltyPoints() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.log('No hay token de autenticación para cargar puntos');
+                    return;
+                }
+
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const userData = data.data.user;
+                    const puntos = userData.puntos_acumulados || 0;
+                    
+                    const loyaltyPointsElement = document.getElementById('loyalty-points-available');
+                    if (loyaltyPointsElement) {
+                        loyaltyPointsElement.textContent = puntos;
+                        console.log('Puntos de lealtad cargados en pedidos:', puntos);
+                    }
+                } else {
+                    console.error('Error al cargar puntos de lealtad:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar puntos de lealtad:', error);
+            }
+        }
+    </script>
+
+</body>
+</html>

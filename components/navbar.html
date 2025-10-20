@@ -39,7 +39,7 @@
                         </button>
                         
                         <!-- Dropdown Menu -->
-                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border" style="z-index: 99999;">
                             <div class="px-4 py-2 border-b border-gray-200">
                                 <p class="text-sm font-medium text-gray-900 user-name">-</p>
                                 <p class="text-xs text-gray-500 user-email">-</p>
@@ -115,7 +115,7 @@
 <!-- Login Modal -->
 <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full modal-content">
             <!-- Modal Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
@@ -152,12 +152,8 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center justify-between">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="loginRemember" class="text-orange-600 focus:ring-orange-500">
-                            <span class="ml-2 text-sm text-gray-600">Recordarme</span>
-                        </label>
-                        <a href="#" class="text-sm text-orange-600 hover:text-orange-500">¿Olvidaste tu contraseña?</a>
+                    <div class="flex items-center justify-end">
+                        <button type="button" onclick="openForgotPasswordModal()" class="text-sm text-orange-600 hover:text-orange-500 bg-transparent border-none cursor-pointer">¿Olvidaste tu contraseña?</button>
                     </div>
                     
                     <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
@@ -202,7 +198,7 @@
 <!-- Register Modal -->
 <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto modal-content">
             <!-- Modal Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
@@ -307,3 +303,117 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Olvidé mi Contraseña -->
+<div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="forgotPasswordModalContent">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Recuperar Contraseña</h3>
+                    <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <hr class="border-gray-200 mb-6">
+                
+                <!-- Form -->
+                <form id="forgotPasswordForm">
+                    <div class="space-y-4">
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                            <input type="email" id="forgotPasswordEmail" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="Ingresa tu correo electrónico">
+                        </div>
+                        
+                        <!-- Nueva Contraseña -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña</label>
+                            <div class="relative">
+                                <input type="password" id="forgotPasswordNewPassword" required
+                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Nueva contraseña">
+                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordNewPassword', 'forgotPasswordNewPasswordIcon')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye" id="forgotPasswordNewPasswordIcon"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, incluir mayúsculas y números</p>
+                        </div>
+                        
+                        <!-- Confirmar Nueva Contraseña -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nueva Contraseña</label>
+                            <div class="relative">
+                                <input type="password" id="forgotPasswordConfirmPassword" required
+                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Confirma tu nueva contraseña">
+                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordConfirmPassword', 'forgotPasswordConfirmPasswordIcon')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye" id="forgotPasswordConfirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="mt-6">
+                        <button type="submit" id="forgotPasswordBtn"
+                                class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="forgotPasswordBtnText">Cambiar Contraseña</span>
+                            <span id="forgotPasswordBtnSpinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Cambiando...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Animation Styles */
+.modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* User Dropdown Animation Styles */
+#userDropdown {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+}
+
+#userDropdown:not(.hidden) {
+    pointer-events: auto;
+}
+
+#userDropdown.dropdown-show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#userDropdown.dropdown-hide {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+}
+</style>
+
+

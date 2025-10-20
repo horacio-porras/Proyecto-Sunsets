@@ -5,12 +5,18 @@
 const PROTECTED_ROUTES = {
     '/cliente/dashboard.html': 'Cliente',
     '/cliente/perfil.html': 'Cliente',
+    '/cliente/pedidos.html': 'Cliente',
     
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',
+    '/empleado/productos.html': 'Empleado',
+    '/empleado/inventario.html': 'Empleado',
     
     '/admin/dashboard.html': 'Administrador',
-    '/admin/perfil.html': 'Administrador'
+    '/admin/perfil.html': 'Administrador',
+    '/admin/productos.html': 'Administrador',
+    '/admin/inventario.html': 'Administrador',
+    '/admin/personal.html': 'Administrador'
 };
 
 //Rutas que son públicas (no requieren autenticación)

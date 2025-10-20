@@ -460,11 +460,78 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// Función para cambiar contraseña sin contraseña actual (olvidé mi contraseña)
+const forgotPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        // Validar datos requeridos
+        if (!email || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email y nueva contraseña son requeridos'
+            });
+        }
+
+        // Verificar que el usuario existe
+        const [users] = await pool.execute(
+            'SELECT id_usuario FROM usuario WHERE correo = ?',
+            [email]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró un usuario con este correo electrónico'
+            });
+        }
+
+        // Validar requisitos de contraseña
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe tener al menos 8 caracteres'
+            });
+        }
+
+        if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe incluir al menos una mayúscula y un número'
+            });
+        }
+
+        // Hash de la nueva contraseña
+        const saltRounds = 12;
+        const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+        // Actualizar la contraseña en la base de datos
+        await pool.execute(
+            'UPDATE usuario SET contrasena = ? WHERE correo = ?',
+            [passwordHash, email]
+        );
+
+        res.json({
+            success: true,
+            message: 'Contraseña cambiada exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+
 module.exports = {
     register,
     login,
     verifyToken,
     logout,
     getProfile,
-    updateProfile
+    updateProfile,
+    forgotPassword
 };

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .stock-bajo { color: #dc2626; }
+        .stock-medio { color: #d97706; }
+        .stock-alto { color: #16a34a; }
+        .tabla-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navbar -->
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-boxes mr-3"></i>Gestión de Inventario
+                    </h1>
+                    <p class="text-gray-300">Administra ingredientes y productos del restaurante</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                        <div class="text-2xl font-bold" id="totalItems">-</div>
+                        <div class="text-sm text-gray-300">Total Items</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg p-6 shadow-md">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600">
+                        <i class="fas fa-exclamation-triangle text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Stock Bajo</p>
+                        <p class="text-2xl font-bold text-red-600" id="stockBajo">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-md">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i class="fas fa-exclamation-circle text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Stock Medio</p>
+                        <p class="text-2xl font-bold text-yellow-600" id="stockMedio">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-md">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Stock Alto</p>
+                        <p class="text-2xl font-bold text-green-600" id="stockAlto">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-md">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-dollar-sign text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Valor Total</p>
+                        <p class="text-2xl font-bold text-blue-600" id="valorTotal">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <button id="btnNuevoItem" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <i class="fas fa-plus"></i>Nuevo Item
+                    </button>
+                        <a href="/admin/productos.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <i class="fas fa-utensils"></i>Productos
+                        </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" id="buscarItem" placeholder="Buscar item..." 
+                               class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <select id="filtroArea" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">Todas las áreas</option>
+                        <option value="cocina">Cocina</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="postres">Postres</option>
+                        <option value="almacen">Almacén</option>
+                        <option value="todas">Todas</option>
+                    </select>
+                    <select id="filtroStock" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">Todos los estados</option>
+                        <option value="bajo">Stock Bajo</option>
+                        <option value="medio">Stock Medio</option>
+                        <option value="alto">Stock Alto</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Inventario -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Item</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Cantidad</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Stock Mínimo</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Área</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Costo</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold">Última Actualización</th>
+                            <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaInventario" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="8" class="text-center py-8 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Cargando inventario...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no hay items -->
+        <div id="mensajeVacio" class="hidden text-center py-12">
+            <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay items en el inventario</h3>
+            <p class="text-gray-500">Comienza agregando un nuevo item al inventario</p>
+        </div>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Item -->
+    <div id="modalItem" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitulo" class="text-xl font-semibold text-gray-800">Nuevo Item</h3>
+                <button type="button" class="modal-close" id="btnCerrarModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+                <form id="formItem">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Item *</label>
+                            <input type="text" id="nombre" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="Ej: Tomates">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Área *</label>
+                            <select id="area" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Seleccionar área</option>
+                                <option value="cocina">Cocina</option>
+                                <option value="bebidas">Bebidas</option>
+                                <option value="postres">Postres</option>
+                                <option value="almacen">Almacén</option>
+                                <option value="todas">Todas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad Actual *</label>
+                            <input type="number" id="cantidad_actual" required min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Stock Mínimo *</label>
+                            <input type="number" id="cantidad_minima" required min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="0">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidad de Medida *</label>
+                            <select id="unidad_medida" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Seleccionar unidad</option>
+                                <option value="kg">Kilogramos (kg)</option>
+                                <option value="g">Gramos (g)</option>
+                                <option value="l">Litros (l)</option>
+                                <option value="ml">Mililitros (ml)</option>
+                                <option value="unidad">Unidades</option>
+                                <option value="caja">Cajas</option>
+                                <option value="bolsa">Bolsas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Costo Unitario *</label>
+                            <input type="number" id="costo_unitario" required min="0" step="0.01"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="submit" id="btnGuardar" 
+                                class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2">
+                            <i id="btnGuardarIcon" class="fas fa-plus"></i>
+                            <span id="btnGuardarText">Agregar</span>
+                            <i id="btnGuardarSpinner" class="fas fa-spinner fa-spin hidden"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Movimiento de Inventario -->
+    <div id="modalMovimiento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold text-gray-800">Registrar Movimiento</h3>
+                <button type="button" class="modal-close" id="btnCerrarMovimiento">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+                <form id="formMovimiento">
+                    <input type="hidden" id="itemIdMovimiento">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Movimiento *</label>
+                        <select id="tipo_movimiento" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Seleccionar tipo</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="salida">Salida</option>
+                            <option value="ajuste">Ajuste</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad *</label>
+                        <input type="number" id="cantidad_movimiento" required min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               placeholder="0">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Motivo *</label>
+                        <textarea id="motivo" required rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  placeholder="Describe el motivo del movimiento..."></textarea>
+                    </div>
+                    <div class="flex justify-end mt-6">
+                        <button type="submit" id="btnRegistrarMovimiento" 
+                                class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2">
+                            <i class="fas fa-save" id="btnRegistrarMovimientoIcon"></i>
+                            <span id="btnRegistrarMovimientoText">Registrar</span>
+                            <i id="btnMovimientoSpinner" class="fas fa-spinner fa-spin hidden"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Productos del Menú -->
+    <div id="modalProductos" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold text-gray-800">Productos del Menú</h3>
+                <button type="button" class="modal-close" id="btnCerrarProductos">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+                <div class="tabla-container" style="max-height: 400px;">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductos" class="bg-white divide-y divide-gray-200">
+                            <!-- Los productos se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts ya incluidos en el head -->
+    <script>
+        //Variables globales
+        let inventario = [];
+        let itemEditando = null;
+
+        //Carga el contenido al inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+            cargarInventario();
+            cargarEstadisticas();
+            setupEventListeners();
+        });
+
+        //Configura los event listeners
+        function setupEventListeners() {
+            const btnNuevoItem = document.getElementById('btnNuevoItem');
+            
+            if (btnNuevoItem) {
+                btnNuevoItem.addEventListener('click', abrirModalItem);
+            }
+
+            //Modal item
+            const btnCerrarModal = document.getElementById('btnCerrarModal');
+            const modalItem = document.getElementById('modalItem');
+            const formItem = document.getElementById('formItem');
+            
+            if (btnCerrarModal) {
+                btnCerrarModal.addEventListener('click', cerrarModalItem);
+            }
+            if (modalItem) {
+                modalItem.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        cerrarModalItem();
+                    }
+                });
+            }
+            if (formItem) {
+                formItem.addEventListener('submit', handleSubmitItem);
+            }
+
+            //Modal movimiento
+            const btnCerrarMovimiento = document.getElementById('btnCerrarMovimiento');
+            const modalMovimiento = document.getElementById('modalMovimiento');
+            const formMovimiento = document.getElementById('formMovimiento');
+            
+            if (btnCerrarMovimiento) {
+                btnCerrarMovimiento.addEventListener('click', cerrarModalMovimiento);
+            }
+            if (modalMovimiento) {
+                modalMovimiento.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        cerrarModalMovimiento();
+                    }
+                });
+            }
+            if (formMovimiento) {
+                formMovimiento.addEventListener('submit', handleSubmitMovimiento);
+            }
+
+            //Modal productos
+            const btnCerrarProductos = document.getElementById('btnCerrarProductos');
+            const modalProductos = document.getElementById('modalProductos');
+            
+            if (btnCerrarProductos) {
+                btnCerrarProductos.addEventListener('click', cerrarModalProductos);
+            }
+            if (modalProductos) {
+                modalProductos.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        cerrarModalProductos();
+                    }
+                });
+            }
+
+            //Filtros
+            const filtroArea = document.getElementById('filtroArea');
+            const filtroStock = document.getElementById('filtroStock');
+            const buscarItem = document.getElementById('buscarItem');
+            
+            if (filtroArea) {
+                filtroArea.addEventListener('change', filtrarInventario);
+            }
+            if (filtroStock) {
+                filtroStock.addEventListener('change', filtrarInventario);
+            }
+            if (buscarItem) {
+                buscarItem.addEventListener('input', filtrarInventario);
+            }
+        }
+
+        //Carga el inventario
+        async function cargarInventario() {
+            try {
+                const token = localStorage.getItem('authToken');
+                console.log('Token encontrado:', token ? 'Sí' : 'No');
+                
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    mostrarError('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+                    return;
+                }
+
+                console.log('Enviando petición a /api/inventario...');
+                const response = await fetch('/api/inventario', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Status de respuesta:', response.status);
+                console.log('Headers de respuesta:', response.headers);
+
+                const data = await response.json();
+                console.log('Datos recibidos:', data);
+
+                if (data.success) {
+                    console.log('Datos cargados exitosamente');
+                    console.log('Estructura de datos:', data);
+                    
+                    // Verificar la estructura de la respuesta
+                    if (data.data && data.data.items) {
+                        console.log(`Items encontrados: ${data.data.items.length}`);
+                        inventario = data.data.items;
+                    } else if (data.data && data.data.inventario) {
+                        console.log(`Items encontrados (estructura alternativa): ${data.data.inventario.length}`);
+                        inventario = data.data.inventario;
+                    } else if (data.inventario) {
+                        console.log(`Items encontrados (estructura directa): ${data.inventario.length}`);
+                        inventario = data.inventario;
+                    } else if (Array.isArray(data.data)) {
+                        console.log(`Items encontrados (array directo): ${data.data.length}`);
+                        inventario = data.data;
+                    } else {
+                        console.error('Estructura de datos inesperada:', data);
+                        throw new Error('Estructura de datos inesperada en la respuesta del servidor');
+                    }
+                    
+                    renderizarInventario();
+                } else {
+                    console.error('Error en la respuesta:', data.message);
+                    throw new Error(data.message || 'Error al cargar inventario');
+                }
+            } catch (error) {
+                console.error('Error al cargar inventario:', error);
+                mostrarError('Error al cargar inventario: ' + error.message);
+                renderizarInventario([]);
+            }
+        }
+
+        //Carga las estadísticas
+        async function cargarEstadisticas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+
+                const response = await fetch('/api/inventario/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.data.estadisticas;
+                    document.getElementById('totalItems').textContent = stats.total_items || 0;
+                    document.getElementById('stockBajo').textContent = stats.stock_bajo || 0;
+                    document.getElementById('stockMedio').textContent = stats.stock_medio || 0;
+                    document.getElementById('stockAlto').textContent = stats.stock_alto || 0;
+                    document.getElementById('valorTotal').textContent = `₡${(stats.valor_total || 0).toLocaleString()}`;
+                } else {
+                    console.error('Error al cargar estadísticas:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+            }
+        }
+
+        //Renderiza el inventario
+        function renderizarInventario(items = inventario) {
+            const tbody = document.getElementById('tablaInventario');
+            const mensajeVacio = document.getElementById('mensajeVacio');
+
+            if (!items || items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-4"></i>
+                            <p>No hay items en el inventario</p>
+                        </td>
+                    </tr>
+                `;
+                mensajeVacio.classList.add('hidden');
+                return;
+            }
+
+            mensajeVacio.classList.add('hidden');
+            tbody.innerHTML = items.map(item => {
+                const estadoClass = getEstadoClass(item.estado_stock);
+                const estadoText = getEstadoText(item.estado_stock);
+                const areaText = getAreaText(item.area);
+                const fechaFormateada = new Date(item.ultima_actualizacion).toLocaleDateString('es-ES');
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-box text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${item.nombre}</div>
+                                    <div class="text-sm text-gray-500">${item.unidad_medida}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${item.cantidad_actual}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${item.cantidad_minima}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
+                                ${estadoText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                                <span class="text-sm text-gray-900">${areaText}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">₡${parseFloat(item.costo_unitario).toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-500">${fechaFormateada}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="registrarMovimiento(${item.id})" 
+                                        class="text-indigo-600 hover:text-indigo-900 transition p-1 rounded hover:bg-indigo-50"
+                                        title="Registrar movimiento">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button onclick="editarItem(${item.id})" 
+                                        class="text-blue-600 hover:text-blue-900 transition p-1 rounded hover:bg-blue-50"
+                                        title="Editar item">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="eliminarItem(${item.id}, '${item.nombre}')" 
+                                        class="text-red-600 hover:text-red-900 transition p-1 rounded hover:bg-red-50"
+                                        title="Eliminar item">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        //Filtra el inventario
+        function filtrarInventario() {
+            const filtroArea = document.getElementById('filtroArea').value;
+            const filtroStock = document.getElementById('filtroStock').value;
+            const busqueda = document.getElementById('buscarItem').value.toLowerCase();
+
+            let itemsFiltrados = inventario.filter(item => {
+                const cumpleArea = !filtroArea || item.area === filtroArea;
+                const cumpleStock = !filtroStock || item.estado_stock === filtroStock;
+                const cumpleBusqueda = !busqueda || item.nombre.toLowerCase().includes(busqueda);
+
+                return cumpleArea && cumpleStock && cumpleBusqueda;
+            });
+
+            renderizarInventario(itemsFiltrados);
+        }
+
+        //Abre el modal para nuevo item
+        function abrirModalItem() {
+            itemEditando = null;
+            document.getElementById('modalTitulo').textContent = 'Nuevo Item';
+            document.getElementById('formItem').reset();
+            
+            document.getElementById('btnGuardarText').textContent = 'Agregar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
+            
+            const modal = document.getElementById('modalItem');
+            modal.classList.add('show');
+        }
+
+        //Edita item
+        function editarItem(id) {
+            const item = inventario.find(i => i.id === id);
+            if (!item) {
+                mostrarError('Item no encontrado');
+                return;
+            }
+
+            itemEditando = item;
+            document.getElementById('modalTitulo').textContent = 'Editar Item';
+            
+            document.getElementById('nombre').value = item.nombre;
+            document.getElementById('area').value = item.area;
+            document.getElementById('cantidad_actual').value = item.cantidad_actual;
+            document.getElementById('cantidad_minima').value = item.cantidad_minima;
+            document.getElementById('unidad_medida').value = item.unidad_medida;
+            document.getElementById('costo_unitario').value = item.costo_unitario;
+
+            document.getElementById('btnGuardarText').textContent = 'Actualizar';
+            document.getElementById('btnGuardarIcon').className = 'fas fa-edit';
+
+            const modal = document.getElementById('modalItem');
+            modal.classList.add('show');
+        }
+
+        //Cierra el modal item
+        function cerrarModalItem() {
+            const modal = document.getElementById('modalItem');
+            modal.classList.remove('show');
+            document.getElementById('formItem').reset();
+            itemEditando = null;
+        }
+
+        //Maneja el envío del formulario de item
+        async function handleSubmitItem(e) {
+            e.preventDefault();
+
+            const btnGuardar = document.getElementById('btnGuardar');
+            const btnGuardarText = document.getElementById('btnGuardarText');
+            const btnGuardarSpinner = document.getElementById('btnGuardarSpinner');
+
+            btnGuardar.disabled = true;
+            btnGuardarText.classList.add('hidden');
+            document.getElementById('btnGuardarIcon').classList.add('hidden');
+            btnGuardarSpinner.classList.remove('hidden');
+
+            try {
+                const formData = {
+                    nombre: document.getElementById('nombre').value,
+                    area: document.getElementById('area').value,
+                    cantidad_actual: parseInt(document.getElementById('cantidad_actual').value),
+                    cantidad_minima: parseInt(document.getElementById('cantidad_minima').value),
+                    unidad_medida: document.getElementById('unidad_medida').value,
+                    costo_unitario: parseFloat(document.getElementById('costo_unitario').value)
+                };
+
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                let response;
+                if (itemEditando) {
+                    response = await fetch(`/api/inventario/${itemEditando.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('/api/inventario', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    cerrarModalItem();
+                    cargarInventario();
+                    cargarEstadisticas();
+                } else {
+                    throw new Error(data.message || 'Error al procesar la solicitud');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error: ' + error.message);
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardarText.classList.remove('hidden');
+                document.getElementById('btnGuardarIcon').classList.remove('hidden');
+                btnGuardarSpinner.classList.add('hidden');
+            }
+        }
+
+        //Registra movimiento
+        function registrarMovimiento(id) {
+            const item = inventario.find(i => i.id === id);
+            if (!item) {
+                mostrarError('Item no encontrado');
+                return;
+            }
+
+            document.getElementById('itemIdMovimiento').value = id;
+            document.getElementById('formMovimiento').reset();
+            
+            const modal = document.getElementById('modalMovimiento');
+            modal.classList.add('show');
+        }
+
+        //Cierra el modal movimiento
+        function cerrarModalMovimiento() {
+            const modal = document.getElementById('modalMovimiento');
+            modal.classList.remove('show');
+            document.getElementById('formMovimiento').reset();
+        }
+
+        //Maneja el envío del formulario de movimiento
+        async function handleSubmitMovimiento(e) {
+            e.preventDefault();
+
+            const btnRegistrar = document.getElementById('btnRegistrarMovimiento');
+            const btnSpinner = document.getElementById('btnMovimientoSpinner');
+
+            btnRegistrar.disabled = true;
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const formData = {
+                    tipo_movimiento: document.getElementById('tipo_movimiento').value,
+                    cantidad: parseInt(document.getElementById('cantidad_movimiento').value),
+                    motivo: document.getElementById('motivo').value
+                };
+
+                console.log('Datos del formulario:', formData);
+
+                const itemId = document.getElementById('itemIdMovimiento').value;
+                console.log('ID del item:', itemId);
+                
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                console.log('Enviando petición de movimiento...');
+                const response = await fetch(`/api/inventario/${itemId}/movimientos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                console.log('Status de respuesta:', response.status);
+                console.log('Headers de respuesta:', response.headers);
+
+                const data = await response.json();
+                console.log('Datos de respuesta:', data);
+
+                if (data.success) {
+                    console.log('Movimiento registrado exitosamente');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    cerrarModalMovimiento();
+                    cargarInventario();
+                    cargarEstadisticas();
+                } else {
+                    console.error('Error en la respuesta:', data.message);
+                    throw new Error(data.message || 'Error al procesar la solicitud');
+                }
+            } catch (error) {
+                console.error('Error completo:', error);
+                console.error(' Stack trace:', error.stack);
+                mostrarError('Error: ' + error.message);
+            } finally {
+                btnRegistrar.disabled = false;
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        //Elimina item
+        async function eliminarItem(id, nombre) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar el item "${nombre}"? Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        throw new Error('No hay token de autenticación');
+                    }
+
+                    const response = await fetch(`/api/inventario/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: 'Item eliminado correctamente',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        cargarInventario();
+                        cargarEstadisticas();
+                    } else {
+                        throw new Error(data.message || 'Error al eliminar el item');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarError('Error: ' + error.message);
+                }
+            }
+        }
+
+        //Abre el modal de productos
+        async function abrirModalProductos() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/inventario/productos', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    renderizarProductos(data.data.productos);
+                    const modal = document.getElementById('modalProductos');
+                    modal.classList.add('show');
+                } else {
+                    throw new Error(data.message || 'Error al cargar productos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error: ' + error.message);
+            }
+        }
+
+        //Renderiza productos
+        function renderizarProductos(productos) {
+            const tbody = document.getElementById('tablaProductos');
+            tbody.innerHTML = productos.map(producto => {
+                const estadoClass = producto.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const estadoText = producto.disponible ? 'Disponible' : 'No disponible';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${producto.nombre}</div>
+                            <div class="text-sm text-gray-500">${producto.descripcion}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${producto.categoria}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ₡${parseFloat(producto.precio).toLocaleString()}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoClass}">
+                                ${estadoText}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="toggleDisponibilidad(${producto.id}, ${producto.disponible})" 
+                                    class="text-indigo-600 hover:text-indigo-900 transition">
+                                <i class="fas fa-toggle-${producto.disponible ? 'on' : 'off'}"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        //Toggle disponibilidad de producto
+        async function toggleDisponibilidad(id, disponible) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/inventario/productos/${id}/disponibilidad`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ disponible: !disponible })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    abrirModalProductos();
+                } else {
+                    throw new Error(data.message || 'Error al actualizar producto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error: ' + error.message);
+            }
+        }
+
+        //Cierra el modal productos
+        function cerrarModalProductos() {
+            const modal = document.getElementById('modalProductos');
+            modal.classList.remove('show');
+        }
+
+        //Funciones auxiliares
+        function getEstadoClass(estado) {
+            switch (estado) {
+                case 'bajo': return 'bg-red-100 text-red-800';
+                case 'medio': return 'bg-yellow-100 text-yellow-800';
+                case 'alto': return 'bg-green-100 text-green-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getEstadoText(estado) {
+            switch (estado) {
+                case 'bajo': return 'Stock Bajo';
+                case 'medio': return 'Stock Medio';
+                case 'alto': return 'Stock Alto';
+                default: return 'Desconocido';
+            }
+        }
+
+        function getAreaText(area) {
+            const areas = {
+                'cocina': 'Cocina',
+                'bebidas': 'Bebidas',
+                'postres': 'Postres',
+                'almacen': 'Almacén',
+                'todas': 'Todas'
+            };
+            return areas[area] || area;
+        }
+
+        function mostrarError(mensaje) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje,
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    </script>
+</body>
+</html>

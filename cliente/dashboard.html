@@ -3,26 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Cliente - Sunset's Tarbaca</title>
+    <title>Dashboard - Sunset's Tarbaca</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
+    <!-- Main Content -->
+    <div class="main-content">
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
         <!-- Welcome Section -->
-        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+                        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
             <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
             <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
-        </div>
-
+            </div>
+            
 
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -30,10 +47,11 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Active Reservations -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Reservaciones Activas</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Reservaciones Activas</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div>
@@ -64,68 +82,46 @@
                             </div>
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md transition">Nueva Reservación</a>
-                        </div>
-                    </div>
+                            <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
+                                <i class="fas fa-calendar-alt"></i>
+                                Nueva Reservación
+                            </a>
                 </div>
+            </div>
+        </div>
 
                 <!-- Recent Orders -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Pedidos Recientes</h2>
-                    </div>
                     <div class="p-6">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Margherita + Limonada</h4>
-                                        <p class="text-sm text-gray-600">Orden #12345 • 15 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡10,300</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Recientes</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
+                        <!-- Loading State -->
+                        <div id="recentOrdersLoading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                            <p class="mt-2 text-gray-600">Cargando pedidos recientes...</p>
+                        </div>
+
+                        <!-- Orders Container -->
+                        <div id="recentOrdersContainer" class="space-y-4 hidden">
+                            <!-- Orders will be loaded here dynamically -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="recentOrdersEmpty" class="text-center py-8 hidden">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
                             </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-utensils text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pasta Carbonara + Tiramisú</h4>
-                                        <p class="text-sm text-gray-600">Orden #12344 • 12 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡11,000</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Pepperoni</h4>
-                                        <p class="text-sm text-gray-600">Orden #12343 • 10 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡9,200</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes pedidos recientes</h3>
+                            <p class="text-gray-600 mb-4">¡Haz tu primer pedido y aparecerá aquí!</p>
+                            <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                                <i class="fas fa-plus"></i>
+                                Hacer Pedido
+                            </a>
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
+                            <a href="/cliente/mis-pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
                         </div>
                     </div>
                 </div>
@@ -139,7 +135,7 @@
                         <div class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                             <i class="fas fa-user text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold user-name">-</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
                         <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
                     </div>
                     
@@ -152,6 +148,10 @@
                             <i class="fas fa-phone text-gray-400"></i>
                             <span class="text-sm" id="telefonoUsuario">-</span>
                         </div>
+                        <div class="flex items-center space-x-3" id="direccionPrincipal" style="display: none;">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                            <span class="text-sm" id="direccionTexto">-</span>
+                        </div>
                     </div>
                     
                     <div class="mt-6">
@@ -163,7 +163,8 @@
 
                 <!-- Loyalty Points -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
+                    <hr class="mb-4">
                     
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
                         <div class="text-center">
@@ -171,6 +172,7 @@
                             <div class="text-orange-100">Puntos Acumulados</div>
                         </div>
                     </div>
+                    
                     
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
@@ -184,31 +186,38 @@
                     </div>
                     
                     <div class="mt-6">
-                        <a href="#rewards" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md transition text-center block">
+                        <a href="#rewards" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center block flex items-center justify-center gap-2">
+                            <i class="fas fa-trophy"></i>
                             Canjear Puntos
                         </a>
                     </div>
                 </div>
 
 
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
-            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
         //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, verificando elementos...');
+            const direccionElement = document.getElementById('direccionPrincipal');
+            const direccionTextoElement = document.getElementById('direccionTexto');
+            console.log('Elementos DOM encontrados al cargar:', {
+                direccionElement: !!direccionElement,
+                direccionTextoElement: !!direccionTextoElement
+            });
+            
             loadUserProfile();
+            loadRecentOrders();
         });
 
+        //Carga el perfil del usuario
         async function loadUserProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -263,6 +272,11 @@
                         fechaRegistroElement.textContent = `Cliente desde ${day}/${month}/${year}`;
                     }
                     
+                    //Cargar dirección principal con un pequeño delay para asegurar que los elementos estén listos
+                    setTimeout(async () => {
+                        await loadMainAddress();
+                    }, 100);
+                    
                     //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
@@ -273,6 +287,132 @@
             }
         }
 
+        //Carga la dirección principal del usuario
+        async function loadMainAddress() {
+            try {
+                console.log('Iniciando carga de dirección principal...');
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.log('No hay token de autenticación');
+                    return;
+                }
+
+                console.log('Haciendo petición a /api/cliente/direcciones...');
+                const response = await fetch('/api/cliente/direcciones', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('Respuesta recibida:', response.status);
+                
+                if (!response.ok) {
+                    console.error('Error en la respuesta HTTP:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('Texto de error:', errorText);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Datos de direcciones:', data);
+                console.log('Tipo de data:', typeof data);
+                console.log('data.success:', data.success);
+                console.log('data.data:', data.data);
+                console.log('data.direcciones:', data.direcciones);
+                console.log('data.data length:', data.data ? data.data.length : 'data.data es null/undefined');
+                console.log('data.direcciones length:', data.direcciones ? data.direcciones.length : 'data.direcciones es null/undefined');
+
+                const direcciones = data.direcciones || data.data;
+                console.log('Direcciones a procesar:', direcciones);
+
+                if (data.success && direcciones && direcciones.length > 0) {
+                    console.log('Direcciones encontradas:', direcciones.length);
+                    console.log('Todas las direcciones:', direcciones);
+                    
+                    //Busca la dirección principal
+                    let mainAddress = direcciones.find(addr => addr.direccion_principal === 1);
+                    console.log('Dirección principal encontrada:', mainAddress);
+                    
+                    if (!mainAddress && direcciones.length > 0) {
+                        mainAddress = direcciones[0];
+                        console.log('Usando primera dirección disponible:', mainAddress);
+                    }
+                    
+                    if (mainAddress) {
+                        console.log('Configurando elementos de dirección...');
+                        const direccionElement = document.getElementById('direccionPrincipal');
+                        const direccionTextoElement = document.getElementById('direccionTexto');
+                        
+                        console.log('Elementos encontrados:', {
+                            direccionElement: !!direccionElement,
+                            direccionTextoElement: !!direccionTextoElement
+                        });
+                        
+                        if (direccionElement && direccionTextoElement) {
+                            const direccionTexto = `${mainAddress.provincia}, ${mainAddress.canton}, ${mainAddress.distrito}`;
+                            console.log('Texto de dirección a mostrar:', direccionTexto);
+                            
+                            direccionTextoElement.textContent = direccionTexto;
+                            direccionElement.style.display = 'flex';
+                            
+                            console.log('Dirección principal configurada exitosamente');
+                        }
+                    } else {
+                        console.log('No se encontró ninguna dirección');
+                    }
+                } else {
+                    console.log('No hay direcciones disponibles o error en la respuesta');
+                    console.log('Respuesta completa:', data);
+                }
+            } catch (error) {
+                console.error('Error al cargar dirección principal:', error);
+                console.error('Stack trace:', error.stack);
+            }
+        }
+
+        //Función de prueba para verificar manualmente la API
+        async function testAddressAPI() {
+            try {
+                console.log('=== PRUEBA MANUAL DE API DE DIRECCIONES ===');
+                const token = localStorage.getItem('authToken');
+                console.log('Token encontrado:', !!token);
+                
+                const response = await fetch('/api/cliente/direcciones', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Respuesta HTTP:', response.status, response.statusText);
+                const data = await response.json();
+                console.log('Datos completos de la API:', JSON.stringify(data, null, 2));
+                
+                const direcciones = data.direcciones || data.data;
+                if (data.success && direcciones && direcciones.length > 0) {
+                    const direccion = direcciones[0];
+                    console.log('Primera dirección encontrada:', direccion);
+                    
+                    const direccionElement = document.getElementById('direccionPrincipal');
+                    const direccionTextoElement = document.getElementById('direccionTexto');
+                    
+                    if (direccionElement && direccionTextoElement) {
+                        direccionTextoElement.textContent = `${direccion.provincia}, ${direccion.canton}, ${direccion.distrito}`;
+                        direccionElement.style.display = 'flex';
+                        console.log('Dirección mostrada manualmente');
+                    } else {
+                        console.error('Elementos DOM no encontrados para mostrar dirección');
+                    }
+                }
+            } catch (error) {
+                console.error('Error en prueba manual:', error);
+            }
+        }
+
+        window.testAddressAPI = testAddressAPI;
+
+        //Actualiza el progreso de lealtad
         function updateLoyaltyProgress(puntos) {
             const progresoBar = document.getElementById('progresoBar');
             const progresoText = document.getElementById('progresoText');
@@ -306,7 +446,6 @@
                 progresoBar.style.width = `${Math.min(progreso, 100)}%`;
                 progresoText.textContent = `${puntosRestantes} puntos más para ${siguienteNivel.nombre}`;
             } else {
-                // Usuario en el nivel más alto
                 progresoBar.style.width = '100%';
                 progresoText.textContent = '¡Nivel máximo alcanzado!';
             }
@@ -316,7 +455,152 @@
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
+
+        //Función para cargar los últimos 3 pedidos del cliente
+        async function loadRecentOrders() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    showRecentOrdersError();
+                    return;
+                }
+
+                const response = await fetch('/api/pedidos?limit=3', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const orders = result.pedidos || [];
+                    renderRecentOrders(orders);
+                } else {
+                    console.error('Error al cargar pedidos recientes:', result.message);
+                    showRecentOrdersError();
+                }
+            } catch (error) {
+                console.error('Error al cargar pedidos recientes:', error);
+                showRecentOrdersError();
+            }
+        }
+
+        //Función para renderizar los pedidos recientes
+        function renderRecentOrders(orders) {
+            const loadingElement = document.getElementById('recentOrdersLoading');
+            const containerElement = document.getElementById('recentOrdersContainer');
+            const emptyElement = document.getElementById('recentOrdersEmpty');
+
+            // Ocultar loading
+            loadingElement.classList.add('hidden');
+
+            if (orders.length === 0) {
+                // Mostrar estado vacío
+                emptyElement.classList.remove('hidden');
+                return;
+            }
+
+            // Mostrar contenedor y renderizar pedidos
+            containerElement.classList.remove('hidden');
+            containerElement.innerHTML = '';
+
+            orders.forEach(order => {
+                const orderElement = createRecentOrderElement(order);
+                containerElement.appendChild(orderElement);
+            });
+        }
+
+        //Función para crear elemento HTML de pedido reciente
+        function createRecentOrderElement(order) {
+            const orderDiv = document.createElement('div');
+            orderDiv.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer';
+            orderDiv.onclick = () => window.location.href = '/cliente/mis-pedidos.html';
+
+            const orderNumber = `#${order.id_pedido.toString().padStart(6, '0')}`;
+            const orderDate = formatDate(order.fecha_pedido);
+            const orderTotal = `₡${order.total.toLocaleString()}`;
+            const statusInfo = getStatusInfo(order.estado_pedido);
+            
+            let itemsSummary = '';
+            if (order.items && order.items.length > 0) {
+                const firstTwoItems = order.items.slice(0, 2);
+                itemsSummary = firstTwoItems.map(item => item.producto_nombre || `Producto #${item.id_producto || 'N/A'}`).join(' + ');
+                if (order.items.length > 2) {
+                    itemsSummary += ` +${order.items.length - 2} más`;
+                }
+            } else {
+                itemsSummary = 'Pedido sin items';
+            }
+
+            orderDiv.innerHTML = `
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-utensils text-white"></i>
+                        </div>
+                    <div>
+                        <h4 class="font-semibold">${itemsSummary}</h4>
+                        <p class="text-sm text-gray-600">${orderNumber} • ${orderDate}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-semibold">${orderTotal}</p>
+                    <span class="text-sm ${statusInfo.class} px-2 py-1 rounded">${statusInfo.text}</span>
+            </div>
+            `;
+
+            return orderDiv;
+        }
+
+        //Función para mostrar error en pedidos recientes
+        function showRecentOrdersError() {
+            const loadingElement = document.getElementById('recentOrdersLoading');
+            const containerElement = document.getElementById('recentOrdersContainer');
+            const emptyElement = document.getElementById('recentOrdersEmpty');
+
+            loadingElement.classList.add('hidden');
+            containerElement.classList.add('hidden');
+            emptyElement.classList.remove('hidden');
+            
+            emptyElement.innerHTML = `
+                <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar pedidos</h3>
+                <p class="text-gray-600 mb-4">No se pudieron cargar tus pedidos recientes</p>
+                <button onclick="loadRecentOrders()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    Reintentar
+                </button>
+            `;
+        }
+
+        //Función para obtener información del estado (reutilizada de mis-pedidos.html)
+        function getStatusInfo(estado) {
+            const statusMap = {
+                'pendiente': { text: 'Pendiente', class: 'bg-yellow-100 text-yellow-800' },
+                'confirmado': { text: 'Confirmado', class: 'bg-blue-100 text-blue-800' },
+                'preparando': { text: 'Preparando', class: 'bg-orange-100 text-orange-800' },
+                'listo': { text: 'Listo', class: 'bg-green-100 text-green-800' },
+                'en_camino': { text: 'En Camino', class: 'bg-purple-100 text-purple-800' },
+                'entregado': { text: 'Entregado', class: 'bg-green-100 text-green-800' },
+                'cancelado': { text: 'Cancelado', class: 'bg-red-100 text-red-800' }
+            };
+            return statusMap[estado] || { text: 'Desconocido', class: 'bg-gray-100 text-gray-800' };
+        }
+
+        //Función para formatear fecha (reutilizada de mis-pedidos.html)
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
     </script>
 
 </body>
-</html>
+</html> 

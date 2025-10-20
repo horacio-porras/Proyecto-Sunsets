@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.disabled {
+            background-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Header -->
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-utensils mr-3"></i>Gestión de Productos
+                        </h1>
+                        <p class="text-gray-300">Activa o desactiva productos del menú del restaurante</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-2xl font-bold" id="totalProductos">-</div>
+                            <div class="text-sm text-gray-300">Total Productos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <a href="/empleado/inventario.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <i class="fas fa-boxes"></i>Inventario
+                        </a>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" id="buscarProducto" placeholder="Buscar producto..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <select id="filtroCategoria" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                        <select id="filtroEstado" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todos los estados</option>
+                            <option value="disponible">Disponibles</option>
+                            <option value="no_disponible">No Disponibles</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Producto</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Precio</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductos" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Cargando productos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+
+    <script>
+        let productos = [];
+        let categorias = [];
+
+        //Carga los datos al inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar('productos');
+            cargarCategorias();
+            cargarProductos();
+            setupEventListeners();
+        });
+
+        //Configura event listeners
+        function setupEventListeners() {
+            //Filtros
+            const filtroCategoria = document.getElementById('filtroCategoria');
+            const filtroEstado = document.getElementById('filtroEstado');
+            const buscarProducto = document.getElementById('buscarProducto');
+            
+            if (filtroCategoria) {
+                filtroCategoria.addEventListener('change', filtrarProductos);
+            }
+            if (filtroEstado) {
+                filtroEstado.addEventListener('change', filtrarProductos);
+            }
+            if (buscarProducto) {
+                buscarProducto.addEventListener('input', filtrarProductos);
+            }
+        }
+
+        //Carga los productos
+        async function cargarProductos() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/inventario/productos', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    productos = data.data.productos;
+                    console.log('Productos cargados desde API:', productos);
+                    renderizarProductos(productos);
+                    actualizarEstadisticas();
+                } else {
+                    throw new Error(data.message || 'Error al cargar productos');
+                }
+            } catch (error) {
+                console.error('Error al cargar productos:', error);
+                mostrarError('Error al cargar productos: ' + error.message);
+            }
+        }
+
+        //Carga las categorías desde la base de datos
+        async function cargarCategorias() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/inventario/categorias', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    categorias = data.data.categorias;
+                    console.log('Categorías cargadas desde API:', categorias);
+                    llenarSelectCategorias();
+                } else {
+                    throw new Error(data.message || 'Error al cargar categorías');
+                }
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+                mostrarError('Error al cargar categorías: ' + error.message);
+            }
+        }
+
+        //Llena los selects de categorías
+        function llenarSelectCategorias() {
+            const selectFiltroCategoria = document.getElementById('filtroCategoria');
+
+            if (selectFiltroCategoria) {
+                selectFiltroCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id;
+                    option.textContent = categoria.nombre;
+                    selectFiltroCategoria.appendChild(option);
+                });
+            }
+        }
+
+        //Renderiza los productos
+        function renderizarProductos(productosFiltrados) {
+            const tbody = document.getElementById('tablaProductos');
+            
+            if (productosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-utensils text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg font-medium">No hay productos</p>
+                            <p class="text-gray-500">No se encontraron productos con los filtros aplicados</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = productosFiltrados.map(producto => {
+                const estadoClass = producto.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const estadoText = producto.disponible ? 'Disponible' : 'No Disponible';
+                const categoriaText = getCategoriaText(producto.categoria_id);
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-utensils text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${producto.nombre}</div>
+                                    <div class="text-sm text-gray-500">ID: ${producto.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-tag mr-2 text-gray-400"></i>
+                                <span class="text-sm text-gray-900">${categoriaText}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">₡${parseFloat(producto.precio).toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
+                                ${estadoText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 max-w-xs truncate">${producto.descripcion || 'Sin descripción'}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center items-center">
+                                <label class="switch" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
+                                    <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
+                                           onchange="toggleDisponibilidad(${producto.id}, this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        //Toggle disponibilidad
+        async function toggleDisponibilidad(id, disponible) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/inventario/productos/${id}/disponibilidad`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ disponible: disponible })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: disponible ? 'Producto activado correctamente' : 'Producto desactivado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    cargarProductos();
+                } else {
+                    throw new Error(data.message || 'Error al cambiar disponibilidad');
+                }
+            } catch (error) {
+                console.error('Error al cambiar disponibilidad:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error al cambiar disponibilidad del producto'
+                });
+                
+                cargarProductos();
+            }
+        }
+
+        //Filtra los productos
+        function filtrarProductos() {
+            const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
+
+            let productosFiltrados = productos.filter(producto => {
+                const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
+                const coincideEstado = !filtroEstado || 
+                    (filtroEstado === 'disponible' && producto.disponible) ||
+                    (filtroEstado === 'no_disponible' && !producto.disponible);
+                const coincideBusqueda = !buscarProducto || 
+                    producto.nombre.toLowerCase().includes(buscarProducto) ||
+                    (producto.descripcion && producto.descripcion.toLowerCase().includes(buscarProducto));
+
+                return coincideCategoria && coincideEstado && coincideBusqueda;
+            });
+
+            renderizarProductos(productosFiltrados);
+        }
+
+        //Actualiza las estadísticas
+        function actualizarEstadisticas() {
+            document.getElementById('totalProductos').textContent = productos.length;
+        }
+
+        //Funciones auxiliares
+        function getCategoriaText(categoriaId) {
+            const categoria = categorias.find(cat => cat.id == categoriaId);
+            return categoria ? categoria.nombre : 'Categoría no encontrada';
+        }
+
+        function mostrarError(mensaje) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje
+            });
+        }
+    </script>
+</body>
+</html>

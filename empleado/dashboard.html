@@ -3,26 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Empleado - Sunset's Tarbaca</title>
+    <title>Dashboard - Sunset's Tarbaca</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
+    <!-- Main Content -->
+    <div class="main-content">
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
         <!-- Welcome Section -->
         <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
             <h1 class="text-3xl font-bold mb-2">¡Bienvenido, <span class="user-name">-</span>!</h1>
             <p class="text-gray-300">Gestiona tus pedidos asignados, verifica el inventario y consulta tu horario de trabajo</p>
-        </div>
-
+            </div>
+            
 
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -30,131 +47,86 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Assigned Orders -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Mis Pedidos Asignados</h2>
-                    </div>
                     <div class="p-6">
-                        <div class="space-y-4" id="pedidosAsignados">
-                            <!-- Los pedidos se cargarán dinámicamente -->
-                            <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-clock text-yellow-600"></i>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Mis Pedidos Asignados</h2>
+                        <hr class="mb-4">
                                     </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12346</h4>
-                                        <p class="text-sm text-gray-600">Pizza Margherita, Pasta Carbonara</p>
-                                        <p class="text-sm text-gray-600">Cliente: Juan Pérez • 15 min restantes</p>
-                                        <div class="flex space-x-2 mt-2">
-                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
-                                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Pasta</span>
+                    <div class="p-6 pt-0">
+                        <!-- Loading State -->
+                        <div id="pedidosLoading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                            <p class="mt-2 text-gray-600 text-sm">Cargando pedidos...</p>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡18,500</p>
-                                    <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">En Preparación</span>
-                                    <div class="mt-2">
-                                        <button onclick="updateOrderStatus('12346', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
-                                    </div>
+
+                        <!-- Table Container -->
+                        <div id="pedidosTableContainer" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pedidosTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Los pedidos se cargarán aquí dinámicamente -->
+                                    </tbody>
+                                </table>
                                 </div>
                             </div>
                             
-                            <div class="flex items-center justify-between p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-utensils text-blue-600"></i>
+                        <!-- Empty State -->
+                        <div id="pedidosEmpty" class="hidden text-center py-12 text-gray-500">
+                            <div class="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clipboard-list text-3xl text-gray-400"></i>
                                     </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12349</h4>
-                                        <p class="text-sm text-gray-600">Pizza Pepperoni, Tiramisú</p>
-                                        <p class="text-sm text-gray-600">Cliente: Ana García • 8 min restantes</p>
-                                        <div class="flex space-x-2 mt-2">
-                                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pizza</span>
-                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Postre</span>
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">No hay pedidos asignados</h3>
+                            <p class="text-gray-500 mb-4">Los pedidos que te asignen aparecerán aquí</p>
                                         </div>
+
+                        <!-- Error State -->
+                        <div id="pedidosError" class="hidden text-center py-12 text-gray-500">
+                            <div class="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
                                     </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡13,700</p>
-                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">En Preparación</span>
-                                    <div class="mt-2">
-                                        <button onclick="updateOrderStatus('12349', 'ready')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Marcar Listo</button>
-                                    </div>
-                                </div>
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">Error al cargar pedidos</h3>
+                            <p class="text-gray-500 mb-4">No se pudieron cargar los pedidos asignados</p>
                             </div>
                             
-                            <div class="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-check text-green-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12350</h4>
-                                        <p class="text-sm text-gray-600">Pizza Vegetariana</p>
-                                        <p class="text-sm text-gray-600">Cliente: Carlos Ruiz • Completado</p>
-                                        <div class="flex space-x-2 mt-2">
-                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Pizza</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡8,900</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Completado</span>
-                                </div>
-                            </div>
-                        </div>
                         <div class="mt-6 text-center">
-                            <a href="#orders" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos mis pedidos</a>
+                            <a href="/empleado/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos mis pedidos</a>
                         </div>
                     </div>
                 </div>
 
                 <!-- Inventory Check -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Verificación de Inventario</h2>
-                    </div>
                     <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <h4 class="font-semibold mb-3">Ingredientes Críticos</h4>
-                                <div class="space-y-2" id="ingredientesCriticos">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Mozzarella Fresca</span>
-                                        <span class="text-sm text-red-600 font-semibold">2kg</span>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Inventario</h2>
+                        <hr class="mb-4">
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Harina de Trigo</span>
-                                        <span class="text-sm text-yellow-600 font-semibold">15kg</span>
+                    <div class="p-6 pt-0">
+                        <div id="inventarioContainer" class="space-y-4">
+                            <!-- Placeholder para inventario -->
+                            <div class="text-center py-12 text-gray-500">
+                                <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Tomates Frescos</span>
-                                        <span class="text-sm text-green-600 font-semibold">8kg</span>
+                                <h3 class="text-xl font-semibold mb-3 text-gray-700">Cargando inventario</h3>
+                                <p class="text-gray-500 mb-4">Obteniendo los items más prioritarios de tu área</p>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <h4 class="font-semibold mb-3">Herramientas</h4>
-                                <div class="space-y-2" id="herramientas">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Hornos</span>
-                                        <span class="text-sm text-green-600 font-semibold">3/3</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Batidoras</span>
-                                        <span class="text-sm text-green-600 font-semibold">2/2</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm">Cuchillos</span>
-                                        <span class="text-sm text-green-600 font-semibold">5/5</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div id="permisoDenegado" class="hidden mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded text-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Permiso denegado para ver el inventario de esta área.
                         </div>
                         <div class="mt-6 text-center">
-                            <a href="#inventory" class="text-orange-600 hover:text-orange-700 font-semibold">Ver inventario</a>
+                            <a href="/empleado/inventario.html" class="text-orange-600 hover:text-orange-700 font-semibold">
+                                Ver inventario completo
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -168,10 +140,13 @@
                     <div class="text-center mb-6">
                         <div class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                             <i class="fas fa-user text-white text-3xl"></i>
+                                    </div>
+                        <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
+                        <div class="flex items-center justify-center mb-2" id="areaTrabajo">
+                            <i class="fas fa-question text-gray-500 mr-2"></i>
+                            <span class="text-sm text-gray-900">-</span>
                         </div>
-                        <h3 class="text-xl font-semibold user-name">-</h3>
-                        <p class="text-gray-600" id="areaTrabajo">-</p>
-                        <p class="text-sm text-gray-500" id="fechaContratacion">Empleado desde -</p>
+                        <p class="text-sm text-gray-500 mb-2" id="fechaContratacion">Empleado desde -</p>
                     </div>
                     
                     <div class="space-y-4">
@@ -191,60 +166,68 @@
                     
                 </div>
 
+                <!-- Accesos Rápidos -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Accesos Rápidos</h3>
+                    <hr class="mb-4">
+                    
+                    <div class="space-y-3">
+                        <!-- Acceso a Pedidos -->
+                        <a href="/empleado/pedidos.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-shopping-cart text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Mis Pedidos</span>
+                        </a>
 
-                <!-- Today's Schedule -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Mi Horario</h2>
+                        <!-- Acceso a Inventario -->
+                        <a href="/empleado/inventario.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-boxes text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Inventario</span>
+                        </a>
+
+                        <!-- Acceso a Productos -->
+                        <a href="/empleado/productos.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-utensils text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Productos</span>
+                        </a>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-4" id="horarioHoy">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-clock text-gray-400"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Turno Mañana</h4>
-                                        <p class="text-sm text-gray-600">8:00 AM - 4:00 PM</p>
-                                    </div>
-                                </div>
-                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-utensils text-gray-400"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Descanso</h4>
-                                        <p class="text-sm text-gray-600">12:00 PM - 1:00 PM</p>
-                                    </div>
-                                </div>
-                                <span class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">Pendiente</span>
-                            </div>
+                </div>
+
+                    
                         </div>
                     </div>
                 </div>
 
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
-            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-        </div>
-    </footer>
 
     <script>
-        //Carga los datos del usuario cuando la página se carga
+        //Funciones para manejar el área de trabajo
+        function getAreaIcon(area) {
+            const icons = {
+                'cocina': 'fas fa-utensils text-orange-500',
+                'bebidas': 'fas fa-glass-martini text-blue-500',
+                'postres': 'fas fa-birthday-cake text-pink-500',
+                'almacen': 'fas fa-boxes text-gray-500',
+                'todas': 'fas fa-globe text-green-500'
+            };
+            return icons[area] || 'fas fa-question text-gray-500';
+        }
+
+        function getAreaText(area) {
+            const texts = {
+                'cocina': 'Cocina',
+                'bebidas': 'Bebidas',
+                'postres': 'Postres',
+                'almacen': 'Almacén',
+                'todas': 'Todas las áreas'
+            };
+            return texts[area] || area;
+        }
+
+        //Carga los datos del usuario, inventario y pedidos cuando la página se carga
         document.addEventListener('DOMContentLoaded', function() {
             loadNavbar('dashboard');
             loadUserProfile();
+            setupInventario();
+            cargarPedidosAsignados();
         });
 
         //Función para cargar el perfil del usuario
@@ -267,21 +250,20 @@
 
                 if (data.success) {
                     const userData = data.data.user;
-                    
-                    //Actualiza información del usuario
                     document.querySelectorAll('.user-name').forEach(el => {
                         el.textContent = userData.nombre || 'Empleado';
                     });
                     document.querySelectorAll('.user-email').forEach(el => {
                         el.textContent = userData.correo || '-';
                     });
-                    
-                    //Actualiza información específica del empleado
                     document.getElementById('telefonoUsuario').textContent = userData.telefono || '-';
-                    document.getElementById('areaTrabajo').textContent = userData.area_trabajo || 'Empleado';
-                    document.getElementById('idEmpleado').textContent = userData.id_empleado || '-';
                     
-                    //Formatea la fecha de contratación
+                    const areaIcon = getAreaIcon(userData.area_trabajo);
+                    const areaText = getAreaText(userData.area_trabajo);
+                    const areaElement = document.getElementById('areaTrabajo');
+                    areaElement.innerHTML = `<i class="${areaIcon} mr-2"></i><span class="text-sm text-gray-900">${areaText}</span>`;
+                    
+                    document.getElementById('idEmpleado').textContent = userData.id_empleado || '-';
                     if (userData.fecha_contratacion) {
                         const fecha = new Date(userData.fecha_contratacion);
                         const day = fecha.getDate().toString().padStart(2, '0');
@@ -289,8 +271,6 @@
                         const year = fecha.getFullYear();
                         document.getElementById('fechaContratacion').textContent = `Empleado desde ${day}/${month}/${year}`;
                     }
-
-                    //Actualiza el localStorage
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     console.error('Error al cargar perfil:', data.message);
@@ -300,17 +280,198 @@
             }
         }
 
-        //Función para actualizar estado de pedido
-        function updateOrderStatus(orderId, status) {
-            //Simula la actualización de estado de pedido
-            alert(`Orden #${orderId} marcada como ${status === 'ready' ? 'lista' : status}`);
+        // --- INVENTARIO FRONTEND LOGIC ---
+        async function setupInventario() {
+            //Detecta el área del empleado y carga el inventario automáticamente
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                console.log('Datos del perfil recibidos:', data);
+                console.log('Estructura completa del objeto:', JSON.stringify(data, null, 2));
+                
+                if (data.success && data.data.user && data.data.user.area_trabajo) {
+                    const areaEmpleado = data.data.user.area_trabajo;
+                    console.log('Área del empleado detectada:', areaEmpleado);
+                    cargarInventario(areaEmpleado);
+                } else {
+                    console.log('No se pudo detectar el área del empleado, usando cocina por defecto');
+                    cargarInventario('cocina');
+                }
+            } catch (error) {
+                console.error('Error al detectar área del empleado:', error);
+                cargarInventario('cocina');
+            }
+        }
+
+        async function cargarInventario(area) {
+            console.log('Cargando inventario para el área:', area);
+            const inventarioContainer = document.getElementById('inventarioContainer');
+            const permisoDenegado = document.getElementById('permisoDenegado');
+            inventarioContainer.innerHTML = '<div class="text-center text-gray-500 py-4"><i class="fas fa-spinner fa-spin"></i> Cargando inventario...</div>';
+            permisoDenegado.classList.add('hidden');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/inventario?area=${area}&limit=5&priority=stock`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    renderInventario(data.data.items, inventarioContainer);
+                } else if (response.status === 403) {
+                    inventarioContainer.innerHTML = '';
+                    permisoDenegado.classList.remove('hidden');
+                } else {
+                    inventarioContainer.innerHTML = '<div class="text-center text-red-600">Error al cargar inventario.</div>';
+                }
+            } catch (error) {
+                console.error('Error al cargar inventario:', error);
+                inventarioContainer.innerHTML = '<div class="text-center text-red-600">Error al cargar inventario.</div>';
+            }
+        }
+
+        //Renderiza los productos/ingredientes del inventario
+        function renderInventario(items, container) {
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-box-open text-3xl text-gray-400"></i>
+                            </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">No hay productos en esta área</h3>
+                        <p class="text-gray-500 mb-4">El inventario de esta área está vacío</p>
+                        <div class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Contacta al administrador si necesitas agregar items
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = '';
+            items.forEach(item => {
+                const isLowStock = item.cantidad_actual <= item.cantidad_minima;
+                const isMediumStock = item.cantidad_actual <= (item.cantidad_minima * 1.5);
+                const stockClass = isLowStock ? 'bg-red-50 border-red-400' : (isMediumStock ? 'bg-yellow-50 border-yellow-400' : 'bg-green-50 border-green-400');
+                const textClass = isLowStock ? 'text-red-600' : (isMediumStock ? 'text-yellow-600' : 'text-green-600');
+                const iconClass = isLowStock ? 'fa-exclamation-triangle text-red-500' : (isMediumStock ? 'fa-exclamation-circle text-yellow-500' : 'fa-check-circle text-green-500');
+                const alerta = isLowStock ? '<span class="ml-2 px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Stock bajo</span>' : '';
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-4 border-l-4 rounded-lg mb-2 ${stockClass}">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas ${iconClass} text-xl"></i>
+                            <div>
+                                <h4 class="font-semibold">${item.nombre}</h4>
+                                <p class="text-sm text-gray-600"><span class="${textClass} font-semibold">${item.cantidad_actual} ${item.unidad_medida}</span>${alerta}</p>
+                    </div>
+                </div>
+                        <div class="text-right">
+                            <span class="text-sm text-gray-500">Última actualización: ${new Date(item.ultima_actualizacion).toLocaleDateString('es-ES')}</span>
+            </div>
+        </div>
+                `;
+            });
+        }
+
+
+        //Función para cargar pedidos asignados
+        async function cargarPedidosAsignados() {
+            document.getElementById('pedidosLoading').classList.remove('hidden');
+            document.getElementById('pedidosTableContainer').classList.add('hidden');
+            document.getElementById('pedidosEmpty').classList.add('hidden');
+            document.getElementById('pedidosError').classList.add('hidden');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/pedidos/assigned', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                document.getElementById('pedidosLoading').classList.add('hidden');
+                
+                if (data.success) {
+                    renderPedidosTable(data.data.pedidos);
+                } else {
+                    document.getElementById('pedidosError').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error cargarPedidosAsignados:', error);
+                document.getElementById('pedidosLoading').classList.add('hidden');
+                document.getElementById('pedidosError').classList.remove('hidden');
+            }
+        }
+
+        function renderPedidosTable(pedidos) {
+            const tableBody = document.getElementById('pedidosTableBody');
             
-            //Actualiza la UI
-            const orderElement = document.querySelector(`[data-order="${orderId}"]`);
-            if (orderElement) {
-                const statusElement = orderElement.querySelector('.status-badge');
-                statusElement.textContent = 'Listo';
-                statusElement.className = 'text-sm bg-green-100 text-green-800 px-2 py-1 rounded status-badge';
+            if (!pedidos || pedidos.length === 0) {
+                document.getElementById('pedidosEmpty').classList.remove('hidden');
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            const pedidosLimitados = pedidos.slice(0, 5);
+
+            pedidosLimitados.forEach(pedido => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">
+                            #${pedido.id_pedido.toString().padStart(6, '0')}
+        </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente invitado'}</div>
+                        <div class="text-sm text-gray-500">${pedido.cliente_telefono || 'Sin teléfono'}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getEstadoClass(pedido.estado_pedido)}">
+                            ${getEstadoText(pedido.estado_pedido)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ₡${pedido.total.toLocaleString()}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        ${new Date(pedido.fecha_pedido).toLocaleDateString('es-CR')}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            document.getElementById('pedidosTableContainer').classList.remove('hidden');
+        }
+
+        async function actualizarEstado(pedidoId) {
+            const select = document.getElementById(`estadoSelect_${pedidoId}`);
+            const nuevoEstado = select.value;
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/pedidos/${pedidoId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ nuevoEstado })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    cargarPedidosAsignados();
+                } else {
+                    alert(data.message || 'Error al actualizar estado');
+                }
+            } catch (error) {
+                console.error('Error actualizarEstado:', error);
+                alert('Error al actualizar estado');
             }
         }
 
@@ -322,6 +483,39 @@
             }
         }
 
+        //Función para obtener la clase CSS del estado
+        function getEstadoClass(estado) {
+            const estados = {
+                'pendiente': 'bg-yellow-100 text-yellow-800',
+                'confirmado': 'bg-blue-100 text-blue-800',
+                'preparando': 'bg-orange-100 text-orange-800',
+                'listo': 'bg-green-100 text-green-800',
+                'en_camino': 'bg-purple-100 text-purple-800',
+                'entregado': 'bg-green-100 text-green-800',
+                'cancelado': 'bg-red-100 text-red-800'
+            };
+            return estados[estado] || 'bg-gray-100 text-gray-800';
+        }
+
+        //Función para obtener el texto del estado
+        function getEstadoText(estado) {
+            const estados = {
+                'pendiente': 'Pendiente',
+                'confirmado': 'Confirmado',
+                'preparando': 'Preparando',
+                'listo': 'Listo',
+                'en_camino': 'En Camino',
+                'entregado': 'Entregado',
+                'cancelado': 'Cancelado'
+            };
+            return estados[estado] || estado;
+        }
+
     </script>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 </body>
-</html>
+</html> 
