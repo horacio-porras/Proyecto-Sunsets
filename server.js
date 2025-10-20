@@ -70,6 +70,16 @@ app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/inventario', inventarioRoutes);
 
+
+app.use('/api/empleado', empleadoRoutes);
+app.use('/api/producto', productoRoutes);
+
+
+// Rutas protegidas solo para admin
+//app.use('/api/empleados', authMiddleware, isAdmin, empleadoRoutes);
+//app.use('/api/productos', authMiddleware, isAdmin, productoRoutes);
+
+
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
     res.json({
