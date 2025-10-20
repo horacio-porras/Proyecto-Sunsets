@@ -6,7 +6,7 @@ require('dotenv').config({ path: './config.env' });
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || '3Qarelo81*',
     database: process.env.DB_NAME || 'SunsetsDB',
     waitForConnections: true,
     connectionLimit: 10,
