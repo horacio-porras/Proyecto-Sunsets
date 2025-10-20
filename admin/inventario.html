@@ -494,11 +494,15 @@
         async function cargarInventario() {
             try {
                 const token = localStorage.getItem('authToken');
+                console.log('Token encontrado:', token ? 'Sí' : 'No');
+                
                 if (!token) {
                     console.error('No hay token de autenticación');
+                    mostrarError('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
                     return;
                 }
 
+                console.log('Enviando petición a /api/inventario...');
                 const response = await fetch('/api/inventario', {
                     method: 'GET',
                     headers: {
@@ -507,12 +511,37 @@
                     }
                 });
 
+                console.log('Status de respuesta:', response.status);
+                console.log('Headers de respuesta:', response.headers);
+
                 const data = await response.json();
+                console.log('Datos recibidos:', data);
 
                 if (data.success) {
-                    inventario = data.data.inventario;
+                    console.log('Datos cargados exitosamente');
+                    console.log('Estructura de datos:', data);
+                    
+                    // Verificar la estructura de la respuesta
+                    if (data.data && data.data.items) {
+                        console.log(`Items encontrados: ${data.data.items.length}`);
+                        inventario = data.data.items;
+                    } else if (data.data && data.data.inventario) {
+                        console.log(`Items encontrados (estructura alternativa): ${data.data.inventario.length}`);
+                        inventario = data.data.inventario;
+                    } else if (data.inventario) {
+                        console.log(`Items encontrados (estructura directa): ${data.inventario.length}`);
+                        inventario = data.inventario;
+                    } else if (Array.isArray(data.data)) {
+                        console.log(`Items encontrados (array directo): ${data.data.length}`);
+                        inventario = data.data;
+                    } else {
+                        console.error('Estructura de datos inesperada:', data);
+                        throw new Error('Estructura de datos inesperada en la respuesta del servidor');
+                    }
+                    
                     renderizarInventario();
                 } else {
+                    console.error('Error en la respuesta:', data.message);
                     throw new Error(data.message || 'Error al cargar inventario');
                 }
             } catch (error) {
@@ -819,12 +848,17 @@
                     motivo: document.getElementById('motivo').value
                 };
 
+                console.log('Datos del formulario:', formData);
+
                 const itemId = document.getElementById('itemIdMovimiento').value;
+                console.log('ID del item:', itemId);
+                
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     throw new Error('No hay token de autenticación');
                 }
 
+                console.log('Enviando petición de movimiento...');
                 const response = await fetch(`/api/inventario/${itemId}/movimientos`, {
                     method: 'POST',
                     headers: {
@@ -834,9 +868,14 @@
                     body: JSON.stringify(formData)
                 });
 
+                console.log('Status de respuesta:', response.status);
+                console.log('Headers de respuesta:', response.headers);
+
                 const data = await response.json();
+                console.log('Datos de respuesta:', data);
 
                 if (data.success) {
+                    console.log('Movimiento registrado exitosamente');
                     await Swal.fire({
                         icon: 'success',
                         title: '¡Éxito!',
@@ -848,10 +887,12 @@
                     cargarInventario();
                     cargarEstadisticas();
                 } else {
+                    console.error('Error en la respuesta:', data.message);
                     throw new Error(data.message || 'Error al procesar la solicitud');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error completo:', error);
+                console.error(' Stack trace:', error.stack);
                 mostrarError('Error: ' + error.message);
             } finally {
                 btnRegistrar.disabled = false;

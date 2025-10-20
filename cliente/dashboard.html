@@ -11,11 +11,27 @@
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
+    <!-- Main Content -->
+    <div class="main-content">
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
         <!-- Welcome Section -->
@@ -31,10 +47,11 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Active Reservations -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Reservaciones Activas</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Reservaciones Activas</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div>
@@ -75,10 +92,11 @@
 
                 <!-- Recent Orders -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Pedidos Recientes</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Recientes</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <!-- Loading State -->
                         <div id="recentOrdersLoading" class="text-center py-8">
                             <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
@@ -117,7 +135,7 @@
                         <div class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                             <i class="fas fa-user text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold user-name">-</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
                         <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
                     </div>
                     
@@ -145,7 +163,8 @@
 
                 <!-- Loyalty Points -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
+                    <hr class="mb-4">
                     
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
                         <div class="text-center">
@@ -175,6 +194,7 @@
                 </div>
 
 
+                </div>
             </div>
         </div>
     </div>

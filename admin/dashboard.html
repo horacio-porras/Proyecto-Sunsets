@@ -11,11 +11,27 @@
     <script src="/js/navbar.js"></script>
     <script src="/js/routeProtection.js"></script>
     <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
+    <!-- Main Content -->
+    <div class="main-content">
     <!-- Dashboard Content -->
     <div class="container mx-auto px-4 py-8">
         <!-- Welcome Section -->
@@ -81,10 +97,11 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Active Orders -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Pedidos Activos</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Activos</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
                                 <div class="flex items-center space-x-4">
@@ -145,10 +162,11 @@
 
                 <!-- Staff Management -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Gestión de Personal</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Personal</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="border border-gray-200 rounded-lg p-4">
                                 <div class="flex items-center space-x-3">
@@ -214,10 +232,11 @@
 
                 <!-- Inventory Alerts -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Alertas de Inventario</h2>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Alertas de Inventario</h2>
+                        <hr class="mb-4">
+                    </div>
+                    <div class="p-6 pt-0">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
                                 <div class="flex items-center space-x-3">
@@ -250,36 +269,36 @@
 
             <!-- Right Column -->
             <div class="space-y-8">
-                <!-- Quick Actions -->
+                <!-- Accesos Rápidos -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Acciones Rápidas</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Accesos Rápidos</h3>
+                    <hr class="mb-4">
                     
                     <div class="space-y-3">
-                        <a href="/admin/personal.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-users text-orange-600"></i>
-                            <span>Gestionar Personal</span>
+                        <!-- Acceso a Personal -->
+                        <a href="/admin/personal.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-users text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Gestionar Personal</span>
                         </a>
-                        
-                        <a href="/admin/inventario.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-boxes text-orange-600"></i>
-                            <span>Gestionar Inventario</span>
+
+                        <!-- Acceso a Inventario -->
+                        <a href="/admin/inventario.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-boxes text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Gestionar Inventario</span>
                         </a>
-                        
-                        <a href="/admin/productos.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-utensils text-orange-600"></i>
-                            <span>Gestionar Productos</span>
-                        </a>
-                        
-                        <a href="/admin/perfil.html" class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                            <i class="fas fa-user-shield text-orange-600"></i>
-                            <span>Mi Perfil</span>
+
+                        <!-- Acceso a Productos -->
+                        <a href="/admin/productos.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-utensils text-gray-400 mr-3"></i>
+                            <span class="text-gray-700">Gestionar Productos</span>
                         </a>
                     </div>
                 </div>
 
                 <!-- Sales Chart -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Ventas de la Semana</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Ventas de la Semana</h3>
+                    <hr class="mb-4">
                     
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
@@ -336,7 +355,8 @@
 
                 <!-- Recent Reviews -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Opiniones Recientes</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Opiniones Recientes</h3>
+                    <hr class="mb-4">
                     
                     <div class="space-y-4">
                         <div class="border-b border-gray-200 pb-3">
@@ -389,7 +409,8 @@
 
                 <!-- System Status -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Estado del Sistema</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Estado del Sistema</h3>
+                    <hr class="mb-4">
                     
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -410,6 +431,7 @@
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Notificaciones</span>
                             <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
+                        </div>
                         </div>
                     </div>
                 </div>

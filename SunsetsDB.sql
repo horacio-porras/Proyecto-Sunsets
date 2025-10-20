@@ -105,18 +105,21 @@ CREATE TABLE movimiento_inventario (
     id_movimiento INT PRIMARY KEY AUTO_INCREMENT,
     id_inventario INT,
     id_responsable INT,
+    tipo_responsable ENUM('empleado', 'administrador') DEFAULT 'empleado',
     tipo_movimiento VARCHAR(50),
     cantidad INT,
     motivo TEXT,
     fecha_movimiento DATETIME,
-    FOREIGN KEY (id_inventario) REFERENCES inventario(id_inventario),
-    FOREIGN KEY (id_responsable) REFERENCES empleado(id_empleado)
+    FOREIGN KEY (id_inventario) REFERENCES inventario(id_inventario)
 );
 
 -- Tabla PEDIDO
 CREATE TABLE pedido (
     id_pedido INT PRIMARY KEY AUTO_INCREMENT,
     id_cliente INT,
+    cliente_invitado_nombre VARCHAR(100),
+    cliente_invitado_telefono VARCHAR(20),
+    cliente_invitado_email VARCHAR(100),
     id_direccion INT,
     id_empleado_asignado INT,
     subtotal DECIMAL(10,2),

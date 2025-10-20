@@ -106,6 +106,19 @@
             transform: translateX(0) scale(1);
             opacity: 1;
         }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
     </style>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
@@ -116,8 +129,9 @@
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
-
-    <!-- Filters and Categories -->
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Filters and Categories -->
     <section class="py-8 bg-white border-b">
         <div class="container mx-auto px-4">
             <!-- Category Tabs -->
@@ -192,6 +206,11 @@
                         </div>
                     </div>
 
+            <!-- Products Grid -->
+            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Los productos se cargarán dinámicamente aquí -->
+            </div>
+
             <!-- Menu content will be dynamically loaded here -->
             <div id="menu-content" class="hidden">
                 <!-- Content will be populated by JavaScript -->
@@ -223,9 +242,11 @@
         <i class="fas fa-shopping-cart text-xl"></i>
         <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
     </button>
+    </div>
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
+
 
 </body>
 </html> 

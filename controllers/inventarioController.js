@@ -4,8 +4,9 @@ const { pool } = require('../config/database');
 const getInventario = async (req, res) => {
     try {
         const userId = req.user.id;
+        const { area, limit, priority } = req.query;
 
-        const inventarioQuery = `
+        let inventarioQuery = `
             SELECT 
                 i.id_inventario as id,
                 i.nombre_item as nombre,
@@ -24,15 +25,34 @@ const getInventario = async (req, res) => {
             FROM inventario i
             LEFT JOIN empleado e ON i.id_responsable = e.id_empleado
             LEFT JOIN usuario u ON e.id_usuario = u.id_usuario
-            ORDER BY i.nombre_item ASC
         `;
+
+        if (area) {
+            inventarioQuery += ` WHERE i.area = '${area}'`;
+        }
+
+        if (priority === 'stock') {
+            inventarioQuery += ` ORDER BY 
+                CASE 
+                    WHEN i.cantidad_actual <= i.cantidad_minima THEN 1
+                    WHEN i.cantidad_actual <= (i.cantidad_minima * 1.5) THEN 2
+                    ELSE 3
+                END ASC,
+                i.nombre_item ASC`;
+        } else {
+            inventarioQuery += ` ORDER BY i.nombre_item ASC`;
+        }
+
+        if (limit) {
+            inventarioQuery += ` LIMIT ${parseInt(limit)}`;
+        }
 
         const [inventarioRows] = await pool.execute(inventarioQuery);
 
         res.json({
             success: true,
             data: {
-                inventario: inventarioRows
+                items: inventarioRows
             }
         });
     } catch (error) {
@@ -65,17 +85,29 @@ const crearItemInventario = async (req, res) => {
             });
         }
 
+        let idResponsable = null;
+        let tipoResponsable = 'empleado';
+        
         const empleadoQuery = `SELECT id_empleado FROM empleado WHERE id_usuario = ?`;
         const [empleadoRows] = await pool.execute(empleadoQuery, [userId]);
-
-        if (empleadoRows.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Empleado no encontrado'
-            });
+        
+        if (empleadoRows.length > 0) {
+            idResponsable = empleadoRows[0].id_empleado;
+            tipoResponsable = 'empleado';
+        } else {
+            const adminQuery = `SELECT id_admin FROM administrador WHERE id_usuario = ?`;
+            const [adminRows] = await pool.execute(adminQuery, [userId]);
+            
+            if (adminRows.length > 0) {
+                idResponsable = adminRows[0].id_admin;
+                tipoResponsable = 'administrador';
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Usuario no autorizado para crear items de inventario'
+                });
+            }
         }
-
-        const idResponsable = empleadoRows[0].id_empleado;
 
         const insertQuery = `
             INSERT INTO inventario (nombre_item, cantidad_actual, cantidad_minima, unidad_medida, costo_unitario, area, id_responsable, ultima_actualizacion)
@@ -210,7 +242,16 @@ const registrarMovimiento = async (req, res) => {
         const itemId = req.params.itemId;
         const { tipo_movimiento, cantidad, motivo, observaciones } = req.body;
 
+        console.log('RegistrarMovimiento - Datos recibidos:');
+        console.log('  - userId:', userId);
+        console.log('  - itemId:', itemId);
+        console.log('  - tipo_movimiento:', tipo_movimiento);
+        console.log('  - cantidad:', cantidad);
+        console.log('  - motivo:', motivo);
+        console.log('  - observaciones:', observaciones);
+
         if (!tipo_movimiento || cantidad === undefined || !motivo) {
+            console.log('Validación fallida: campos obligatorios faltantes');
             return res.status(400).json({
                 success: false,
                 message: 'Tipo de movimiento, cantidad y motivo son obligatorios'
@@ -231,17 +272,36 @@ const registrarMovimiento = async (req, res) => {
             });
         }
 
+        let idResponsable = null;
+        let tipoResponsable = 'empleado';
+        
+        console.log('Buscando usuario responsable...');
+        
         const empleadoQuery = `SELECT id_empleado FROM empleado WHERE id_usuario = ?`;
         const [empleadoRows] = await pool.execute(empleadoQuery, [userId]);
-
-        if (empleadoRows.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Empleado no encontrado'
-            });
+        console.log('Resultado búsqueda empleado:', empleadoRows);
+        
+        if (empleadoRows.length > 0) {
+            idResponsable = empleadoRows[0].id_empleado;
+            tipoResponsable = 'empleado';
+            console.log('Usuario encontrado como empleado:', idResponsable);
+        } else {
+            const adminQuery = `SELECT id_admin FROM administrador WHERE id_usuario = ?`;
+            const [adminRows] = await pool.execute(adminQuery, [userId]);
+            console.log('Resultado búsqueda administrador:', adminRows);
+            
+            if (adminRows.length > 0) {
+                idResponsable = adminRows[0].id_admin;
+                tipoResponsable = 'administrador';
+                console.log('Usuario encontrado como administrador:', idResponsable);
+            } else {
+                console.log('Usuario no encontrado ni como empleado ni como administrador');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Usuario no autorizado para realizar movimientos de inventario'
+                });
+            }
         }
-
-        const idResponsable = empleadoRows[0].id_empleado;
 
         const itemQuery = `SELECT cantidad_actual FROM inventario WHERE id_inventario = ?`;
         const [itemRows] = await pool.execute(itemQuery, [itemId]);
@@ -270,22 +330,34 @@ const registrarMovimiento = async (req, res) => {
             nuevaCantidad = cantidad;
         }
 
-        await pool.execute('START TRANSACTION');
+        console.log('🔄 Iniciando transacción...');
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
 
         try {
             const insertMovimientoQuery = `
-                INSERT INTO movimiento_inventario (id_inventario, id_responsable, tipo_movimiento, cantidad, motivo, observaciones, fecha_movimiento)
+                INSERT INTO movimiento_inventario (id_inventario, id_responsable, tipo_responsable, tipo_movimiento, cantidad, motivo, fecha_movimiento)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())
             `;
 
-            await pool.execute(insertMovimientoQuery, [
+            console.log('Insertando movimiento con datos:');
+            console.log('  - itemId:', itemId);
+            console.log('  - idResponsable:', idResponsable);
+            console.log('  - tipoResponsable:', tipoResponsable);
+            console.log('  - tipo_movimiento:', tipo_movimiento);
+            console.log('  - cantidad:', cantidad);
+            console.log('  - motivo:', motivo);
+
+            const [movimientoResult] = await connection.execute(insertMovimientoQuery, [
                 itemId,
                 idResponsable,
+                tipoResponsable,
                 tipo_movimiento,
                 cantidad,
-                motivo,
-                observaciones || null
+                motivo
             ]);
+
+            console.log('Movimiento insertado exitosamente:', movimientoResult);
 
             const updateInventarioQuery = `
                 UPDATE inventario 
@@ -293,9 +365,9 @@ const registrarMovimiento = async (req, res) => {
                 WHERE id_inventario = ?
             `;
 
-            await pool.execute(updateInventarioQuery, [nuevaCantidad, itemId]);
+            await connection.execute(updateInventarioQuery, [nuevaCantidad, itemId]);
 
-            await pool.execute('COMMIT');
+            await connection.commit();
 
             res.status(201).json({
                 success: true,
@@ -306,11 +378,16 @@ const registrarMovimiento = async (req, res) => {
                 }
             });
         } catch (error) {
-            await pool.execute('ROLLBACK');
+            console.error('Error en transacción:', error);
+            console.error('Stack trace:', error.stack);
+            await connection.rollback();
             throw error;
+        } finally {
+            connection.release();
         }
     } catch (error) {
         console.error('Error en registrarMovimiento:', error);
+        console.error('Stack trace completo:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Error del servidor al registrar movimiento',
@@ -327,10 +404,10 @@ const getEstadisticasInventario = async (req, res) => {
         const statsQuery = `
             SELECT 
                 COUNT(*) as total_items,
-                SUM(CASE WHEN cantidad_actual <= cantidad_minima THEN 1 ELSE 0 END) as items_bajo_stock,
-                SUM(CASE WHEN cantidad_actual <= (cantidad_minima * 1.5) AND cantidad_actual > cantidad_minima THEN 1 ELSE 0 END) as items_medio_stock,
-                SUM(CASE WHEN cantidad_actual > (cantidad_minima * 1.5) THEN 1 ELSE 0 END) as items_alto_stock,
-                SUM(cantidad_actual * costo_unitario) as valor_total_inventario
+                SUM(CASE WHEN cantidad_actual <= cantidad_minima THEN 1 ELSE 0 END) as stock_bajo,
+                SUM(CASE WHEN cantidad_actual <= (cantidad_minima * 1.5) AND cantidad_actual > cantidad_minima THEN 1 ELSE 0 END) as stock_medio,
+                SUM(CASE WHEN cantidad_actual > (cantidad_minima * 1.5) THEN 1 ELSE 0 END) as stock_alto,
+                SUM(cantidad_actual * costo_unitario) as valor_total
             FROM inventario
         `;
 

@@ -576,18 +576,26 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    const order = result.pedido;
+                    const order = result.data.pedido;
                     populateOrderDetailsModal(order);
                     document.getElementById('modalLoadingState').classList.add('hidden');
                     document.getElementById('modalOrderContent').classList.remove('hidden');
                 } else {
                     console.error('Error al cargar detalles del pedido:', result.message);
-                    alert('Error al cargar los detalles del pedido');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cargar los detalles del pedido: ' + (result.message || 'Error desconocido')
+                    });
                     closeOrderDetailsModal();
                 }
             } catch (error) {
                 console.error('Error al cargar detalles del pedido:', error);
-                alert('Error al cargar los detalles del pedido');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error de conexión al cargar los detalles del pedido'
+                });
                 closeOrderDetailsModal();
             }
         }
@@ -603,9 +611,17 @@
             statusElement.className = `status-badge ${statusInfo.class}`;
 
             const itemsContainer = document.getElementById('modalOrderItems');
-            if (order.items && order.items.length > 0) {
-                itemsContainer.innerHTML = order.items.map(item => {
-                    const productName = item.producto_nombre || `Producto #${item.id_producto || 'N/A'}`;
+            if (order.productos && order.productos.length > 0) {
+                itemsContainer.innerHTML = order.productos.map(item => {
+                    let productName;
+                    if (item.producto_nombre) {
+                        productName = item.producto_nombre;
+                    } else if (item.id_producto) {
+                        productName = `Producto #${item.id_producto}`;
+                    } else {
+                        productName = `Producto (₡${item.precio_unitario.toLocaleString()})`;
+                    }
+                    
                     return `
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center space-x-3">
@@ -615,6 +631,7 @@
                                 <div>
                                     <div class="font-semibold text-sm">${productName}</div>
                                     ${item.producto_descripcion ? `<div class="text-xs text-gray-600">${item.producto_descripcion}</div>` : ''}
+                                    ${!item.producto_nombre && !item.id_producto ? `<div class="text-xs text-gray-500 italic">Pedido histórico</div>` : ''}
                                 </div>
                             </div>
                             <div class="text-right">

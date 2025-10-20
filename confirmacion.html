@@ -75,6 +75,7 @@
     <!-- Footer Container -->
     <div id="footer-container" class="mt-auto"></div>
 
+
     <script>
         let orderData = null;
 
@@ -102,12 +103,14 @@
             const delivery = orderData.delivery;
             const payment = orderData.payment;
 
+            const items = orderData.items || [];
+            
             detailsContainer.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                     <div>
                         <h4 class="font-semibold text-gray-700 mb-2">Información del Cliente</h4>
-                        <p class="text-gray-600"><strong>Nombre:</strong> ${customer.name}</p>
-                        <p class="text-gray-600"><strong>Teléfono:</strong> ${customer.phone}</p>
+                        <p class="text-gray-600"><strong>Nombre:</strong> ${customer.name || 'No disponible'}</p>
+                        <p class="text-gray-600"><strong>Teléfono:</strong> ${customer.phone || 'No disponible'}</p>
                         ${customer.email ? `<p class="text-gray-600"><strong>Email:</strong> ${customer.email}</p>` : ''}
                     </div>
                     
@@ -126,37 +129,37 @@
                 <div class="border-t pt-4 mt-4">
                     <h4 class="font-semibold text-gray-700 mb-2">Resumen del Pedido</h4>
                     <div class="space-y-2">
-                        ${orderData.items.map(item => `
+                        ${items.length > 0 ? items.map(item => `
                             <div class="flex justify-between">
-                                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                                <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
                                 <span>₡${(item.price * item.quantity).toLocaleString()}</span>
                             </div>
-                        `).join('')}
+                        `).join('') : '<p class="text-gray-500 text-center py-4">No hay items disponibles</p>'}
                         <hr class="my-2">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Subtotal</span>
-                            <span>₡${orderData.subtotal.toLocaleString()}</span>
+                            <span>₡${(orderData.subtotal || 0).toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Costo de entrega</span>
-                            <span>₡${orderData.deliveryFee.toLocaleString()}</span>
+                            <span>₡${(orderData.deliveryFee || 0).toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Impuestos</span>
-                            <span>₡${Math.round(orderData.taxes).toLocaleString()}</span>
+                            <span>₡${Math.round(orderData.taxes || 0).toLocaleString()}</span>
                         </div>
                         <hr class="my-2">
                         <div class="flex justify-between font-semibold text-lg">
                             <span>Total</span>
-                            <span>₡${Math.round(orderData.total).toLocaleString()}</span>
+                            <span>₡${Math.round(orderData.total || 0).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="border-t pt-4 mt-4 text-center">
                     <p class="text-sm text-gray-500">
-                        <strong>Número de Pedido:</strong> ${orderData.numeroPedido || '#' + orderData.id}<br>
-                        <strong>Fecha:</strong> ${new Date(orderData.timestamp).toLocaleString('es-CR')}
+                        <strong>Número de Pedido:</strong> ${orderData.numeroPedido || '#' + (orderData.id || 'N/A')}<br>
+                        <strong>Fecha:</strong> ${new Date(orderData.timestamp || Date.now()).toLocaleString('es-CR')}
                     </p>
                 </div>
             `;
@@ -189,6 +192,7 @@
             };
             return methods[method] || method;
         }
+
     </script>
 </body>
 </html>

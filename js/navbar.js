@@ -191,24 +191,30 @@ function configureRoleSpecificMenus() {
         case 'Empleado':
             roleMenuItems = `
                 <a href="/empleado/perfil.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-user-shield mr-2 text-gray-700"></i>Privacidad
+                    <i class="fas fa-user-shield mr-2 text-gray-700"></i>Mi Perfil
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-list mr-2 text-gray-700"></i>Gestionar Pedidos
+                <a href="/empleado/pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-list mr-2 text-gray-700"></i>Pedidos
                 </a>
                 <a href="/empleado/inventario.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-boxes mr-2 text-gray-700"></i>Inventario
                 </a>
+                <a href="/empleado/productos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-utensils mr-2 text-gray-700"></i>Productos
+                </a>
             `;
             mobileRoleMenuItems = `
                 <a href="/empleado/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-user-shield mr-2"></i>Privacidad
+                    <i class="fas fa-user-shield mr-2"></i>Mi Perfil
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-list mr-2"></i>Gestionar Pedidos
+                <a href="/empleado/pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-list mr-2"></i>Pedidos
                 </a>
                 <a href="/empleado/inventario.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-boxes mr-2"></i>Inventario
+                </a>
+                <a href="/empleado/productos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-utensils mr-2"></i>Productos
                 </a>
             `;
             break;

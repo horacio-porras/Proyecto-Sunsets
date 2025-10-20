@@ -77,6 +77,19 @@
         #order-cart-items * {
             box-sizing: border-box !important;
         }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
     </style>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
@@ -87,8 +100,10 @@
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
-    <!-- Order Process -->
-    <section class="py-12 flex-grow">
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Order Process -->
+        <section class="py-12 flex-grow">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
                 <!-- Progress Steps -->
@@ -287,6 +302,7 @@
             </div>
         </div>
     </section>
+    </div>
 
     <!-- Footer Container -->
     <div id="footer-container" class="mt-auto"></div>
@@ -295,7 +311,52 @@
         //Verifica si el usuario es un cliente autenticado y redirigir
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(checkUserAndRedirect, 100);
+            fillCustomerData();
         });
+
+        //Función para llenar automáticamente los datos del cliente si está autenticado
+        async function fillCustomerData() {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (authToken) {
+                try {
+                    const response = await fetch('/api/auth/profile', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.data.user) {
+                        const user = data.data.user;
+                        
+                        const nameField = document.getElementById('customerName');
+                        const phoneField = document.getElementById('customerPhone');
+                        const emailField = document.getElementById('customerEmail');
+                        
+                        if (nameField && user.nombre) {
+                            nameField.value = user.nombre;
+                        }
+                        
+                        if (phoneField && user.telefono) {
+                            phoneField.value = user.telefono;
+                        }
+                        
+                        if (emailField && user.correo) {
+                            emailField.value = user.correo;
+                        }
+                        
+                        showOrderSummary();
+                        
+                        console.log('Datos del cliente llenados automáticamente');
+                    }
+                } catch (error) {
+                    console.error('Error al obtener datos del cliente:', error);
+                }
+            }
+        }
 
         function checkUserAndRedirect() {
             const userData = localStorage.getItem('userData');
@@ -402,6 +463,119 @@
             }
         }
 
+        //Función para enviar el pedido
+        async function placeOrder() {
+            try {
+                if (!validateOrderForm()) {
+                    return;
+                }
+
+                const orderData = getOrderData();
+                
+                const cartItems = getCartItems();
+                if (cartItems.length === 0) {
+                    alert('Tu carrito está vacío');
+                    return;
+                }
+
+                const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const taxes = subtotal * 0.13; // 13% IVA
+                const total = subtotal + taxes;
+
+                const orderPayload = {
+                    items: cartItems,
+                    customer: orderData.customer,
+                    delivery: orderData.delivery,
+                    payment: {
+                        method: 'efectivo'
+                    },
+                    subtotal: subtotal,
+                    deliveryFee: 0,
+                    taxes: taxes,
+                    total: total,
+                    loyaltyPointsUsed: 0
+                };
+
+                console.log('Enviando pedido:', orderPayload);
+
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                button.disabled = true;
+
+                const response = await fetch('/api/pedidos/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const orderData = {
+                        pedidoId: result.data.pedidoId,
+                        numeroPedido: result.data.numeroPedido,
+                        total: total,
+                        subtotal: subtotal,
+                        taxes: taxes,
+                        items: cartItems,
+                        customer: getOrderData().customer,
+                        delivery: getOrderData().delivery,
+                        payment: {
+                            method: 'efectivo'
+                        }
+                    };
+                    
+                    localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+                    
+                    window.location.href = '/pago.html';
+                } else {
+                    alert(`Error al crear el pedido: ${result.message || 'Error desconocido'}`);
+                }
+
+            } catch (error) {
+                console.error('Error al enviar pedido:', error);
+                alert('Error de conexión al enviar el pedido');
+            } finally {
+                const button = event.target;
+                button.innerHTML = '<i class="fas fa-check"></i> Confirmar Pedido';
+                button.disabled = false;
+            }
+        }
+
+        //Función para obtener items del carrito
+        function getCartItems() {
+            const cart = JSON.parse(localStorage.getItem('sunsets-cart') || '[]');
+            
+            if (cart.length === 0) {
+                alert('Tu carrito está vacío. Serás redirigido al menú para agregar productos.');
+                window.location.href = '/menu.html';
+                return [];
+            }
+            
+            return cart;
+        }
+
+        //Función para limpiar formulario
+        function clearForm() {
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('deliveryProvince').value = '';
+            document.getElementById('deliveryCanton').value = '';
+            document.getElementById('deliveryDistrict').value = '';
+            document.getElementById('deliveryAddress').value = '';
+            document.getElementById('deliveryInstructions').value = '';
+        }
+
+        //Función para limpiar carrito
+        function clearCart() {
+            localStorage.removeItem('sunsets-cart');
+            console.log('Carrito limpiado');
+        }
+
         //Event listeners para actualizar el resumen en tiempo real
         document.addEventListener('DOMContentLoaded', function() {
             const formFields = [
@@ -417,7 +591,6 @@
                 }
             });
 
-            // Mostrar resumen inicial
             showOrderSummary();
         });
     </script>
