@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cron = require('node-cron');
 //Carga las variables de entorno desde config.env
 require('dotenv').config({ path: './config.env' });
 
@@ -12,6 +13,7 @@ const clienteRoutes = require('./routes/clienteRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
 const inventarioRoutes = require('./routes/inventarioRoutes');
+const { sendDailyReminders } = require('./utils/reminderService');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
@@ -74,6 +76,12 @@ app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/empleados', empleadoRoutes);
 app.use('/api/inventario', inventarioRoutes);
+// Reservaciones API
+const reservationRoutes = require('./routes/reservationRoutes');
+app.use('/api/reservaciones', reservationRoutes);
+// Recordatorios API (solo desarrollo)
+const reminderRoutes = require('./routes/reminderRoutes');
+app.use('/api/reminders', reminderRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
@@ -156,6 +164,19 @@ async function startServer() {
             console.log(`API: http://localhost:${PORT}/api`);
             console.log(`Health check: http://localhost:${PORT}/api/health`);
             console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+            
+            // Inicializar tarea programada de recordatorios
+            // Se ejecuta todos los días a las 10:00 AM
+            cron.schedule('0 10 * * *', async () => {
+                console.log('[CRON] Ejecutando tarea de recordatorios diarios...');
+                try {
+                    await sendDailyReminders();
+                } catch (error) {
+                    console.error('[CRON] Error en tarea de recordatorios:', error);
+                }
+            });
+            
+            console.log('✅ Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
         });
 
     } catch (error) {
