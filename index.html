@@ -216,15 +216,15 @@
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
-    <!-- ChatBot - Botón personalizado oculto, usamos el de Landbot personalizado -->
-    <!-- <div class="fixed bottom-4 right-4 z-50">
-        <button id="chatbotButton" onclick="toggleChat()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition" title="Abrir chat de ayuda">
+    <!-- ChatBot
+    <div class="fixed bottom-4 right-4 z-50">
+        <button id="chatbotButton" onclick="toggleChat()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition">
             <i class="fas fa-comments text-xl"></i>
         </button>
     </div> -->
 
     <style>
-        /* Estilos para botón personalizado (oculto) */
+        /* Efecto de pulse para el botón de chatbot */
         #chatbotButton {
             transition: transform 0.3s ease;
         }
@@ -233,152 +233,7 @@
             animation: pulseAdd 0.3s ease;
         }
         
-        /* Personalizar el botón por defecto de Landbot */
-        .landbot-launcher {
-            background: linear-gradient(to right, #f97316, #dc2626) !important;
-            background: -webkit-linear-gradient(left, #f97316, #dc2626) !important;
-            background: -moz-linear-gradient(left, #f97316, #dc2626) !important;
-            background: -o-linear-gradient(left, #f97316, #dc2626) !important;
-            border-radius: 50% !important;
-            width: 56px !important;
-            height: 56px !important;
-            min-width: 56px !important;
-            min-height: 56px !important;
-            max-width: 56px !important;
-            max-height: 56px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-            border: none !important;
-            transition: all 0.3s ease !important;
-            position: fixed !important;
-            bottom: 16px !important;
-            right: 16px !important;
-            z-index: 1000 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            overflow: hidden !important;
-        }
-        
-        .landbot-launcher:hover {
-            background: linear-gradient(to right, #ea580c, #b91c1c) !important;
-            background: -webkit-linear-gradient(left, #ea580c, #b91c1c) !important; /* Safari */
-            background: -moz-linear-gradient(left, #ea580c, #b91c1c) !important; /* Firefox */
-            background: -o-linear-gradient(left, #ea580c, #b91c1c) !important; /* Opera */
-            transform: scale(1.05) !important;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-        }
-        
-        /* Personalizar el icono del botón de Landbot */
-        .landbot-launcher {
-            --icon-content: '\f086'; /* Icono de chat por defecto */
-        }
-        
-        .landbot-launcher::before {
-            content: var(--icon-content) !important;
-            font-family: 'Font Awesome 6 Free' !important;
-            font-weight: 900 !important;
-            font-size: 20px !important;
-            color: white !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        /* Ocultar el icono original de Landbot */
-        .landbot-launcher svg,
-        .landbot-launcher img,
-        .landbot-launcher .landbot-launcher-icon {
-            display: none !important;
-        }
-        
-        /* Forzar el círculo perfecto */
-        .landbot-launcher * {
-            border-radius: 50% !important;
-        }
-        
-        /* Sobrescribir cualquier estilo de Landbot */
-        .landbot-launcher[style] {
-            background: linear-gradient(to right, #f97316, #dc2626) !important;
-            border-radius: 50% !important;
-            width: 56px !important;
-            height: 56px !important;
-        }
-        
-        /* Forzar círculo perfecto con aspect-ratio */
-        .landbot-launcher {
-            aspect-ratio: 1 / 1 !important;
-        }
-        
-        /* Asegurar que no haya padding interno */
-        .landbot-launcher::after {
-            content: '' !important;
-            display: block !important;
-            padding-bottom: 100% !important;
-        }
-        
-        /* Efecto de pulso para el botón de Landbot */
-        .landbot-launcher.pulse {
-            animation: landbotPulse 2s infinite !important;
-        }
-        
-        @keyframes landbotPulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
-            }
-        }
-        
-        /* Personalizar el contenedor del chat */
-        .landbot-container {
-            z-index: 999 !important;
-        }
-        
-        /* Personalizar la ventana del chat */
-        .landbot-widget {
-            border-radius: 12px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-            border: none !important;
-        }
-        
-        /* Personalizar el header del chat */
-        .landbot-widget .landbot-widget-header {
-            background: linear-gradient(to right, #f97316, #dc2626) !important;
-            border-radius: 12px 12px 0 0 !important;
-            color: white !important;
-        }
-        
-        /* Personalizar los botones del chat */
-        .landbot-widget button {
-            background: linear-gradient(to right, #f97316, #dc2626) !important;
-            border: none !important;
-            border-radius: 8px !important;
-            color: white !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .landbot-widget button:hover {
-            background: linear-gradient(to right, #ea580c, #b91c1c) !important;
-            transform: translateY(-2px) !important;
-        }
-        
-        /* Estilos adicionales para el botón de Landbot cuando está abierto */
-        .landbot-launcher.chat-open {
-            background: linear-gradient(to right, #dc2626, #b91c1c) !important;
-        }
-        
-        .landbot-launcher.chat-open:hover {
-            background: linear-gradient(to right, #b91c1c, #991b1b) !important;
-        }
-        
+        /* Efecto de parallax para el fondo del hero */
         #hero-background {
             transform: translateZ(0) scale(1.15);
             will-change: transform;
@@ -466,126 +321,34 @@
             });
         });
         
-        //Variables globales para Landbot
-        var myLandbot = null;
-        var landbotInitialized = false;
-
-        //Función para inicializar Landbot
-        function initLandbot() {
-            if (landbotInitialized) {
-                return;
+        function toggleChat() {
+            const chatbotButton = document.getElementById('chatbotButton');
+            if (chatbotButton) {
+                chatbotButton.classList.add('pulse-add');
+                setTimeout(() => {
+                    chatbotButton.classList.remove('pulse-add');
+                }, 300);
             }
-
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.async = true;
-            script.src = 'https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs';
-            
-            script.onload = function() {
-                myLandbot = new Landbot.Livechat({
-                    configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-3178601-8RWZXAO24J2AZAKM/index.json',
-                    launcher: true,
-                    welcomeUrl: false,
-                    popup: true 
-                });
-
-                landbotInitialized = true;
-                
-                //Eventos del chatbot
-                myLandbot.on('ready', () => {
-                    console.log('Landbot está listo');
-                    
-                    setTimeout(() => {
-                        const landbotButton = document.querySelector('.landbot-launcher');
-                        if (landbotButton) {
-                            landbotButton.style.cssText = `
-                                background: linear-gradient(to right, #f97316, #dc2626) !important;
-                                border-radius: 50% !important;
-                                width: 56px !important;
-                                height: 56px !important;
-                                min-width: 56px !important;
-                                min-height: 56px !important;
-                                max-width: 56px !important;
-                                max-height: 56px !important;
-                                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-                                border: none !important;
-                                position: fixed !important;
-                                bottom: 16px !important;
-                                right: 16px !important;
-                                z-index: 1000 !important;
-                                padding: 0 !important;
-                                margin: 0 !important;
-                                display: flex !important;
-                                align-items: center !important;
-                                justify-content: center !important;
-                                overflow: hidden !important;
-                            `;
-                            
-                            landbotButton.classList.add('pulse');
-                            
-                            const originalIcons = landbotButton.querySelectorAll('svg, img, .landbot-launcher-icon');
-                            originalIcons.forEach(icon => {
-                                icon.style.display = 'none';
-                            });
-                            
-                            const observer = new MutationObserver(() => {
-                                if (landbotButton.style.background !== 'linear-gradient(to right, rgb(249, 115, 22), rgb(220, 38, 38))') {
-                                    landbotButton.style.cssText = `
-                                        background: linear-gradient(to right, #f97316, #dc2626) !important;
-                                        border-radius: 50% !important;
-                                        width: 56px !important;
-                                        height: 56px !important;
-                                        min-width: 56px !important;
-                                        min-height: 56px !important;
-                                        max-width: 56px !important;
-                                        max-height: 56px !important;
-                                        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-                                        border: none !important;
-                                        position: fixed !important;
-                                        bottom: 16px !important;
-                                        right: 16px !important;
-                                        z-index: 1000 !important;
-                                        padding: 0 !important;
-                                        margin: 0 !important;
-                                        display: flex !important;
-                                        align-items: center !important;
-                                        justify-content: center !important;
-                                        overflow: hidden !important;
-                                    `;
-                                }
-                            });
-                            
-                            observer.observe(landbotButton, {
-                                attributes: true,
-                                attributeFilter: ['style', 'class']
-                            });
-                        }
-                    }, 500);
-                });
-
-                myLandbot.on('open', () => {
-                    console.log('Chat abierto');
-                    const landbotButton = document.querySelector('.landbot-launcher');
-                    if (landbotButton) {
-                        landbotButton.style.setProperty('--icon-content', '"\\f00d"');
-                    }
-                });
-
-                myLandbot.on('close', () => {
-                    console.log('Chat cerrado');
-                    const landbotButton = document.querySelector('.landbot-launcher');
-                    if (landbotButton) {
-                        landbotButton.style.setProperty('--icon-content', '"\\f086"');
-                    }
-                });
-            };
-            
-            document.head.appendChild(script);
         }
 
-        //Inicializar Landbot cuando el usuario interactúe con la página
         window.addEventListener('mouseover', initLandbot, { once: true });
         window.addEventListener('touchstart', initLandbot, { once: true });
+        var myLandbot;
+        function initLandbot() {
+            if (!myLandbot) {
+                var s = document.createElement('script');
+                s.type = "module"
+                s.async = true;
+                s.addEventListener('load', function () {
+                    var myLandbot = new Landbot.Livechat({
+                        configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-3178601-8RWZXAO24J2AZAKM/index.json',
+                    });
+                });
+                s.src = 'https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs';
+                var x = document.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+            }
+        }
     </script>
 </body>
 

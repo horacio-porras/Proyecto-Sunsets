@@ -122,6 +122,7 @@ CREATE TABLE pedido (
     cliente_invitado_email VARCHAR(100),
     id_direccion INT,
     id_empleado_asignado INT,
+    area_asignacion VARCHAR(50),
     subtotal DECIMAL(10,2),
     impuestos DECIMAL(10,2),
     descuentos DECIMAL(10,2),
