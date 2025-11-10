@@ -28,7 +28,16 @@ const createReservationValidation = [
     .withMessage('Las solicitudes especiales no pueden exceder 1000 caracteres'),
   body('preferencia_mesa')
     .optional()
-    .isIn(['indoor', 'outdoor', 'window', 'any'])
+    .isIn([
+      'Interior',
+      'Terraza',
+      'Ventana',
+      'Cualquiera',
+      'indoor',
+      'outdoor',
+      'window',
+      'any'
+    ])
     .withMessage('Preferencia de mesa inválida')
 ];
 

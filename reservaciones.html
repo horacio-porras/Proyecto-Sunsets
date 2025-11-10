@@ -201,7 +201,7 @@
                             <!-- Información de Recordatorio -->
                             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                 <div class="flex items-start gap-3">
-                                    <div class="text-blue-600 text-xl">📧</div>
+                                    <div class="text-blue-600 text-xl">❗</div>
                                     <div class="flex-1">
                                         <p class="font-medium text-gray-800">
                                             Recordatorio automático incluido
@@ -329,19 +329,23 @@
         }
 
         function updateSummary() {
-            const notesElement = document.getElementById('reservation-notes');
-            const reservationSummary = document.getElementById('reservationSummary');
-            if (!reservationSummary) {
-                return;
+            if (summaryDate) {
+                summaryDate.textContent = reservationState.date ? formatDateForDisplay(reservationState.date) : 'No seleccionada';
             }
-            reservationSummary.innerHTML = `
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p><i class="fas fa-calendar-alt text-orange-500 mr-2"></i><strong>Fecha:</strong> ${reservationState.date ? formatDateForDisplay(reservationState.date) : 'Selecciona una fecha'}</p>
-                    <p><i class="fas fa-clock text-orange-500 mr-2"></i><strong>Hora:</strong> ${reservationState.timeDisplay || 'Selecciona un horario'}</p>
-                    <p><i class="fas fa-users text-orange-500 mr-2"></i><strong>Personas:</strong> ${reservationState.people ? `${reservationState.people} ${reservationState.people === 1 ? 'persona' : 'personas'}` : 'Selecciona la cantidad de personas'}</p>
-                    <p><i class="fas fa-chair text-orange-500 mr-2"></i><strong>Preferencia:</strong> ${reservationState.tablePreference || 'Ninguna'}</p>
-                </div>
-            `;
+
+            if (summaryTime) {
+                summaryTime.textContent = reservationState.timeDisplay || 'No seleccionada';
+            }
+
+            if (summaryPeople) {
+                summaryPeople.textContent = reservationState.people
+                    ? `${reservationState.people} ${reservationState.people === 1 ? 'persona' : 'personas'}`
+                    : 'No seleccionado';
+            }
+
+            if (summaryTablePreference) {
+                summaryTablePreference.textContent = reservationState.tablePreference || 'Sin preferencia';
+            }
         }
 
         function clearFieldError(fieldName) {
@@ -629,6 +633,14 @@
             clearValidationFeedback();
 
             const token = localStorage.getItem('authToken');
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Necesitas una cuenta',
+                    text: 'Crea una cuenta o inicia sesión para confirmar tu reservación.'
+                });
+                return;
+            }
 
             const formData = getFormData();
             const validationErrors = validateFormData(formData);
@@ -661,9 +673,9 @@
                         hora_reserva: reservationState.time,
                         cantidad_personas: reservationState.people,
                         preferencia_mesa: reservationState.tablePreference || undefined,
-                        nombre_contacto: formData.fullName,
-                        correo_contacto: formData.email,
-                        telefono_contacto: formData.phone
+                        nombre: formData.fullName,
+                        correo: formData.email,
+                        telefono: formData.phone
                     })
                 });
 
@@ -683,10 +695,25 @@
                     return;
                 }
 
+                const numeroReserva = result?.data?.numero_reserva;
+                const previewUrl = result?.data?.preview_url;
+                const successTextParts = [
+                    'Tu reservación ha sido registrada.'
+                ];
+
+                if (numeroReserva) {
+                    successTextParts.push(`Tu número de reservación es ${numeroReserva}.`);
+                }
+
+                successTextParts.push('Revisa tu correo para la confirmación.');
+
                 Swal.fire({
                     icon: 'success',
                     title: '¡Reservación confirmada!',
-                    text: 'Tu reservación ha sido registrada y está asociada a tu perfil.',
+                    html: `
+                        <p>${successTextParts.join(' ')}</p>
+                        ${previewUrl ? `<p class="mt-3"><a href="${previewUrl}" target="_blank" class="text-orange-500 underline">Ver vista previa del correo</a></p>` : ''}
+                    `,
                     confirmButtonText: 'Entendido'
                 }).then(() => {
                     reservationForm.reset();

@@ -8,10 +8,11 @@ async function getTransport() {
     SMTP_SECURE,
     SMTP_USER,
     SMTP_PASS,
-    MAIL_FROM
+    MAIL_FROM,
+    SMTP_SERVICE
   } = process.env;
 
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !MAIL_FROM) {
+  if (!SMTP_USER || !SMTP_PASS || !MAIL_FROM || (!SMTP_HOST && !SMTP_SERVICE)) {
     console.warn('SMTP no configurado completamente. Usando cuenta de prueba Ethereal...');
     const testAccount = await nodemailer.createTestAccount();
     const transporter = nodemailer.createTransport({
@@ -21,15 +22,31 @@ async function getTransport() {
       auth: { user: testAccount.user, pass: testAccount.pass }
     });
     return { transporter, from: `Sunset's Tarbaca <no-reply@sunsets.test>`, isTest: true };
-  } else {
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT || 587),
-      secure: String(SMTP_SECURE || 'false') === 'true',
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
-    });
-    return { transporter, from: MAIL_FROM, isTest: false };
   }
+
+  const transporterOptions = SMTP_SERVICE
+    ? {
+        service: SMTP_SERVICE,
+        auth: { user: SMTP_USER, pass: SMTP_PASS }
+      }
+    : {
+        host: SMTP_HOST,
+        port: Number(SMTP_PORT || 587),
+        secure: String(SMTP_SECURE || 'false') === 'true',
+        auth: { user: SMTP_USER, pass: SMTP_PASS }
+      };
+
+  const transporter = nodemailer.createTransport(transporterOptions);
+
+  try {
+    await transporter.verify();
+    console.info(`[Mailer] Conexión SMTP verificada con ${SMTP_SERVICE || SMTP_HOST}:${transporterOptions.port || ''}`);
+  } catch (verifyErr) {
+    console.error('[Mailer] Error verificando conexión SMTP:', verifyErr.message);
+    throw verifyErr;
+  }
+
+  return { transporter, from: MAIL_FROM, isTest: false };
 }
 
 async function sendReservationEmail({ to, nombre, numeroReserva, fecha, hora, personas }) {

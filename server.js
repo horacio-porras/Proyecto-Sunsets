@@ -178,7 +178,7 @@ async function startServer() {
                 }
             });
             
-            console.log('✅ Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
+            console.log('Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
         });
 
     } catch (error) {

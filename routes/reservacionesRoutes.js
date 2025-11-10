@@ -1,15 +1,25 @@
 const express = require('express');
 const router = express.Router();
 
-const { createReservation, getActiveReservations, updateReservation, cancelReservation } = require('../controllers/reservacionController');
+const {
+    createReservation,
+    createPublicReservation,
+    getActiveReservations,
+    updateReservation,
+    cancelReservation
+} = require('../controllers/reservacionController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { createReservationValidation } = require('../validators/reservationValidator');
 
-router.post(
-    '/',
-    authenticateToken,
-    authorizeRoles('Cliente'),
-    createReservation
-);
+router.post('/', createReservationValidation, (req, res, next) => {
+    const authHeader = req.headers.authorization || '';
+
+    if (authHeader) {
+        return authenticateToken(req, res, () => authorizeRoles('Cliente')(req, res, () => createReservation(req, res, next)));
+    }
+
+    return createPublicReservation(req, res, next);
+});
 
 router.get(
     '/activas',
