@@ -198,6 +198,21 @@
                                 </div>
                             </div>
 
+                            <!-- Información de Recordatorio -->
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <div class="flex items-start gap-3">
+                                    <div class="text-blue-600 text-xl">📧</div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-800">
+                                            Recordatorio automático incluido
+                                        </p>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            Te enviaremos un correo 24 horas antes con los detalles de tu reservación.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Confirmation -->
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <h4 class="font-semibold mb-2">Resumen de la Reservación</h4>
@@ -210,9 +225,9 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
-                                <i class="fas fa-check"></i>
-                                Confirmar Reservación
+                            <button id="resSubmitBtn" type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
+                                <span class="btn-text flex items-center gap-2"><i class="fas fa-check"></i>Confirmar Reservación</span>
+                                <span class="btn-loading hidden items-center gap-2"><i class="fas fa-spinner fa-spin"></i>Procesando...</span>
                             </button>
                         </form>
                     </div>
@@ -614,17 +629,6 @@
             clearValidationFeedback();
 
             const token = localStorage.getItem('authToken');
-            if (!token) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Inicia sesión',
-                    text: 'Debes iniciar sesión como cliente para confirmar tu reservación.',
-                    confirmButtonText: 'Ir a iniciar sesión'
-                }).then(() => {
-                    window.location.href = '/login';
-                });
-                return;
-            }
 
             const formData = getFormData();
             const validationErrors = validateFormData(formData);
@@ -641,12 +645,17 @@
             }
 
             try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (token) {
+                    headers.Authorization = `Bearer ${token}`;
+                }
+
                 const response = await fetch('/api/reservaciones', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    },
+                    headers,
                     body: JSON.stringify({
                         fecha_reserva: reservationState.date,
                         hora_reserva: reservationState.time,
@@ -729,14 +738,7 @@
             updateSummary();
 
             const token = localStorage.getItem('authToken');
-            if (!token) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Inicia sesión para reservar',
-                    text: 'Necesitas iniciar sesión como cliente para confirmar una reservación.',
-                    confirmButtonText: 'Entendido'
-                });
-            } else {
+            if (token) {
                 loadClientProfile();
             }
 
