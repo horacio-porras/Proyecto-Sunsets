@@ -193,6 +193,23 @@
             <div id="orders-list" class="space-y-6 hidden">
                 <!-- Los pedidos se cargarán dinámicamente aquí -->
             </div>
+
+            <div id="paginationControls" class="hidden mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="paginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 pedidos
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="paginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="nextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -315,12 +332,37 @@
     <script>
         let allOrders = [];
         let filteredOrders = [];
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 5;
 
+        let paginationControls;
+        let paginationSummary;
+        let paginationInfo;
+        let prevPageBtn;
+        let nextPageBtn;
+ 
         document.addEventListener('DOMContentLoaded', function() {
+            setupPaginationControls();
             loadOrders();
             setupFilters();
             setupModalEventListeners();
         });
+
+        function setupPaginationControls() {
+            paginationControls = document.getElementById('paginationControls');
+            paginationSummary = document.getElementById('paginationSummary');
+            paginationInfo = document.getElementById('paginationInfo');
+            prevPageBtn = document.getElementById('prevPageBtn');
+            nextPageBtn = document.getElementById('nextPageBtn');
+
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', () => changePage(-1));
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', () => changePage(1));
+            }
+        }
 
         //Configura los event listeners del modal de detalles del pedido
         function setupModalEventListeners() {
@@ -361,6 +403,7 @@
                 if (result.success) {
                     allOrders = result.pedidos || [];
                     filteredOrders = [...allOrders];
+                    currentPage = 1;
                     displayOrders();
                 } else {
                     console.error('Error al cargar pedidos:', result.message);
@@ -388,7 +431,59 @@
             ordersList.classList.remove('hidden');
             emptyState.classList.add('hidden');
 
-            ordersList.innerHTML = filteredOrders.map(order => createOrderCard(order)).join('');
+            const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredOrders.length);
+            const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+            ordersList.innerHTML = paginatedOrders.map(order => createOrderCard(order)).join('');
+            renderPagination(totalPages, startIndex, endIndex);
+        }
+
+        function renderPagination(totalPages, startIndex, endIndex) {
+            if (!paginationControls || !paginationSummary || !paginationInfo || !prevPageBtn || !nextPageBtn) {
+                return;
+            }
+
+            if (filteredOrders.length === 0) {
+                paginationControls.classList.add('hidden');
+                return;
+            }
+
+            paginationControls.classList.remove('hidden');
+
+            const total = filteredOrders.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            paginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} pedidos`;
+            paginationInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+
+            const isFirstPage = currentPage <= 1;
+            const isLastPage = currentPage >= totalPages;
+
+            prevPageBtn.disabled = isFirstPage;
+            nextPageBtn.disabled = isLastPage;
+        }
+
+        function changePage(offset) {
+            goToPage(currentPage + offset);
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            currentPage = page;
+            displayOrders();
         }
 
         //Crea el card del pedido
@@ -502,6 +597,10 @@
             loadingState.classList.add('hidden');
             ordersList.classList.add('hidden');
             emptyState.classList.remove('hidden');
+
+            if (paginationControls) {
+                paginationControls.classList.add('hidden');
+            }
         }
 
         //Configura los filtros de la lista de pedidos
@@ -522,6 +621,8 @@
                 if (!statusFilter) return true;
                 return order.estado_pedido === statusFilter;
             });
+
+            currentPage = 1;
 
             filteredOrders.sort((a, b) => {
                 switch (sortFilter) {
@@ -546,6 +647,7 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('sortFilter').value = 'fecha_desc';
             filteredOrders = [...allOrders];
+            currentPage = 1;
             displayOrders();
         }
 

@@ -24,9 +24,41 @@
         .main-content {
             flex: 1;
         }
+
+        .calendar-day.selected,
+        .time-slot.selected {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #fff;
+        }
+
+        .table-preference.active {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #fff;
+        }
+
+        .table-preference.active span {
+            color: #fff;
+        }
+
+        .calendar-day.disabled,
+        .time-slot.disabled {
+            cursor: not-allowed;
+            color: #d1d5db;
+        }
+
+        .calendar-day:not(.selected):not(.disabled):hover,
+        .time-slot:not(.selected):not(.disabled):hover,
+        .table-preference:not(.active):hover {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #fff;
+        }
+
+        .table-preference:not(.active):hover span {
+            color: #fff;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-max-reservas="8">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
@@ -104,29 +136,32 @@
                     <div class="bg-white rounded-lg shadow-lg p-6">
                         <h3 class="text-2xl font-bold mb-6">Detalles de la Reservación</h3>
                         
-                        <form class="space-y-6">
+                        <form id="reservationForm" class="space-y-6" novalidate>
                             <!-- Guest Information -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
-                                <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
+                                <input type="text" id="fullName" name="fullName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
+                                <p class="mt-1 text-sm text-red-600 hidden" data-error-for="fullName"></p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
-                                    <input type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                                    <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="email"></p>
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
-                                    <input type="tel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                    <input type="tel" id="phone" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="phone"></p>
                                 </div>
                             </div>
 
                             <!-- Party Size -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Número de Personas *</label>
-                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <select id="peopleCount" name="peopleCount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
                                     <option value="">Selecciona el número de personas</option>
                                     <option value="1">1 persona</option>
                                     <option value="2">2 personas</option>
@@ -136,14 +171,8 @@
                                     <option value="6">6 personas</option>
                                     <option value="7">7 personas</option>
                                     <option value="8">8 personas</option>
-                                    <option value="9+">9+ personas (Contactar)</option>
                                 </select>
-                            </div>
-
-                            <!-- Special Requests -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Solicitudes Especiales</label>
-                                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Alergias, preferencias especiales, ocasión especial, etc."></textarea>
+                                <p class="mt-1 text-sm text-red-600 hidden" data-error-for="peopleCount"></p>
                             </div>
 
                             <!-- Table Preference -->
@@ -151,19 +180,19 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Preferencia de Mesa</label>
                                 <div class="flex flex-wrap gap-3">
                                     <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
-                                        <input type="radio" name="table-preference" value="indoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <input type="radio" name="table-preference" value="Interior" class="mr-2 hidden">
                                         <span class="text-sm text-gray-700">Interior</span>
                                     </label>
                                     <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
-                                        <input type="radio" name="table-preference" value="outdoor" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <input type="radio" name="table-preference" value="Terraza" class="mr-2 hidden">
                                         <span class="text-sm text-gray-700">Terraza</span>
                                     </label>
                                     <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
-                                        <input type="radio" name="table-preference" value="window" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <input type="radio" name="table-preference" value="Ventana" class="mr-2 hidden">
                                         <span class="text-sm text-gray-700">Ventana</span>
                                     </label>
                                     <label class="table-preference flex items-center bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
-                                        <input type="radio" name="table-preference" value="any" class="mr-2 hidden" onchange="filterTablePreference()">
+                                        <input type="radio" name="table-preference" value="Cualquiera" class="mr-2 hidden">
                                         <span class="text-sm text-gray-700">Cualquiera</span>
                                     </label>
                                 </div>
@@ -176,6 +205,7 @@
                                     <p><strong>Fecha:</strong> <span id="selectedDate">No seleccionada</span></p>
                                     <p><strong>Hora:</strong> <span id="selectedTime">No seleccionada</span></p>
                                     <p><strong>Personas:</strong> <span id="selectedPeople">No seleccionado</span></p>
+                                    <p><strong>Mesa:</strong> <span id="selectedTablePreference">Sin preferencia</span></p>
                                 </div>
                             </div>
 
@@ -228,169 +258,501 @@
     <div id="footer-container"></div>
 
     <script>
-        let currentDate = new Date();
-        let selectedDate = null;
-        let selectedTime = null;
+        const MAX_PERSONAS_RESERVA = Number(document.body.dataset.maxReservas) || 8;
+        const calendarElement = document.getElementById('calendar');
+        const currentMonthElement = document.getElementById('currentMonth');
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        const peopleSelect = document.getElementById('peopleCount');
+        const reservationForm = document.getElementById('reservationForm');
+        const summaryDate = document.getElementById('selectedDate');
+        const summaryTime = document.getElementById('selectedTime');
+        const summaryPeople = document.getElementById('selectedPeople');
+        const summaryTablePreference = document.getElementById('selectedTablePreference');
+        const tablePreferenceLabels = document.querySelectorAll('.table-preference');
+
+        const calendarDayBaseClasses = 'calendar-day text-center py-2 cursor-pointer rounded transition';
+
+        let calendarReferenceDate = new Date();
+
+        const reservationState = {
+            date: null,
+            time: null,
+            timeDisplay: null,
+            people: null,
+            tablePreference: null
+        };
 
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        function generateCalendar() {
-            const calendar = document.getElementById('calendar');
-            const currentMonthElement = document.getElementById('currentMonth');
-            
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            
-            currentMonthElement.textContent = currentDate.toLocaleDateString('es-ES', { 
-                month: 'long', 
-                year: 'numeric' 
-            });
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            calendar.innerHTML = '';
-            
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'text-center py-2 cursor-pointer rounded transition';
-                
-                if (date.getMonth() === month) {
-                    dayElement.textContent = date.getDate();
-                    
-                    if (date < new Date().setHours(0, 0, 0, 0)) {
-                        dayElement.classList.add('text-gray-300', 'cursor-not-allowed');
-                    } else {
-                        dayElement.addEventListener('click', () => selectDate(date));
-                        dayElement.addEventListener('mouseenter', function() {
-                            this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
-                            this.style.color = 'white';
-                        });
-                        dayElement.addEventListener('mouseleave', function() {
-                            if (!this.classList.contains('selected')) {
-                                this.style.background = '';
-                                this.style.color = '';
-                            }
-                        });
-                    }
-                } else {
-                    dayElement.classList.add('text-gray-300');
-                }
-                
-                calendar.appendChild(dayElement);
+            if (menu) {
+                menu.classList.toggle('hidden');
             }
         }
 
-        function selectDate(date) {
-            selectedDate = date;
-            document.getElementById('selectedDate').textContent = date.toLocaleDateString('es-ES');
-            
-            document.querySelectorAll('#calendar > div').forEach(day => {
-                day.classList.remove('selected');
-                day.style.background = '';
-                day.style.color = '';
-            });
-            
-            const selectedDay = event.target;
-            selectedDay.classList.add('selected');
-            selectedDay.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
-            selectedDay.style.color = 'white';
+        function formatDateForDisplay(isoDate) {
+            if (!isoDate) {
+                return 'No seleccionada';
+            }
+            const date = new Date(`${isoDate}T00:00:00`);
+            return new Intl.DateTimeFormat('es-CR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }).format(date);
         }
 
-        function selectTime(time) {
-            selectedTime = time;
-            document.getElementById('selectedTime').textContent = time;
-            
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
-                slot.style.background = '';
-                slot.style.color = '';
+        function formatTimeForDisplay(time) {
+            if (!time) {
+                return 'No seleccionada';
+            }
+            const [hours, minutes] = time.split(':');
+            const hourNumber = Number(hours);
+            const period = hourNumber >= 12 ? 'PM' : 'AM';
+            const hour12 = ((hourNumber + 11) % 12) + 1;
+            return `${hour12}:${minutes} ${period}`;
+        }
+
+        function updateSummary() {
+            const notesElement = document.getElementById('reservation-notes');
+            const reservationSummary = document.getElementById('reservationSummary');
+            if (!reservationSummary) {
+                return;
+            }
+            reservationSummary.innerHTML = `
+                <div class="text-sm text-gray-600 space-y-2">
+                    <p><i class="fas fa-calendar-alt text-orange-500 mr-2"></i><strong>Fecha:</strong> ${reservationState.date ? formatDateForDisplay(reservationState.date) : 'Selecciona una fecha'}</p>
+                    <p><i class="fas fa-clock text-orange-500 mr-2"></i><strong>Hora:</strong> ${reservationState.timeDisplay || 'Selecciona un horario'}</p>
+                    <p><i class="fas fa-users text-orange-500 mr-2"></i><strong>Personas:</strong> ${reservationState.people ? `${reservationState.people} ${reservationState.people === 1 ? 'persona' : 'personas'}` : 'Selecciona la cantidad de personas'}</p>
+                    <p><i class="fas fa-chair text-orange-500 mr-2"></i><strong>Preferencia:</strong> ${reservationState.tablePreference || 'Ninguna'}</p>
+                </div>
+            `;
+        }
+
+        function clearFieldError(fieldName) {
+            const mappedField = fieldName === 'cantidad_personas' ? 'peopleCount' : fieldName;
+
+            if (['fullName', 'email', 'phone', 'peopleCount'].includes(mappedField)) {
+                const input = document.getElementById(mappedField);
+                if (input) {
+                    input.classList.remove('border-red-500', 'focus:ring-red-500');
+                }
+                const errorElement = document.querySelector(`[data-error-for="${mappedField}"]`);
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.classList.add('hidden');
+                }
+            }
+
+            if (fieldName === 'fecha_reserva' || mappedField === 'fecha_reserva') {
+                calendarElement.classList.remove('ring-2', 'ring-red-400', 'rounded-md');
+            }
+
+            if (fieldName === 'hora_reserva' || mappedField === 'hora_reserva') {
+                timeSlotsContainer.classList.remove('ring-2', 'ring-red-400', 'rounded-md');
+            }
+        }
+
+        function showFieldError(fieldName, message) {
+            const mappedField = fieldName === 'cantidad_personas' ? 'peopleCount' : fieldName;
+
+            if (['fullName', 'email', 'phone', 'peopleCount'].includes(mappedField)) {
+                const input = document.getElementById(mappedField);
+                if (input) {
+                    input.classList.add('border-red-500', 'focus:ring-red-500');
+                }
+                const errorElement = document.querySelector(`[data-error-for="${mappedField}"]`);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.remove('hidden');
+                }
+            }
+
+            if (fieldName === 'fecha_reserva') {
+                calendarElement.classList.add('ring-2', 'ring-red-400', 'rounded-md');
+            }
+
+            if (fieldName === 'hora_reserva') {
+                timeSlotsContainer.classList.add('ring-2', 'ring-red-400', 'rounded-md');
+            }
+        }
+
+        function clearValidationFeedback() {
+            ['fullName', 'email', 'phone', 'peopleCount', 'cantidad_personas', 'fecha_reserva', 'hora_reserva']
+                .forEach(clearFieldError);
+        }
+
+        function handleDateSelection(isoDate, element) {
+            reservationState.date = isoDate;
+            document.querySelectorAll('#calendar .calendar-day').forEach(day => day.classList.remove('selected'));
+            element.classList.add('selected');
+            clearFieldError('fecha_reserva');
+            updateSummary();
+        }
+
+        function generateCalendar() {
+            const year = calendarReferenceDate.getFullYear();
+            const month = calendarReferenceDate.getMonth();
+
+            currentMonthElement.textContent = calendarReferenceDate.toLocaleDateString('es-ES', {
+                month: 'long',
+                year: 'numeric'
             });
-            
-            const selectedSlot = event.target;
-            selectedSlot.classList.add('selected');
-            selectedSlot.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
-            selectedSlot.style.color = 'white';
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const startDate = new Date(firstDayOfMonth);
+            startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay());
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            calendarElement.innerHTML = '';
+
+            for (let i = 0; i < 42; i += 1) {
+                const current = new Date(startDate);
+                current.setDate(startDate.getDate() + i);
+                const isoDate = current.toISOString().split('T')[0];
+
+                const dayElement = document.createElement('div');
+                dayElement.className = calendarDayBaseClasses;
+                dayElement.dataset.isoDate = isoDate;
+                dayElement.textContent = current.getDate();
+
+                if (current.getMonth() !== month || current < today) {
+                    dayElement.classList.add('disabled');
+                } else {
+                    dayElement.addEventListener('click', () => handleDateSelection(isoDate, dayElement));
+                }
+
+                if (reservationState.date === isoDate) {
+                    dayElement.classList.add('selected');
+                }
+
+                calendarElement.appendChild(dayElement);
+            }
+        }
+
+        function handleTimeSelection(time, element) {
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+
+            reservationState.time = time;
+            reservationState.timeDisplay = formatTimeForDisplay(time);
+            document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('selected'));
+            element.classList.add('selected');
+            clearFieldError('hora_reserva');
+            updateSummary();
+        }
+
+        function attachTimeSlotHandlers() {
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.addEventListener('click', () => handleTimeSelection(slot.dataset.time, slot));
+            });
+        }
+
+        function handlePeopleChange(event) {
+            const value = event.target.value;
+
+            if (!value) {
+                reservationState.people = null;
+                clearFieldError('peopleCount');
+                updateSummary();
+                return;
+            }
+
+            if (value === '9+' || Number(value) > MAX_PERSONAS_RESERVA) {
+                reservationState.people = null;
+                event.target.value = '';
+                updateSummary();
+                showFieldError('peopleCount', `Por favor selecciona hasta ${MAX_PERSONAS_RESERVA} personas.`);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Capacidad máxima',
+                    text: `La capacidad máxima por reservación es de ${MAX_PERSONAS_RESERVA} personas.`
+                });
+                return;
+            }
+
+            reservationState.people = Number(value);
+            clearFieldError('peopleCount');
+            updateSummary();
+        }
+
+        function updateTablePreferenceStyles() {
+            tablePreferenceLabels.forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    label.classList.add('active');
+                } else {
+                    label.classList.remove('active');
+                }
+            });
+        }
+
+        function handleTablePreferenceChange(event) {
+            reservationState.tablePreference = event.target.value;
+            updateTablePreferenceStyles();
+            updateSummary();
+        }
+
+        function getFormData() {
+            return {
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+        }
+
+        function validateFormData(formData) {
+            const errors = [];
+
+            if (!formData.fullName) {
+                errors.push({ field: 'fullName', message: 'El nombre completo es obligatorio.' });
+            }
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!formData.email) {
+                errors.push({ field: 'email', message: 'El correo electrónico es obligatorio.' });
+            } else if (!emailPattern.test(formData.email)) {
+                errors.push({ field: 'email', message: 'Ingresa un correo electrónico válido.' });
+            }
+
+            const phonePattern = /^\+?[0-9\s-]{8,15}$/;
+            if (!formData.phone) {
+                errors.push({ field: 'phone', message: 'El número de teléfono es obligatorio.' });
+            } else if (!phonePattern.test(formData.phone)) {
+                errors.push({ field: 'phone', message: 'Ingresa un número de teléfono válido.' });
+            }
+
+            if (!reservationState.date) {
+                errors.push({ field: 'fecha_reserva', message: 'Selecciona una fecha disponible.' });
+            }
+
+            if (!reservationState.time) {
+                errors.push({ field: 'hora_reserva', message: 'Selecciona un horario disponible.' });
+            }
+
+            if (!reservationState.people) {
+                errors.push({ field: 'peopleCount', message: 'Selecciona la cantidad de personas.' });
+            } else if (reservationState.people > MAX_PERSONAS_RESERVA) {
+                errors.push({
+                    field: 'cantidad_personas',
+                    message: `La capacidad máxima por reservación es de ${MAX_PERSONAS_RESERVA} personas.`
+                });
+            }
+
+            return errors;
+        }
+
+        function showValidationErrors(errors) {
+            if (!Array.isArray(errors) || errors.length === 0) {
+                return;
+            }
+
+            const messages = [];
+            const processedFields = new Set();
+
+            errors.forEach(error => {
+                messages.push(error.message);
+                if (!processedFields.has(error.field)) {
+                    showFieldError(error.field, error.message);
+                    processedFields.add(error.field);
+                }
+            });
+
+            const uniqueMessages = [...new Set(messages)];
+            const listHtml = `<ul class="text-left space-y-1">${uniqueMessages.map(message => `<li>• ${message}</li>`).join('')}</ul>`;
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Revisa tu reservación',
+                html: listHtml,
+                confirmButtonText: 'Entendido'
+            });
+        }
+
+        async function loadClientProfile() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/profile', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const { data } = await response.json();
+                const user = data?.user;
+                if (!user) {
+                    return;
+                }
+
+                if (user.nombre) {
+                    document.getElementById('fullName').value = user.nombre;
+                }
+                if (user.correo) {
+                    document.getElementById('email').value = user.correo;
+                }
+                if (user.telefono) {
+                    document.getElementById('phone').value = user.telefono;
+                }
+            } catch (error) {
+                // Silenciar errores de carga de perfil
+            }
+        }
+
+        async function submitReservation(event) {
+            event.preventDefault();
+            clearValidationFeedback();
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicia sesión',
+                    text: 'Debes iniciar sesión como cliente para confirmar tu reservación.',
+                    confirmButtonText: 'Ir a iniciar sesión'
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+                return;
+            }
+
+            const formData = getFormData();
+            const validationErrors = validateFormData(formData);
+
+            if (validationErrors.length > 0) {
+                showValidationErrors(validationErrors);
+                return;
+            }
+
+            const submitButton = reservationForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+
+            try {
+                const response = await fetch('/api/reservaciones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        fecha_reserva: reservationState.date,
+                        hora_reserva: reservationState.time,
+                        cantidad_personas: reservationState.people,
+                        preferencia_mesa: reservationState.tablePreference || undefined,
+                        nombre_contacto: formData.fullName,
+                        correo_contacto: formData.email,
+                        telefono_contacto: formData.phone
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    if (Array.isArray(result?.errors) && result.errors.length > 0) {
+                        showValidationErrors(result.errors);
+                    }
+
+                    const message = result?.message || 'No se pudo crear la reservación.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Reservación no completada',
+                        text: message
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reservación confirmada!',
+                    text: 'Tu reservación ha sido registrada y está asociada a tu perfil.',
+                    confirmButtonText: 'Entendido'
+                }).then(() => {
+                    reservationForm.reset();
+                    reservationState.date = null;
+                    reservationState.time = null;
+                    reservationState.timeDisplay = null;
+                    reservationState.people = null;
+                    reservationState.tablePreference = null;
+                    document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('selected'));
+                    tablePreferenceLabels.forEach(label => {
+                        const radio = label.querySelector('input[type="radio"]');
+                        if (radio) {
+                            radio.checked = false;
+                        }
+                        label.classList.remove('active');
+                    });
+                    generateCalendar();
+                    clearValidationFeedback();
+                    updateSummary();
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error inesperado',
+                    text: 'Ocurrió un problema al guardar tu reservación. Intenta nuevamente.'
+                });
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+            }
         }
 
         function previousMonth() {
-            currentDate.setMonth(currentDate.getMonth() - 1);
+            calendarReferenceDate.setMonth(calendarReferenceDate.getMonth() - 1);
             generateCalendar();
         }
 
         function nextMonth() {
-            currentDate.setMonth(currentDate.getMonth() + 1);
+            calendarReferenceDate.setMonth(calendarReferenceDate.getMonth() + 1);
             generateCalendar();
         }
 
-        generateCalendar();
+        document.addEventListener('DOMContentLoaded', () => {
+            generateCalendar();
+            attachTimeSlotHandlers();
+            updateTablePreferenceStyles();
+            updateSummary();
 
-        document.querySelectorAll('.time-slot').forEach(slot => {
-            slot.addEventListener('click', () => selectTime(slot.dataset.time));
-            
-            slot.addEventListener('mouseenter', function() {
-                if (!this.classList.contains('selected')) {
-                    this.style.background = 'linear-gradient(to right, #f97316, #ef4444)';
-                    this.style.color = 'white';
-                }
-            });
-            slot.addEventListener('mouseleave', function() {
-                if (!this.classList.contains('selected')) {
-                    this.style.background = '';
-                    this.style.color = '';
-                }
-            });
-        });
-
-        function filterTablePreference() {
-            document.querySelectorAll('.table-preference').forEach(preference => {
-                const radio = preference.querySelector('input[type="radio"]');
-                const span = preference.querySelector('span');
-                
-                if (radio.checked) {
-                    preference.classList.remove('bg-gray-100', 'hover:bg-gray-200');
-                    preference.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
-                    span.classList.remove('text-gray-700');
-                    span.classList.add('text-white');
-                } else {
-                    preference.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
-                    preference.classList.add('bg-gray-100', 'hover:bg-gray-200');
-                    span.classList.remove('text-white');
-                    span.classList.add('text-gray-700');
-                }
-            });
-        }
-
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!selectedDate || !selectedTime) {
-                alert('Por favor selecciona una fecha y hora');
-                return;
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicia sesión para reservar',
+                    text: 'Necesitas iniciar sesión como cliente para confirmar una reservación.',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                loadClientProfile();
             }
-            
-            const people = document.querySelector('select').value;
-            if (!people) {
-                alert('Por favor selecciona el número de personas');
-                return;
-            }
-            
-            document.getElementById('selectedPeople').textContent = people + ' persona(s)';
-            
-            alert('¡Reservación confirmada! Recibirás un correo de confirmación pronto.');
+
+            peopleSelect.addEventListener('change', handlePeopleChange);
+            tablePreferenceLabels.forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.addEventListener('change', handleTablePreferenceChange);
+                }
+            });
+            reservationForm.addEventListener('submit', submitReservation);
         });
 
-        document.querySelector('select').addEventListener('change', function() {
-            document.getElementById('selectedPeople').textContent = this.value ? this.value + ' persona(s)' : 'No seleccionado';
-        });
+        window.previousMonth = previousMonth;
+        window.nextMonth = nextMonth;
+        window.toggleMobileMenu = toggleMobileMenu;
     </script>
 </body>
 </html> 

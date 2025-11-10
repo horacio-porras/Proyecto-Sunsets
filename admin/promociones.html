@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promociones - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background-color: rgba(17, 24, 39, 0.55);
+            backdrop-filter: blur(6px);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            animation: modalSlideUp 0.25s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .toggle-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-checkbox span {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background-color: #d1d5db;
+            transition: background-color 0.25s ease;
+        }
+
+        .toggle-checkbox span::after {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            top: 3px;
+            border-radius: 9999px;
+            background-color: #fff;
+            transition: transform 0.25s ease;
+        }
+
+        .toggle-checkbox input:checked + span {
+            background: linear-gradient(to right, #f97316, #ef4444);
+        }
+
+        .toggle-checkbox input:checked + span::after {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-tags mr-3"></i>Gestión de Promociones
+                        </h1>
+                        <p class="text-gray-300">Administra descuentos y recompensas para tus clientes frecuentes</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold" id="totalPromociones">-</div>
+                            <div class="text-sm text-gray-300">Promociones activas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800">Catálogo de Promociones</h2>
+                        <p class="text-sm text-gray-500">Crea campañas y beneficios para fidelizar clientes.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button id="btnNuevaPromocion" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            Nueva Promoción
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Promoción</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Alcance</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Descuento</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Vigencia</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Productos</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Estado</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPromociones" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="7" class="text-center py-10 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                                    <p>Cargando promociones...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="promocionesPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="promocionesPaginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 promociones
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="promocionesPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="promocionesPaginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="promocionesNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="promocionModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-start justify-between pb-4 border-b border-gray-200">
+                <div>
+                    <h3 id="modalPromocionTitulo" class="text-xl font-semibold text-gray-800">Nueva promoción</h3>
+                    <p class="text-sm text-gray-500">Define descuentos, experiencias o recompensas para tus clientes.</p>
+                </div>
+                <button type="button" id="btnCerrarPromocionModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="formPromocion" class="mt-4 space-y-5">
+                <input type="hidden" id="promocionId">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la promoción *</label>
+                    <input type="text" id="nombrePromocion" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                           placeholder="Ej: Descuento especial de temporada">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea id="descripcionPromocion" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              placeholder="Describe los beneficios o condiciones de la promoción"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Alcance *</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 p-3 border border-gray-200 rounded-md cursor-pointer hover:border-orange-400 transition">
+                            <input type="radio" name="alcancePromocion" value="general" class="text-orange-500 focus:ring-orange-500" checked>
+                            <span class="text-sm text-gray-700">General (aplica a todos los productos)</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 border border-gray-200 rounded-md cursor-pointer hover:border-orange-400 transition">
+                            <input type="radio" name="alcancePromocion" value="producto" class="text-orange-500 focus:ring-orange-500">
+                            <span class="text-sm text-gray-700">Productos específicos</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="productosAlcanceWrapper" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona los productos *</label>
+                    <select id="productosPromocion" multiple size="6"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples productos.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de descuento (%) *</label>
+                        <input type="number" id="porcentajePromocion" min="1" max="100" step="0.1"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                               placeholder="Ej: 15">
+                    </div>
+                    <div class="flex items-center justify-between mt-2 md:mt-8">
+                        <span class="text-sm font-medium text-gray-700">Promoción activa</span>
+                        <label class="toggle-checkbox">
+                            <input type="checkbox" id="promocionActiva">
+                            <span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha y hora de inicio</label>
+                        <input type="datetime-local" id="fechaInicioPromocion"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha y hora de fin</label>
+                        <input type="datetime-local" id="fechaFinPromocion"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button type="submit" id="btnGuardarPromocion" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center gap-2">
+                        <i id="btnGuardarPromocionIcono" class="fas fa-plus"></i>
+                        <span id="btnGuardarPromocionTexto">Agregar</span>
+                        <i id="spinnerGuardarPromocion" class="fas fa-spinner fa-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let promociones = [];
+        let promocionEditando = null;
+        let productosCatalogo = [];
+        let promocionesFiltradas = [];
+        let promocionesPaginaActual = 1;
+        const PROMOCIONES_POR_PAGINA = 8;
+
+        let promocionesPaginationControls;
+        let promocionesPaginationSummary;
+        let promocionesPaginationInfo;
+        let promocionesPrevPageBtn;
+        let promocionesNextPageBtn;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+            inicializarControlesPaginacionPromociones();
+            loadPromociones();
+            loadCatalogoProductos();
+            setupPromocionesListeners();
+        });
+
+        function inicializarControlesPaginacionPromociones() {
+            promocionesPaginationControls = document.getElementById('promocionesPaginationControls');
+            promocionesPaginationSummary = document.getElementById('promocionesPaginationSummary');
+            promocionesPaginationInfo = document.getElementById('promocionesPaginationInfo');
+            promocionesPrevPageBtn = document.getElementById('promocionesPrevPageBtn');
+            promocionesNextPageBtn = document.getElementById('promocionesNextPageBtn');
+
+            if (promocionesPrevPageBtn) {
+                promocionesPrevPageBtn.addEventListener('click', () => cambiarPaginaPromociones(-1));
+            }
+
+            if (promocionesNextPageBtn) {
+                promocionesNextPageBtn.addEventListener('click', () => cambiarPaginaPromociones(1));
+            }
+        }
+
+        function setupPromocionesListeners() {
+            const btnNuevaPromocion = document.getElementById('btnNuevaPromocion');
+            const btnCerrarPromocionModal = document.getElementById('btnCerrarPromocionModal');
+            const btnCancelarPromocion = document.getElementById('btnCancelarPromocion');
+            const formPromocion = document.getElementById('formPromocion');
+            const alcanceRadios = document.querySelectorAll('input[name="alcancePromocion"]');
+
+            if (btnNuevaPromocion) {
+                btnNuevaPromocion.addEventListener('click', () => abrirModalPromocion());
+            }
+
+            if (btnCerrarPromocionModal) {
+                btnCerrarPromocionModal.addEventListener('click', cerrarModalPromocion);
+            }
+
+            if (btnCancelarPromocion) {
+                btnCancelarPromocion.addEventListener('click', cerrarModalPromocion);
+            }
+
+            if (formPromocion) {
+                formPromocion.addEventListener('submit', handleSubmitPromocion);
+            }
+
+            if (alcanceRadios && alcanceRadios.length > 0) {
+                alcanceRadios.forEach(radio => {
+                    radio.addEventListener('change', actualizarCamposAlcance);
+                });
+            }
+
+            actualizarCamposAlcance();
+        }
+
+        async function loadCatalogoProductos() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) throw new Error('No hay token de autenticación');
+
+                const response = await fetch('/api/inventario/productos', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudieron cargar los productos');
+                }
+
+                productosCatalogo = data.data?.productos || [];
+
+                const selectProductos = document.getElementById('productosPromocion');
+                if (selectProductos) {
+                    selectProductos.innerHTML = productosCatalogo.map(producto => `
+                        <option value="${producto.id}">
+                            ${producto.nombre} (₡${parseFloat(producto.precio).toLocaleString()})
+                        </option>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar catálogo de productos:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar los productos.'
+                });
+            }
+        }
+
+        async function loadPromociones() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/promociones', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudieron cargar las promociones');
+                }
+
+                promociones = data.data?.promociones || [];
+                promocionesFiltradas = [...promociones];
+                promocionesPaginaActual = 1;
+                renderPromociones();
+            } catch (error) {
+                console.error('Error al cargar promociones:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar las promociones.'
+                });
+                promociones = [];
+                promocionesFiltradas = [];
+                promocionesPaginaActual = 1;
+                renderPromociones();
+            }
+        }
+
+        function renderPromociones() {
+            const tbody = document.getElementById('tablaPromociones');
+            const totalPromociones = document.getElementById('totalPromociones');
+
+            if (!tbody) return;
+
+            if (totalPromociones) {
+                const activas = promociones.filter(p => p.activa).length;
+                totalPromociones.textContent = activas;
+            }
+
+            if (!promocionesFiltradas || promocionesFiltradas.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-10 text-gray-500">
+                            <i class="fas fa-tags text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-lg font-medium">No hay promociones registradas</p>
+                            <p class="text-gray-500">Crea tu primera campaña para incentivar a tus clientes.</p>
+                        </td>
+                    </tr>
+                `;
+                if (promocionesPaginationControls) {
+                    promocionesPaginationControls.classList.add('hidden');
+                }
+                return;
+            }
+
+            const totalPromos = promocionesFiltradas.length;
+            const totalPaginas = Math.ceil(totalPromos / PROMOCIONES_POR_PAGINA) || 1;
+
+            if (promocionesPaginaActual > totalPaginas) {
+                promocionesPaginaActual = totalPaginas;
+            }
+            if (promocionesPaginaActual < 1) {
+                promocionesPaginaActual = 1;
+            }
+
+            const inicio = (promocionesPaginaActual - 1) * PROMOCIONES_POR_PAGINA;
+            const fin = Math.min(inicio + PROMOCIONES_POR_PAGINA, totalPromos);
+            const promocionesPagina = promocionesFiltradas.slice(inicio, fin);
+
+            tbody.innerHTML = promocionesPagina.map(promocion => {
+                const alcanceBadgeClass = promocion.alcance === 'producto'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-green-100 text-green-700';
+                const vigenciaTexto = promocion.vigencia || 'Sin límite definido';
+                const productosTexto = promocion.alcance === 'producto'
+                    ? promocion.productos.map(p => p.nombre).join(', ') || 'Sin productos asociados'
+                    : 'Todos los productos';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-800">${promocion.nombre_promocion}</div>
+                            <div class="text-xs text-gray-500 mt-1">${promocion.descripcion || 'Sin descripción proporcionada.'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${alcanceBadgeClass}">
+                                ${promocion.alcance === 'producto' ? 'Productos específicos' : 'General'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${promocion.porcentaje_descuento != null
+                                ? `${parseFloat(promocion.porcentaje_descuento).toLocaleString()}%`
+                                : '—'}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${vigenciaTexto}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${productosTexto}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <label class="toggle-checkbox inline-flex items-center">
+                                <input type="checkbox" ${promocion.activa ? 'checked' : ''} onchange="togglePromocionActiva(${promocion.id_promocion}, this.checked)">
+                                <span></span>
+                            </label>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold" onclick="editarPromocion(${promocion.id_promocion})">
+                                    <i class="fas fa-edit mr-1"></i> Editar
+                                </button>
+                                <button class="px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition font-semibold" onclick="eliminarPromocion(${promocion.id_promocion})">
+                                    <i class="fas fa-trash mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderizarControlesPaginacionPromociones(totalPromos, inicio, fin, totalPaginas);
+        }
+
+        function renderizarControlesPaginacionPromociones(totalPromos, inicio, fin, totalPaginas) {
+            if (!promocionesPaginationControls) return;
+
+            promocionesPaginationControls.classList.remove('hidden');
+
+            if (promocionesPaginationSummary) {
+                promocionesPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalPromos} promociones`;
+            }
+
+            if (promocionesPaginationInfo) {
+                promocionesPaginationInfo.textContent = `Página ${promocionesPaginaActual} de ${totalPaginas}`;
+            }
+
+            promocionesPrevPageBtn.disabled = promocionesPaginaActual === 1;
+            promocionesNextPageBtn.disabled = promocionesPaginaActual === totalPaginas;
+        }
+
+        function formatoFechaParaInput(fecha) {
+            if (!fecha) return '';
+            const date = new Date(fecha);
+            if (Number.isNaN(date.getTime())) return '';
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() - offset * 60000);
+            return localDate.toISOString().slice(0, 16);
+        }
+
+        function abrirModalPromocion(promocion = null) {
+            promocionEditando = promocion;
+            const modal = document.getElementById('promocionModal');
+
+            if (!modal) return;
+
+            resetFormularioPromocion();
+
+            if (promocion) {
+                document.getElementById('modalPromocionTitulo').textContent = 'Editar promoción';
+                document.getElementById('promocionId').value = promocion.id_promocion;
+                document.getElementById('nombrePromocion').value = promocion.nombre_promocion || '';
+                document.getElementById('descripcionPromocion').value = promocion.descripcion || '';
+                document.getElementById('porcentajePromocion').value = promocion.porcentaje_descuento != null ? promocion.porcentaje_descuento : '';
+                document.getElementById('fechaInicioPromocion').value = formatoFechaParaInput(promocion.fecha_inicio);
+                document.getElementById('fechaFinPromocion').value = formatoFechaParaInput(promocion.fecha_fin);
+                document.getElementById('promocionActiva').checked = !!promocion.activa;
+                const alcance = promocion.alcance || 'general';
+                document.querySelectorAll('input[name="alcancePromocion"]').forEach(radio => {
+                    radio.checked = radio.value === alcance;
+                });
+                actualizarCamposAlcance();
+                actualizarBotonPromocion(true);
+
+                if (alcance === 'producto' && Array.isArray(promocion.productos)) {
+                    const select = document.getElementById('productosPromocion');
+                    const idsSeleccionados = promocion.productos.map(p => p.id_producto);
+                    if (select) {
+                        Array.from(select.options).forEach(option => {
+                            option.selected = idsSeleccionados.includes(parseInt(option.value, 10));
+                        });
+                    }
+                }
+            } else {
+                document.getElementById('modalPromocionTitulo').textContent = 'Nueva promoción';
+                actualizarCamposAlcance();
+                actualizarBotonPromocion(false);
+            }
+
+            modal.classList.add('show');
+        }
+
+        function cerrarModalPromocion() {
+            const modal = document.getElementById('promocionModal');
+            if (!modal) return;
+            modal.classList.remove('show');
+            promocionEditando = null;
+            actualizarBotonPromocion(false);
+        }
+
+        function resetFormularioPromocion() {
+            document.getElementById('formPromocion').reset();
+            document.getElementById('promocionId').value = '';
+            document.getElementById('promocionActiva').checked = true;
+            document.querySelectorAll('input[name="alcancePromocion"]').forEach(radio => {
+                radio.checked = radio.value === 'general';
+            });
+            actualizarCamposAlcance();
+        }
+
+        function actualizarBotonPromocion(esEdicion) {
+            const icono = document.getElementById('btnGuardarPromocionIcono');
+            const texto = document.getElementById('btnGuardarPromocionTexto');
+
+            if (!icono || !texto) return;
+
+            if (esEdicion) {
+                icono.className = 'fas fa-edit';
+                texto.textContent = 'Actualizar';
+            } else {
+                icono.className = 'fas fa-plus';
+                texto.textContent = 'Agregar';
+            }
+        }
+
+        function actualizarCamposAlcance() {
+            const alcanceSeleccionado = document.querySelector('input[name="alcancePromocion"]:checked');
+            const wrapper = document.getElementById('productosAlcanceWrapper');
+
+            if (!alcanceSeleccionado || !wrapper) return;
+
+            if (alcanceSeleccionado.value === 'producto') {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+                const select = document.getElementById('productosPromocion');
+                if (select) {
+                    Array.from(select.options).forEach(option => option.selected = false);
+                }
+            }
+        }
+
+
+        async function handleSubmitPromocion(event) {
+            event.preventDefault();
+
+            const btnGuardar = document.getElementById('btnGuardarPromocion');
+            const spinner = document.getElementById('spinnerGuardarPromocion');
+            const texto = document.getElementById('btnGuardarPromocionTexto');
+
+            btnGuardar.disabled = true;
+            spinner.classList.remove('hidden');
+            if (texto) {
+                texto.textContent = promocionEditando ? 'Actualizando...' : 'Guardando...';
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const payload = {
+                    nombrePromocion: document.getElementById('nombrePromocion').value,
+                    descripcion: document.getElementById('descripcionPromocion').value,
+                    porcentajeDescuento: document.getElementById('porcentajePromocion').value,
+                    fechaInicio: document.getElementById('fechaInicioPromocion').value,
+                    fechaFin: document.getElementById('fechaFinPromocion').value,
+                    activa: document.getElementById('promocionActiva').checked,
+                    alcance: document.querySelector('input[name="alcancePromocion"]:checked').value,
+                    productos: Array.from(document.getElementById('productosPromocion').selectedOptions).map(option => option.value)
+                };
+
+                const options = {
+                    method: promocionEditando ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                };
+
+                const endpoint = promocionEditando
+                    ? `/api/promociones/${promocionEditando.id_promocion}`
+                    : '/api/promociones';
+
+                const response = await fetch(endpoint, options);
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo guardar la promoción');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Promoción guardada!',
+                    text: data.message || 'La promoción se guardó correctamente.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                cerrarModalPromocion();
+                loadPromociones();
+            } catch (error) {
+                console.error('Error al guardar promoción:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo guardar la promoción.'
+                });
+            } finally {
+                btnGuardar.disabled = false;
+                spinner.classList.add('hidden');
+                actualizarBotonPromocion(!!promocionEditando);
+            }
+        }
+
+        async function togglePromocionActiva(idPromocion, estaActiva) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/promociones/${idPromocion}/estado`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ activa: estaActiva })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo actualizar el estado');
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: `Promoción ${estaActiva ? 'activada' : 'desactivada'}`,
+                    timer: 1400,
+                    showConfirmButton: false
+                });
+
+                await loadPromociones();
+            } catch (error) {
+                console.error('Error al cambiar estado de promoción:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo actualizar el estado de la promoción.'
+                });
+            }
+        }
+
+        async function eliminarPromocion(idPromocion) {
+            const promocion = promociones.find(p => p.id_promocion === idPromocion);
+            if (!promocion) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No encontrada',
+                    text: 'No se pudo localizar la promoción seleccionada.'
+                });
+                return;
+            }
+
+            const confirmacion = await Swal.fire({
+                title: '¿Eliminar promoción?',
+                text: `Esta acción eliminará "${promocion.nombre_promocion}" y no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!confirmacion.isConfirmed) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/promociones/${idPromocion}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo eliminar la promoción');
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Promoción eliminada',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                await loadPromociones();
+            } catch (error) {
+                console.error('Error al eliminar promoción:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la promoción.'
+                });
+            }
+        }
+
+        function editarPromocion(idPromocion) {
+            const promocion = promociones.find(p => p.id_promocion === idPromocion);
+            if (!promocion) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Promoción no encontrada',
+                    text: 'No se pudo encontrar la promoción seleccionada.'
+                });
+                return;
+            }
+
+            abrirModalPromocion(promocion);
+        }
+
+        window.togglePromocionActiva = togglePromocionActiva;
+        window.editarPromocion = editarPromocion;
+        window.eliminarPromocion = eliminarPromocion;
+
+        function cambiarPaginaPromociones(offset) {
+            irAPaginaPromociones(promocionesPaginaActual + offset);
+        }
+
+        function irAPaginaPromociones(pagina) {
+            const totalPaginas = Math.ceil((promocionesFiltradas?.length || 0) / PROMOCIONES_POR_PAGINA) || 1;
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+            promocionesPaginaActual = pagina;
+            renderPromociones();
+        }
+
+        function renderizarControlesPaginacionPromociones(totalPromos, inicio, fin, totalPaginas) {
+            if (!promocionesPaginationControls || !promocionesPaginationSummary || !promocionesPaginationInfo || !promocionesPrevPageBtn || !promocionesNextPageBtn) {
+                return;
+            }
+
+            if (totalPromos === 0) {
+                promocionesPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            promocionesPaginationControls.classList.remove('hidden');
+
+            promocionesPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalPromos} promociones`;
+            promocionesPaginationInfo.textContent = `Página ${promocionesPaginaActual} de ${totalPaginas}`;
+
+            promocionesPrevPageBtn.disabled = promocionesPaginaActual <= 1;
+            promocionesNextPageBtn.disabled = promocionesPaginaActual >= totalPaginas;
+        }
+    </script>
+</body>
+</html>
+

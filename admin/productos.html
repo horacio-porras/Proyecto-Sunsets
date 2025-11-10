@@ -89,53 +89,61 @@
             flex: 1;
         }
         
-        .switch {
+        .toggle-checkbox {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
+            width: 52px;
+            height: 28px;
         }
-        
-        .switch input {
+
+        .toggle-checkbox input {
             opacity: 0;
             width: 0;
             height: 0;
         }
-        
-        .slider {
+
+        .toggle-checkbox span {
             position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
+            inset: 0;
+            border-radius: 9999px;
+            background-color: #d1d5db;
+            transition: background-color 0.25s ease;
         }
-        
-        .slider:before {
+
+        .toggle-checkbox span::after {
+            content: '';
             position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
+            height: 22px;
+            width: 22px;
             left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+            top: 3px;
+            border-radius: 9999px;
+            background-color: #fff;
+            transition: transform 0.25s ease;
         }
-        
-        input:checked + .slider {
-            background-color: #10b981;
+
+        .toggle-checkbox input:checked + span {
+            background: linear-gradient(to right, #f97316, #ef4444);
         }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
+
+        .toggle-checkbox input:checked + span::after {
+            transform: translateX(24px);
         }
-        
-        .slider.disabled {
-            background-color: #ef4444;
+
+        .descuento-toggle span {
+            transition: background-color 0.3s ease;
+        }
+
+        .descuento-toggle span span {
+            transition: transform 0.3s ease;
+        }
+
+        .descuento-toggle input:checked + span {
+            background-color: #f97316;
+        }
+
+        .descuento-toggle input:checked + span span {
+            transform: translateX(24px);
         }
     </style>
 </head>
@@ -219,6 +227,22 @@
                     </table>
                 </div>
             </div>
+            <div id="productosPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="productosPaginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 productos
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="productosPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="productosPaginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="productosNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -271,6 +295,52 @@
                     <textarea id="descripcion" rows="3"
                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                               placeholder="Descripción del producto..."></textarea>
+                </div>
+
+                <!-- Sección de Descuento -->
+                <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-800">Descuento Promocional</h4>
+                            <p class="text-sm text-gray-500">Configura descuentos temporales para este producto.</p>
+                        </div>
+                        <label class="inline-flex items-center cursor-pointer descuento-toggle">
+                            <input type="checkbox" id="descuentoActivo" class="sr-only">
+                            <span class="relative inline-block w-12 h-6 bg-gray-300 rounded-full transition-colors">
+                                <span class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></span>
+                            </span>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Activar descuento</span>
+                        </label>
+                    </div>
+
+                    <div id="discountFields" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de descuento (%)</label>
+                            <input type="number" id="porcentajeDescuento" min="1" max="99" step="0.1"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                   placeholder="Ej: 15">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de inicio</label>
+                            <input type="datetime-local" id="fechaInicioDescuento"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
+                            <input type="datetime-local" id="fechaFinDescuento"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="text-xs text-gray-500 bg-white border border-gray-200 rounded-md p-3">
+                                <p class="mb-1"><strong>Notas:</strong></p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>El porcentaje se aplica al precio actual del producto.</li>
+                                    <li>Si no seleccionas fechas, el descuento estará activo desde ahora hasta que lo desactives.</li>
+                                    <li>Desactivar el descuento conserva los valores para futuras campañas.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Sección de Imagen -->
@@ -337,10 +407,68 @@
         let categorias = [];
         let productoEditando = null;
         let imagenActual = null;
+        let productosFiltrados = [];
+        let productosPaginaActual = 1;
+        const PRODUCTOS_POR_PAGINA = 10;
+
+        let productosPaginationControls;
+        let productosPaginationSummary;
+        let productosPaginationInfo;
+        let productosPrevPageBtn;
+        let productosNextPageBtn;
+ 
+        function resetDiscountFields() {
+            const toggle = document.getElementById('descuentoActivo');
+            const porcentajeInput = document.getElementById('porcentajeDescuento');
+            const fechaInicioInput = document.getElementById('fechaInicioDescuento');
+            const fechaFinInput = document.getElementById('fechaFinDescuento');
+
+            if (toggle) toggle.checked = false;
+            if (porcentajeInput) porcentajeInput.value = '';
+            if (fechaInicioInput) fechaInicioInput.value = '';
+            if (fechaFinInput) fechaFinInput.value = '';
+
+            updateDiscountFieldsState();
+        }
+
+        function updateDiscountFieldsState() {
+            const toggle = document.getElementById('descuentoActivo');
+            const fieldsContainer = document.getElementById('discountFields');
+            if (!toggle || !fieldsContainer) return;
+
+            const isActive = toggle.checked;
+            fieldsContainer.classList.toggle('opacity-60', !isActive);
+            fieldsContainer.querySelectorAll('input').forEach(input => {
+                input.disabled = !isActive;
+            });
+        }
+
+        function formatDateTimeLocal(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) return '';
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() - offset * 60000);
+            return localDate.toISOString().slice(0, 16);
+        }
+
+        function formatDiscountDateLabel(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) return '';
+            return date.toLocaleString('es-CR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
         //Carga los datos al inicializar
         document.addEventListener('DOMContentLoaded', () => {
             loadNavbar();
+            inicializarControlesPaginacionProductos();
             cargarCategorias();
             cargarProductos();
             setupEventListeners();
@@ -370,6 +498,13 @@
             if (formProducto) {
                 formProducto.addEventListener('submit', handleSubmitProducto);
             }
+
+            const descuentoToggle = document.getElementById('descuentoActivo');
+            if (descuentoToggle) {
+                descuentoToggle.addEventListener('change', updateDiscountFieldsState);
+            }
+
+            updateDiscountFieldsState();
 
             //Filtros
             const filtroCategoria = document.getElementById('filtroCategoria');
@@ -410,6 +545,22 @@
             }
         }
 
+        function inicializarControlesPaginacionProductos() {
+            productosPaginationControls = document.getElementById('productosPaginationControls');
+            productosPaginationSummary = document.getElementById('productosPaginationSummary');
+            productosPaginationInfo = document.getElementById('productosPaginationInfo');
+            productosPrevPageBtn = document.getElementById('productosPrevPageBtn');
+            productosNextPageBtn = document.getElementById('productosNextPageBtn');
+
+            if (productosPrevPageBtn) {
+                productosPrevPageBtn.addEventListener('click', () => cambiarPaginaProductos(-1));
+            }
+
+            if (productosNextPageBtn) {
+                productosNextPageBtn.addEventListener('click', () => cambiarPaginaProductos(1));
+            }
+        }
+
         //Carga los productos
         async function cargarProductos() {
             try {
@@ -427,18 +578,24 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    productos = data.data.productos;
-                    console.log('Productos cargados desde API:', productos);
-                    renderizarProductos(productos);
-                    actualizarEstadisticas();
-                } else {
-                    throw new Error(data.message || 'Error al cargar productos');
-                }
-            } catch (error) {
-                console.error('Error al cargar productos:', error);
-                mostrarError('Error al cargar productos: ' + error.message);
-            }
-        }
+                     productos = data.data.productos;
+                     console.log('Productos cargados desde API:', productos);
+                     productosFiltrados = [...productos];
+                     productosPaginaActual = 1;
+                     renderizarProductos();
+                     actualizarEstadisticas();
+                 } else {
+                     throw new Error(data.message || 'Error al cargar productos');
+                 }
+             } catch (error) {
+                 console.error('Error al cargar productos:', error);
+                 mostrarError('Error al cargar productos: ' + error.message);
+                 productos = [];
+                 productosFiltrados = [];
+                 productosPaginaActual = 1;
+                 renderizarProductos();
+             }
+         }
 
         //Carga las categorías desde la base de datos
         async function cargarCategorias() {
@@ -496,10 +653,10 @@
         }
 
         //Renderiza los productos
-        function renderizarProductos(productosFiltrados) {
+        function renderizarProductos() {
             const tbody = document.getElementById('tablaProductos');
-            
-            if (productosFiltrados.length === 0) {
+ 
+            if (!productosFiltrados || productosFiltrados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-8 text-gray-500">
@@ -509,13 +666,51 @@
                         </td>
                     </tr>
                 `;
+                if (productosPaginationControls) {
+                    productosPaginationControls.classList.add('hidden');
+                }
                 return;
             }
 
-            tbody.innerHTML = productosFiltrados.map(producto => {
+            const totalProductos = productosFiltrados.length;
+            const totalPaginas = Math.ceil(totalProductos / PRODUCTOS_POR_PAGINA) || 1;
+
+            if (productosPaginaActual > totalPaginas) {
+                productosPaginaActual = totalPaginas;
+            }
+            if (productosPaginaActual < 1) {
+                productosPaginaActual = 1;
+            }
+
+            const inicio = (productosPaginaActual - 1) * PRODUCTOS_POR_PAGINA;
+            const fin = Math.min(inicio + PRODUCTOS_POR_PAGINA, totalProductos);
+            const productosPagina = productosFiltrados.slice(inicio, fin);
+
+            tbody.innerHTML = productosPagina.map(producto => {
                 const estadoClass = producto.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                 const estadoText = producto.disponible ? 'Disponible' : 'No Disponible';
                 const categoriaText = getCategoriaText(producto.categoria_id);
+                const descuentoActivo = !!producto.descuento_activo;
+                const descuentoVigente = !!producto.descuento_vigente;
+                const porcentajeDescuento = producto.porcentaje_descuento;
+                const precioOriginal = parseFloat(producto.precio || 0);
+                const precioFinal = producto.precio_final != null ? parseFloat(producto.precio_final) : precioOriginal;
+
+                let descuentoInfoHtml = '';
+                if (descuentoVigente && porcentajeDescuento) {
+                    descuentoInfoHtml = `
+                        <div class="mt-1 text-xs text-green-600 font-semibold">
+                            Precio con descuento: ₡${precioFinal.toLocaleString()} (-${porcentajeDescuento}%${producto.fecha_fin_descuento ? ` · hasta ${formatDiscountDateLabel(producto.fecha_fin_descuento)}` : ''})
+                        </div>
+                    `;
+                } else if (descuentoActivo && porcentajeDescuento) {
+                    const inicioTexto = producto.fecha_inicio_descuento ? `desde ${formatDiscountDateLabel(producto.fecha_inicio_descuento)}` : 'pendiente de inicio';
+                    descuentoInfoHtml = `
+                        <div class="mt-1 text-xs text-orange-600 font-semibold">
+                            Descuento preparado: ${porcentajeDescuento}% · ${inicioTexto}
+                        </div>
+                    `;
+                }
 
                 return `
                     <tr class="hover:bg-gray-50">
@@ -537,7 +732,8 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">₡${parseFloat(producto.precio).toLocaleString()}</div>
+                            <div class="text-sm text-gray-900 font-semibold">₡${precioOriginal.toLocaleString()}</div>
+                            ${descuentoInfoHtml}
                         </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
@@ -549,18 +745,18 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center items-center space-x-3">
-                                <label class="switch" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
+                                <label class="toggle-checkbox" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
                                     <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
                                            onchange="toggleDisponibilidad(${producto.id}, this.checked)">
-                                    <span class="slider"></span>
+                                    <span></span>
                                 </label>
                                 <button onclick="editarProducto(${producto.id})" 
-                                        class="text-blue-600 hover:text-blue-900 transition p-1 rounded hover:bg-blue-50"
+                                        class="text-orange-600 hover:text-orange-700 transition"
                                         title="Editar producto">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="eliminarProducto(${producto.id}, '${producto.nombre}')" 
-                                        class="text-red-600 hover:text-red-900 transition p-1 rounded hover:bg-red-50"
+                                        class="text-red-600 hover:text-red-700 transition"
                                         title="Eliminar producto">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -569,6 +765,8 @@
                     </tr>
                 `;
             }).join('');
+
+            renderizarControlesPaginacionProductos(totalProductos, inicio, fin, totalPaginas);
         }
 
         //Abre el modal para nuevo producto
@@ -578,6 +776,7 @@
             document.getElementById('formProducto').reset();
             
             eliminarImagen();
+            resetDiscountFields();
             
             document.getElementById('btnGuardarText').textContent = 'Agregar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
@@ -603,6 +802,24 @@
             document.getElementById('disponible').value = producto.disponible ? '1' : '0';
             document.getElementById('descripcion').value = producto.descripcion || '';
 
+            const descuentoToggle = document.getElementById('descuentoActivo');
+            const porcentajeInput = document.getElementById('porcentajeDescuento');
+            const fechaInicioInput = document.getElementById('fechaInicioDescuento');
+            const fechaFinInput = document.getElementById('fechaFinDescuento');
+
+            if (descuentoToggle) {
+                descuentoToggle.checked = !!producto.descuento_activo;
+            }
+            if (porcentajeInput) {
+                porcentajeInput.value = producto.porcentaje_descuento != null ? producto.porcentaje_descuento : '';
+            }
+            if (fechaInicioInput) {
+                fechaInicioInput.value = formatDateTimeLocal(producto.fecha_inicio_descuento);
+            }
+            if (fechaFinInput) {
+                fechaFinInput.value = formatDateTimeLocal(producto.fecha_fin_descuento);
+            }
+
             //Debug
             console.log('Producto encontrado:', producto);
             console.log('Categoría del producto:', producto.categoria);
@@ -612,6 +829,8 @@
             document.getElementById('imagenUrl').value = '';
 
             cargarImagenProducto(id);
+
+            updateDiscountFieldsState();
 
             document.getElementById('btnGuardarText').textContent = 'Actualizar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-edit';
@@ -628,6 +847,7 @@
             productoEditando = null;
             
             eliminarImagen();
+            resetDiscountFields();
             
             document.getElementById('btnGuardarText').textContent = 'Agregar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
@@ -652,7 +872,11 @@
                     categoria: document.getElementById('categoria').value,
                     precio: parseFloat(document.getElementById('precio').value),
                     disponible: document.getElementById('disponible').value === '1',
-                    descripcion: document.getElementById('descripcion').value
+                    descripcion: document.getElementById('descripcion').value,
+                    descuentoActivo: document.getElementById('descuentoActivo').checked,
+                    porcentajeDescuento: document.getElementById('porcentajeDescuento').value,
+                    fechaInicioDescuento: document.getElementById('fechaInicioDescuento').value,
+                    fechaFinDescuento: document.getElementById('fechaFinDescuento').value
                 };
 
                 console.log('Datos del formulario:', formData);
@@ -822,7 +1046,7 @@
             const filtroEstado = document.getElementById('filtroEstado').value;
             const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
 
-            let productosFiltrados = productos.filter(producto => {
+            productosFiltrados = productos.filter(producto => {
                 const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
                 const coincideEstado = !filtroEstado || 
                     (filtroEstado === 'disponible' && producto.disponible) ||
@@ -834,12 +1058,45 @@
                 return coincideCategoria && coincideEstado && coincideBusqueda;
             });
 
-            renderizarProductos(productosFiltrados);
+            productosPaginaActual = 1;
+            renderizarProductos();
         }
 
         //Actualiza las estadísticas
         function actualizarEstadisticas() {
             document.getElementById('totalProductos').textContent = productos.length;
+        }
+
+        function cambiarPaginaProductos(offset) {
+            irAPaginaProductos(productosPaginaActual + offset);
+        }
+
+        function irAPaginaProductos(pagina) {
+            const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / PRODUCTOS_POR_PAGINA) || 1;
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+            productosPaginaActual = pagina;
+            renderizarProductos();
+        }
+
+        function renderizarControlesPaginacionProductos(totalProductos, inicio, fin, totalPaginas) {
+            if (!productosPaginationControls || !productosPaginationSummary || !productosPaginationInfo || !productosPrevPageBtn || !productosNextPageBtn) {
+                return;
+            }
+
+            if (totalProductos === 0) {
+                productosPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            productosPaginationControls.classList.remove('hidden');
+
+            productosPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalProductos} productos`;
+            productosPaginationInfo.textContent = `Página ${productosPaginaActual} de ${totalPaginas}`;
+
+            productosPrevPageBtn.disabled = productosPaginaActual <= 1;
+            productosNextPageBtn.disabled = productosPaginaActual >= totalPaginas;
         }
 
         //Funciones auxiliares

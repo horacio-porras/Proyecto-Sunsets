@@ -83,6 +83,10 @@ CREATE TABLE producto (
     sin_gluten BOOLEAN,
     disponible BOOLEAN,
     tiempo_preparacion INT,
+    descuento_activo BOOLEAN DEFAULT FALSE,
+    porcentaje_descuento DECIMAL(5,2),
+    fecha_inicio_descuento DATETIME,
+    fecha_fin_descuento DATETIME,
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
@@ -191,7 +195,8 @@ CREATE TABLE promocion (
     hora_inicio TIME,
     hora_fin TIME,
     activa BOOLEAN,
-    puntos_requeridos INT
+    puntos_requeridos INT,
+    alcance ENUM('general', 'producto') DEFAULT 'general'
 );
 
 -- Tabla PRODUCTO_PROMOCION
@@ -202,6 +207,19 @@ CREATE TABLE producto_promocion (
     fecha_aplicacion DATETIME,
     FOREIGN KEY (id_producto) REFERENCES producto(id_producto),
     FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion)
+);
+
+-- Tabla RECOMPENSA
+CREATE TABLE recompensa (
+    id_recompensa INT PRIMARY KEY AUTO_INCREMENT,
+    nombre_recompensa VARCHAR(100),
+    descripcion TEXT,
+    tipo_recompensa VARCHAR(50),
+    valor_recompensa DECIMAL(10,2),
+    puntos_requeridos INT,
+    fecha_inicio DATETIME,
+    fecha_fin DATETIME,
+    activa BOOLEAN
 );
 
 -- Tabla OPINION
@@ -244,7 +262,9 @@ CREATE TABLE canje_puntos (
     valor_canje DECIMAL(10,2),
     fecha_canje DATETIME,
     estado_canje VARCHAR(50),
-    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+    id_recompensa INT,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+    FOREIGN KEY (id_recompensa) REFERENCES recompensa(id_recompensa)
 );
 
 -- Tabla NOTIFICACION

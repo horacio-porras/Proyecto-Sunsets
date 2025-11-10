@@ -242,12 +242,12 @@
                         <div class="section-content">
                             <!-- Controles de Pedidos Asignados -->
                             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                     <h2 class="text-xl font-semibold text-gray-800">Pedidos Asignados</h2>
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex flex-col xl:flex-row xl:items-center gap-4 w-full lg:w-auto">
                                         <div class="flex items-center gap-2">
                                             <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-                                            <select id="estadoFilter" onchange="filterPedidos()" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                            <select id="estadoFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
                                                 <option value="">Todos los estados</option>
                                                 <option value="pendiente">Pendiente</option>
                                                 <option value="confirmado">Confirmado</option>
@@ -258,10 +258,17 @@
                                                 <option value="cancelado">Cancelado</option>
                                             </select>
                                         </div>
-                                        <button onclick="refreshPedidos()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
-                                            <i class="fas fa-sync-alt"></i>
-                                            Actualizar
-                                        </button>
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                                            <select id="ordenarPedidos" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="fecha_desc" selected>Más recientes</option>
+                                                <option value="fecha_asc">Más antiguos</option>
+                                            </select>
+                                        </div>
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                            <input id="buscarPedidoId" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar por ID" class="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 w-full lg:w-48" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -281,6 +288,22 @@
                                     </div>
                                 </div>
                             </div>
+                            <div id="assignedPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div id="assignedPaginationSummary" class="text-sm text-gray-600">
+                                    Mostrando 0 - 0 de 0 pedidos
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="assignedPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                                    </button>
+                                    <div id="assignedPaginationInfo" class="text-sm font-semibold text-gray-700">
+                                        Página 1 de 1
+                                    </div>
+                                    <button id="assignedNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -291,7 +314,18 @@
                             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <h2 class="text-xl font-semibold text-gray-800">Pedidos Sin Asignar</h2>
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex flex-col xl:flex-row xl:items-center gap-4 w-full md:w-auto">
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                                            <select id="ordenarPedidosSinAsignar" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="fecha_desc" selected>Más recientes</option>
+                                                <option value="fecha_asc">Más antiguos</option>
+                                            </select>
+                                        </div>
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                            <input id="buscarPedidoSinAsignarId" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar por ID" class="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 w-full md:w-48" />
+                                        </div>
                                         <button onclick="refreshPedidosSinAsignar()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
                                             <i class="fas fa-sync-alt"></i>
                                             Actualizar
@@ -313,6 +347,22 @@
                                             <p class="text-gray-500">Obteniendo los pedidos disponibles para asignar</p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            <div id="unassignedPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div id="unassignedPaginationSummary" class="text-sm text-gray-600">
+                                    Mostrando 0 - 0 de 0 pedidos
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="unassignedPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                                    </button>
+                                    <div id="unassignedPaginationInfo" class="text-sm font-semibold text-gray-700">
+                                        Página 1 de 1
+                                    </div>
+                                    <button id="unassignedNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -354,9 +404,35 @@
         let pedidosSinAsignarData = [];
         let filteredPedidosSinAsignar = [];
 
+        const ASSIGNED_ITEMS_PER_PAGE = 5;
+        const UNASSIGNED_ITEMS_PER_PAGE = 5;
+        let assignedCurrentPage = 1;
+        let unassignedCurrentPage = 1;
+
+        let assignedPaginationControls;
+        let assignedPaginationSummary;
+        let assignedPaginationInfo;
+        let assignedPrevPageBtn;
+        let assignedNextPageBtn;
+
+        let unassignedPaginationControls;
+        let unassignedPaginationSummary;
+        let unassignedPaginationInfo;
+        let unassignedPrevPageBtn;
+        let unassignedNextPageBtn;
+
+        let assignedSearchTerm = '';
+        let assignedSortOrder = 'fecha_desc';
+        let unassignedSearchTerm = '';
+        let unassignedSortOrder = 'fecha_desc';
+
         //Carga los datos cuando la página se carga
         document.addEventListener('DOMContentLoaded', function() {
             loadNavbar('pedidos');
+            initializeAssignedPaginationControls();
+            initializeUnassignedPaginationControls();
+            setupAssignedControls();
+            setupUnassignedControls();
             cargarAreaEmpleado();
             cargarPedidosAsignados();
             cargarPedidosSinAsignar();
@@ -382,6 +458,154 @@
                     }
                 }
             });
+        }
+
+        function initializeAssignedPaginationControls() {
+            assignedPaginationControls = document.getElementById('assignedPaginationControls');
+            assignedPaginationSummary = document.getElementById('assignedPaginationSummary');
+            assignedPaginationInfo = document.getElementById('assignedPaginationInfo');
+            assignedPrevPageBtn = document.getElementById('assignedPrevPageBtn');
+            assignedNextPageBtn = document.getElementById('assignedNextPageBtn');
+
+            if (assignedPrevPageBtn) {
+                assignedPrevPageBtn.addEventListener('click', () => changeAssignedPage(-1));
+            }
+
+            if (assignedNextPageBtn) {
+                assignedNextPageBtn.addEventListener('click', () => changeAssignedPage(1));
+            }
+        }
+
+        function initializeUnassignedPaginationControls() {
+            unassignedPaginationControls = document.getElementById('unassignedPaginationControls');
+            unassignedPaginationSummary = document.getElementById('unassignedPaginationSummary');
+            unassignedPaginationInfo = document.getElementById('unassignedPaginationInfo');
+            unassignedPrevPageBtn = document.getElementById('unassignedPrevPageBtn');
+            unassignedNextPageBtn = document.getElementById('unassignedNextPageBtn');
+
+            if (unassignedPrevPageBtn) {
+                unassignedPrevPageBtn.addEventListener('click', () => changeUnassignedPage(-1));
+            }
+
+            if (unassignedNextPageBtn) {
+                unassignedNextPageBtn.addEventListener('click', () => changeUnassignedPage(1));
+            }
+        }
+
+        function changeAssignedPage(offset) {
+            goToAssignedPage(assignedCurrentPage + offset);
+        }
+
+        function goToAssignedPage(page) {
+            const totalPages = Math.ceil(filteredPedidos.length / ASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            assignedCurrentPage = page;
+            renderPedidos();
+        }
+
+        function changeUnassignedPage(offset) {
+            goToUnassignedPage(unassignedCurrentPage + offset);
+        }
+
+        function goToUnassignedPage(page) {
+            const totalPages = Math.ceil(filteredPedidosSinAsignar.length / UNASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            unassignedCurrentPage = page;
+            renderPedidosSinAsignar();
+        }
+
+        function renderAssignedPagination(totalPages, startIndex, endIndex) {
+            if (!assignedPaginationControls || !assignedPaginationSummary || !assignedPaginationInfo || !assignedPrevPageBtn || !assignedNextPageBtn) {
+                return;
+            }
+
+            if (filteredPedidos.length === 0) {
+                assignedPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            assignedPaginationControls.classList.remove('hidden');
+
+            const total = filteredPedidos.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            assignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} pedidos`;
+            assignedPaginationInfo.textContent = `Página ${assignedCurrentPage} de ${totalPages}`;
+
+            assignedPrevPageBtn.disabled = assignedCurrentPage <= 1;
+            assignedNextPageBtn.disabled = assignedCurrentPage >= totalPages;
+        }
+
+        function renderUnassignedPagination(totalPages, startIndex, endIndex) {
+            if (!unassignedPaginationControls || !unassignedPaginationSummary || !unassignedPaginationInfo || !unassignedPrevPageBtn || !unassignedNextPageBtn) {
+                return;
+            }
+
+            if (filteredPedidosSinAsignar.length === 0) {
+                unassignedPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            unassignedPaginationControls.classList.remove('hidden');
+
+            const total = filteredPedidosSinAsignar.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            unassignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} pedidos`;
+            unassignedPaginationInfo.textContent = `Página ${unassignedCurrentPage} de ${totalPages}`;
+
+            unassignedPrevPageBtn.disabled = unassignedCurrentPage <= 1;
+            unassignedNextPageBtn.disabled = unassignedCurrentPage >= totalPages;
+        }
+
+        function setupAssignedControls() {
+            const sortSelect = document.getElementById('ordenarPedidos');
+            if (sortSelect) {
+                assignedSortOrder = sortSelect.value;
+                sortSelect.addEventListener('change', function() {
+                    assignedSortOrder = this.value;
+                    filterPedidos();
+                });
+            }
+
+            const searchInput = document.getElementById('buscarPedidoId');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    assignedSearchTerm = this.value.trim();
+                    filterPedidos();
+                });
+            }
+
+            const estadoSelect = document.getElementById('estadoFilter');
+            if (estadoSelect && !estadoSelect.hasAttribute('data-listener')) {
+                estadoSelect.setAttribute('data-listener', 'true');
+                estadoSelect.addEventListener('change', filterPedidos);
+            }
+        }
+
+        function setupUnassignedControls() {
+            const sortSelect = document.getElementById('ordenarPedidosSinAsignar');
+            if (sortSelect) {
+                unassignedSortOrder = sortSelect.value;
+                sortSelect.addEventListener('change', function() {
+                    unassignedSortOrder = this.value;
+                    filterPedidosSinAsignar();
+                });
+            }
+
+            const searchInput = document.getElementById('buscarPedidoSinAsignarId');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    unassignedSearchTerm = this.value.trim();
+                    filterPedidosSinAsignar();
+                });
+            }
         }
 
         //Función para cargar el área del empleado
@@ -455,6 +679,7 @@
 
                 if (data.success) {
                     pedidosData = data.data.pedidos || [];
+                    assignedCurrentPage = 1;
                     // Aplicar filtro por defecto (ocultar pedidos "listo")
                     filterPedidos();
                     updateStats();
@@ -481,8 +706,7 @@
 
                 if (data.success) {
                     pedidosSinAsignarData = data.data.pedidos || [];
-                    filteredPedidosSinAsignar = [...pedidosSinAsignarData];
-                    renderPedidosSinAsignar();
+                    filterPedidosSinAsignar();
                     updateStats(); // Actualizar estadísticas del header
                 } else {
                     showError('Error al cargar pedidos sin asignar: ' + (data.message || 'Error desconocido'));
@@ -506,39 +730,93 @@
                         <p class="text-gray-500 mb-4">No tienes pedidos asignados en este momento</p>
                     </div>
                 `;
+                if (assignedPaginationControls) {
+                    assignedPaginationControls.classList.add('hidden');
+                }
                 return;
             }
 
+            const totalPages = Math.ceil(filteredPedidos.length / ASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (assignedCurrentPage > totalPages) {
+                assignedCurrentPage = totalPages;
+            }
+            if (assignedCurrentPage < 1) {
+                assignedCurrentPage = 1;
+            }
+
+            const startIndex = (assignedCurrentPage - 1) * ASSIGNED_ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ASSIGNED_ITEMS_PER_PAGE, filteredPedidos.length);
+            const paginatedPedidos = filteredPedidos.slice(startIndex, endIndex);
+
             container.innerHTML = '';
-            filteredPedidos.forEach(pedido => {
+            paginatedPedidos.forEach(pedido => {
                 const pedidoCard = createPedidoCard(pedido);
                 container.appendChild(pedidoCard);
             });
+
+            renderAssignedPagination(totalPages, startIndex, endIndex);
+        }
+
+        function filterPedidosSinAsignar() {
+            const normalizedSearch = unassignedSearchTerm.replace(/[^0-9]/g, '');
+
+            filteredPedidosSinAsignar = pedidosSinAsignarData.filter(pedido => {
+                if (!normalizedSearch) {
+                    return true;
+                }
+                return pedido.id_pedido && pedido.id_pedido.toString().includes(normalizedSearch);
+            });
+
+            filteredPedidosSinAsignar.sort((a, b) => {
+                const dateA = new Date(a.fecha_pedido).getTime();
+                const dateB = new Date(b.fecha_pedido).getTime();
+                return unassignedSortOrder === 'fecha_asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            unassignedCurrentPage = 1;
+            renderPedidosSinAsignar();
         }
 
         //Función para renderizar pedidos sin asignar
         function renderPedidosSinAsignar() {
             const container = document.getElementById('pedidosSinAsignarContainer');
-            
+ 
             if (filteredPedidosSinAsignar.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12 text-gray-500">
-                        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-clipboard-list text-3xl text-gray-400"></i>
                         </div>
                         <h3 class="text-xl font-semibold mb-3 text-gray-700">No hay pedidos sin asignar</h3>
                         <p class="text-gray-500">Todos los pedidos han sido asignados</p>
                     </div>
                 `;
-                return;
-            }
+                if (unassignedPaginationControls) {
+                    unassignedPaginationControls.classList.add('hidden');
+                }
+                 return;
+             }
+ 
+             const totalPages = Math.ceil(filteredPedidosSinAsignar.length / UNASSIGNED_ITEMS_PER_PAGE) || 1;
+             if (unassignedCurrentPage > totalPages) {
+                 unassignedCurrentPage = totalPages;
+             }
+             if (unassignedCurrentPage < 1) {
+                 unassignedCurrentPage = 1;
+             }
 
-            container.innerHTML = '';
-            filteredPedidosSinAsignar.forEach(pedido => {
-                const pedidoCard = createPedidoSinAsignarCard(pedido);
-                container.appendChild(pedidoCard);
-            });
-        }
+             const startIndex = (unassignedCurrentPage - 1) * UNASSIGNED_ITEMS_PER_PAGE;
+             const endIndex = Math.min(startIndex + UNASSIGNED_ITEMS_PER_PAGE, filteredPedidosSinAsignar.length);
+             const paginatedPedidos = filteredPedidosSinAsignar.slice(startIndex, endIndex);
+
+             container.innerHTML = '';
+             paginatedPedidos.forEach(pedido => {
+                 const pedidoCard = createPedidoSinAsignarCard(pedido);
+                 container.appendChild(pedidoCard);
+             });
+
+             renderUnassignedPagination(totalPages, startIndex, endIndex);
+         }
 
         //Función para crear tarjeta de pedido
         function createPedidoCard(pedido) {
@@ -949,15 +1227,37 @@
 
         //Función para filtrar pedidos
         function filterPedidos() {
-            const filter = document.getElementById('estadoFilter').value;
-            
-            if (filter === '') {
-                // Mostrar todos los pedidos excepto los que están "listo"
-                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido !== 'listo');
-            } else {
-                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido === filter);
-            }
-            
+            const estadoSelect = document.getElementById('estadoFilter');
+            const estadoValue = estadoSelect ? estadoSelect.value : '';
+            const normalizedSearch = assignedSearchTerm.replace(/[^0-9]/g, '');
+            const hasSearch = normalizedSearch.length > 0;
+
+            filteredPedidos = pedidosData.filter(pedido => {
+                let matchesEstado;
+                if (!estadoValue) {
+                    matchesEstado = hasSearch ? true : pedido.estado_pedido !== 'listo';
+                } else {
+                    matchesEstado = pedido.estado_pedido === estadoValue;
+                }
+
+                if (!matchesEstado) {
+                    return false;
+                }
+
+                if (hasSearch) {
+                    return pedido.id_pedido && pedido.id_pedido.toString().includes(normalizedSearch);
+                }
+
+                return true;
+            });
+
+            filteredPedidos.sort((a, b) => {
+                const dateA = a.fecha_pedido ? new Date(a.fecha_pedido).getTime() : 0;
+                const dateB = b.fecha_pedido ? new Date(b.fecha_pedido).getTime() : 0;
+                return assignedSortOrder === 'fecha_asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            assignedCurrentPage = 1;
             renderPedidos();
         }
 
@@ -1057,6 +1357,118 @@
                 title: 'Error',
                 text: message
             });
+        }
+
+        //Función para inicializar controles de paginación para pedidos asignados
+        function initializeAssignedPaginationControls() {
+            assignedPaginationControls = document.getElementById('assignedPaginationControls');
+            assignedPaginationSummary = document.getElementById('assignedPaginationSummary');
+            assignedPaginationInfo = document.getElementById('assignedPaginationInfo');
+            assignedPrevPageBtn = document.getElementById('assignedPrevPageBtn');
+            assignedNextPageBtn = document.getElementById('assignedNextPageBtn');
+
+            if (assignedPrevPageBtn) {
+                assignedPrevPageBtn.addEventListener('click', () => changeAssignedPage(-1));
+            }
+
+            if (assignedNextPageBtn) {
+                assignedNextPageBtn.addEventListener('click', () => changeAssignedPage(1));
+            }
+        }
+
+        //Función para inicializar controles de paginación para pedidos sin asignar
+        function initializeUnassignedPaginationControls() {
+            unassignedPaginationControls = document.getElementById('unassignedPaginationControls');
+            unassignedPaginationSummary = document.getElementById('unassignedPaginationSummary');
+            unassignedPaginationInfo = document.getElementById('unassignedPaginationInfo');
+            unassignedPrevPageBtn = document.getElementById('unassignedPrevPageBtn');
+            unassignedNextPageBtn = document.getElementById('unassignedNextPageBtn');
+
+            if (unassignedPrevPageBtn) {
+                unassignedPrevPageBtn.addEventListener('click', () => changeUnassignedPage(-1));
+            }
+
+            if (unassignedNextPageBtn) {
+                unassignedNextPageBtn.addEventListener('click', () => changeUnassignedPage(1));
+            }
+        }
+
+        //Función para calcular el número total de páginas para pedidos asignados
+        function getTotalPagesAssigned() {
+            return Math.ceil(pedidosData.length / ASSIGNED_ITEMS_PER_PAGE);
+        }
+
+        //Función para calcular el número total de páginas para pedidos sin asignar
+        function getTotalPagesUnassigned() {
+            return Math.ceil(pedidosSinAsignarData.length / UNASSIGNED_ITEMS_PER_PAGE);
+        }
+
+        //Función para actualizar la información de paginación
+        function updatePaginationInfo() {
+            const start = (assignedCurrentPage - 1) * ASSIGNED_ITEMS_PER_PAGE + 1;
+            const end = Math.min(start + ASSIGNED_ITEMS_PER_PAGE - 1, pedidosData.length);
+            assignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${pedidosData.length} pedidos`;
+            assignedPaginationInfo.textContent = `Página ${assignedCurrentPage} de ${getTotalPagesAssigned()}`;
+
+            assignedPrevPageBtn.disabled = assignedCurrentPage === 1;
+            assignedNextPageBtn.disabled = assignedCurrentPage === getTotalPagesAssigned();
+
+            const unassignedStart = (unassignedCurrentPage - 1) * UNASSIGNED_ITEMS_PER_PAGE + 1;
+            const unassignedEnd = Math.min(unassignedStart + UNASSIGNED_ITEMS_PER_PAGE - 1, pedidosSinAsignarData.length);
+            unassignedPaginationSummary.textContent = `Mostrando ${unassignedStart} - ${unassignedEnd} de ${pedidosSinAsignarData.length} pedidos`;
+            unassignedPaginationInfo.textContent = `Página ${unassignedCurrentPage} de ${getTotalPagesUnassigned()}`;
+
+            unassignedPrevPageBtn.disabled = unassignedCurrentPage === 1;
+            unassignedNextPageBtn.disabled = unassignedCurrentPage === getTotalPagesUnassigned();
+        }
+
+        //Actualizar la información de paginación cuando los datos cambian
+        function updatePaginationOnDataChange() {
+            updatePaginationInfo();
+            renderPedidos(); // Re-renderizar pedidos asignados para reflejar el filtro
+            renderPedidosSinAsignar(); // Re-renderizar pedidos sin asignar
+        }
+
+        //Función para filtrar pedidos asignados
+        function filterPedidosAssigned() {
+            const filter = document.getElementById('estadoFilterAssigned').value;
+            
+            if (filter === '') {
+                // Mostrar todos los pedidos excepto los que están "listo"
+                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido !== 'listo');
+            } else {
+                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido === filter);
+            }
+            
+            assignedCurrentPage = 1; // Resetear a la primera página al filtrar
+            updatePaginationOnDataChange();
+        }
+
+        //Función para filtrar pedidos sin asignar
+        function filterPedidosUnassigned() {
+            const filter = document.getElementById('estadoFilterUnassigned').value;
+            
+            if (filter === '') {
+                // Mostrar todos los pedidos sin asignar
+                filteredPedidosSinAsignar = [...pedidosSinAsignarData];
+            } else {
+                filteredPedidosSinAsignar = pedidosSinAsignarData.filter(pedido => pedido.estado_pedido === filter);
+            }
+            
+            unassignedCurrentPage = 1; // Resetear a la primera página al filtrar
+            updatePaginationOnDataChange();
+        }
+
+        //Función para refrescar pedidos asignados
+        function refreshPedidosAssigned() {
+            cargarPedidosAsignados();
+            updatePaginationOnDataChange();
+        }
+
+        //Función para refrescar pedidos sin asignar
+        function refreshPedidosUnassigned() {
+            cargarPedidosSinAsignar();
+            updatePaginationOnDataChange();
         }
     </script>
 </body>

@@ -24,53 +24,45 @@
             flex: 1;
         }
         
-        .switch {
+        .toggle-checkbox {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
+            width: 52px;
+            height: 28px;
         }
-        
-        .switch input {
+
+        .toggle-checkbox input {
             opacity: 0;
             width: 0;
             height: 0;
         }
-        
-        .slider {
+
+        .toggle-checkbox span {
             position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
+            inset: 0;
+            border-radius: 9999px;
+            background-color: #d1d5db;
+            transition: background-color 0.25s ease;
         }
-        
-        .slider:before {
+
+        .toggle-checkbox span::after {
+            content: '';
             position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
+            height: 22px;
+            width: 22px;
             left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+            top: 3px;
+            border-radius: 9999px;
+            background-color: #fff;
+            transition: transform 0.25s ease;
         }
-        
-        input:checked + .slider {
-            background-color: #10b981;
+
+        .toggle-checkbox input:checked + span {
+            background: linear-gradient(to right, #f97316, #ef4444);
         }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        
-        .slider.disabled {
-            background-color: #ef4444;
+
+        .toggle-checkbox input:checked + span::after {
+            transform: translateX(24px);
         }
     </style>
 </head>
@@ -151,6 +143,22 @@
                     </table>
                 </div>
             </div>
+            <div id="productosPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="productosPaginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 productos
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="productosPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="productosPaginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="productosNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -160,10 +168,20 @@
     <script>
         let productos = [];
         let categorias = [];
+        let productosFiltrados = [];
+        let productosPaginaActual = 1;
+        const PRODUCTOS_ITEMS_POR_PAGINA = 10;
 
+        let productosPaginationControls;
+        let productosPaginationSummary;
+        let productosPaginationInfo;
+        let productosPrevPageBtn;
+        let productosNextPageBtn;
+ 
         //Carga los datos al inicializar
         document.addEventListener('DOMContentLoaded', () => {
             loadNavbar('productos');
+            inicializarControlesPaginacionProductos();
             cargarCategorias();
             cargarProductos();
             setupEventListeners();
@@ -187,6 +205,22 @@
             }
         }
 
+        function inicializarControlesPaginacionProductos() {
+            productosPaginationControls = document.getElementById('productosPaginationControls');
+            productosPaginationSummary = document.getElementById('productosPaginationSummary');
+            productosPaginationInfo = document.getElementById('productosPaginationInfo');
+            productosPrevPageBtn = document.getElementById('productosPrevPageBtn');
+            productosNextPageBtn = document.getElementById('productosNextPageBtn');
+
+            if (productosPrevPageBtn) {
+                productosPrevPageBtn.addEventListener('click', () => cambiarPaginaProductos(-1));
+            }
+
+            if (productosNextPageBtn) {
+                productosNextPageBtn.addEventListener('click', () => cambiarPaginaProductos(1));
+            }
+        }
+ 
         //Carga los productos
         async function cargarProductos() {
             try {
@@ -204,9 +238,11 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    productos = data.data.productos;
+                    productos = data.data.productos || [];
+                    productosFiltrados = [...productos];
+                    productosPaginaActual = 1;
                     console.log('Productos cargados desde API:', productos);
-                    renderizarProductos(productos);
+                    renderizarProductos();
                     actualizarEstadisticas();
                 } else {
                     throw new Error(data.message || 'Error al cargar productos');
@@ -214,6 +250,10 @@
             } catch (error) {
                 console.error('Error al cargar productos:', error);
                 mostrarError('Error al cargar productos: ' + error.message);
+                productos = [];
+                productosFiltrados = [];
+                productosPaginaActual = 1;
+                renderizarProductos();
             }
         }
 
@@ -262,10 +302,10 @@
         }
 
         //Renderiza los productos
-        function renderizarProductos(productosFiltrados) {
+        function renderizarProductos() {
             const tbody = document.getElementById('tablaProductos');
-            
-            if (productosFiltrados.length === 0) {
+ 
+            if (!productosFiltrados || productosFiltrados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-8 text-gray-500">
@@ -275,10 +315,27 @@
                         </td>
                     </tr>
                 `;
+                if (productosPaginationControls) {
+                    productosPaginationControls.classList.add('hidden');
+                }
                 return;
             }
 
-            tbody.innerHTML = productosFiltrados.map(producto => {
+            const totalProductos = productosFiltrados.length;
+            const totalPaginas = Math.ceil(totalProductos / PRODUCTOS_ITEMS_POR_PAGINA) || 1;
+
+            if (productosPaginaActual > totalPaginas) {
+                productosPaginaActual = totalPaginas;
+            }
+            if (productosPaginaActual < 1) {
+                productosPaginaActual = 1;
+            }
+
+            const inicio = (productosPaginaActual - 1) * PRODUCTOS_ITEMS_POR_PAGINA;
+            const fin = Math.min(inicio + PRODUCTOS_ITEMS_POR_PAGINA, totalProductos);
+            const productosPagina = productosFiltrados.slice(inicio, fin);
+
+            tbody.innerHTML = productosPagina.map(producto => {
                 const estadoClass = producto.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                 const estadoText = producto.disponible ? 'Disponible' : 'No Disponible';
                 const categoriaText = getCategoriaText(producto.categoria_id);
@@ -315,16 +372,18 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center items-center">
-                                <label class="switch" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
+                                <label class="toggle-checkbox" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
                                     <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
                                            onchange="toggleDisponibilidad(${producto.id}, this.checked)">
-                                    <span class="slider"></span>
+                                    <span></span>
                                 </label>
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            renderizarControlesPaginacionProductos(totalProductos, inicio, fin, totalPaginas);
         }
 
         //Toggle disponibilidad
@@ -377,7 +436,7 @@
             const filtroEstado = document.getElementById('filtroEstado').value;
             const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
 
-            let productosFiltrados = productos.filter(producto => {
+            productosFiltrados = productos.filter(producto => {
                 const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
                 const coincideEstado = !filtroEstado || 
                     (filtroEstado === 'disponible' && producto.disponible) ||
@@ -389,7 +448,40 @@
                 return coincideCategoria && coincideEstado && coincideBusqueda;
             });
 
-            renderizarProductos(productosFiltrados);
+            productosPaginaActual = 1;
+            renderizarProductos();
+        }
+
+        function cambiarPaginaProductos(offset) {
+            irAPaginaProductos(productosPaginaActual + offset);
+        }
+
+        function irAPaginaProductos(pagina) {
+            const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / PRODUCTOS_ITEMS_POR_PAGINA) || 1;
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+            productosPaginaActual = pagina;
+            renderizarProductos();
+        }
+
+        function renderizarControlesPaginacionProductos(totalProductos, inicio, fin, totalPaginas) {
+            if (!productosPaginationControls || !productosPaginationSummary || !productosPaginationInfo || !productosPrevPageBtn || !productosNextPageBtn) {
+                return;
+            }
+
+            if (totalProductos === 0) {
+                productosPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            productosPaginationControls.classList.remove('hidden');
+
+            productosPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalProductos} productos`;
+            productosPaginationInfo.textContent = `Página ${productosPaginaActual} de ${totalPaginas}`;
+
+            productosPrevPageBtn.disabled = productosPaginaActual <= 1;
+            productosNextPageBtn.disabled = productosPaginaActual >= totalPaginas;
         }
 
         //Actualiza las estadísticas

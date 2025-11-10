@@ -82,7 +82,9 @@ router.post('/', authenticateToken, async (req, res) => {
             deliveryFee, 
             taxes, 
             total,
-            loyaltyPointsUsed 
+            loyaltyPointsUsed,
+            rewardCanjeId,
+            rewardDiscount 
         } = req.body;
 
         //Verifica el tipo de usuario
@@ -120,6 +122,62 @@ router.post('/', authenticateToken, async (req, res) => {
         const areaAsignacion = await determinarAreaAsignacion(items, connection);
         const empleadoAsignado = null; // Los pedidos se crean sin asignar
 
+        let descuentoPorRecompensa = 0;
+        let canjeAsociado = null;
+
+        if (rewardCanjeId) {
+            const [canjeRows] = await connection.execute(
+                `SELECT 
+                    cp.id_canje,
+                    cp.id_cliente,
+                    cp.valor_canje,
+                    cp.estado_canje
+                 FROM canje_puntos cp
+                 WHERE cp.id_canje = ? FOR UPDATE`,
+                [rewardCanjeId]
+            );
+
+            if (canjeRows.length === 0) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'La recompensa seleccionada no está disponible'
+                });
+            }
+
+            canjeAsociado = canjeRows[0];
+
+            if (canjeAsociado.id_cliente !== clienteId) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'No puedes aplicar una recompensa que no pertenece a tu cuenta'
+                });
+            }
+
+            if (canjeAsociado.estado_canje !== 'pendiente') {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'Esta recompensa ya fue utilizada o no está disponible'
+                });
+            }
+
+            const descuentoSolicitado = Number(rewardDiscount) || 0;
+            const valorDisponible = Number(canjeAsociado.valor_canje) || 0;
+
+            descuentoPorRecompensa = Math.max(0, Math.min(descuentoSolicitado, valorDisponible));
+        }
+
+        const deliveryAmount = Number(deliveryFee) || 0;
+        const subtotalAmount = Number(subtotal) || 0;
+        const taxesAmount = Number(taxes) || 0;
+        const descuentoTotal = descuentoPorRecompensa;
+
+        let totalCalculado = subtotalAmount + deliveryAmount + taxesAmount - descuentoTotal;
+        if (totalCalculado < 0) {
+            totalCalculado = 0;
+        }
 
         const [pedidoResult] = await connection.execute(
             `INSERT INTO pedido (
@@ -142,13 +200,13 @@ router.post('/', authenticateToken, async (req, res) => {
                 delivery.addressId || null,
                 empleadoAsignado,
                 areaAsignacion,
-                subtotal,
-                taxes,
-                loyaltyPointsUsed || 0,
-                total,
+                subtotalAmount,
+                taxesAmount,
+                descuentoTotal,
+                totalCalculado,
                 payment.method,
                 delivery.instructions || null,
-                Math.floor(subtotal / 100)
+                Math.floor(subtotalAmount / 100)
             ]
         );
 
@@ -173,7 +231,7 @@ router.post('/', authenticateToken, async (req, res) => {
             );
         }
 
-        const puntosGanados = Math.floor(subtotal / 100);
+        const puntosGanados = Math.floor(subtotalAmount / 100);
         
         //Solo aplica puntos de lealtad si es un cliente registrado
         if (clienteId && userRole === 'Cliente') {
@@ -194,6 +252,15 @@ router.post('/', authenticateToken, async (req, res) => {
             }
         }
 
+        if (canjeAsociado) {
+            await connection.execute(
+                `UPDATE canje_puntos
+                 SET estado_canje = 'aplicado'
+                 WHERE id_canje = ?`,
+                [canjeAsociado.id_canje]
+            );
+        }
+
         await connection.commit();
 
         res.json({
@@ -210,7 +277,7 @@ router.post('/', authenticateToken, async (req, res) => {
         console.error('Error al crear pedido:', error);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
+            message: error.message || 'Error interno del servidor'
         });
     } finally {
         connection.release();

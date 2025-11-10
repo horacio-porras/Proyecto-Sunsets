@@ -232,6 +232,12 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/productos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-utensils mr-2 text-gray-700"></i>Productos
                 </a>
+                <a href="/admin/promociones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-tags mr-2 text-gray-700"></i>Promociones
+                </a>
+                <a href="/admin/recompensas.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-gift mr-2 text-gray-700"></i>Recompensas
+                </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
                 </a>
@@ -251,6 +257,12 @@ function configureRoleSpecificMenus() {
                 </a>
                 <a href="/admin/productos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-utensils mr-2"></i>Productos
+                </a>
+                <a href="/admin/promociones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-tags mr-2"></i>Promociones
+                </a>
+                <a href="/admin/recompensas.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-gift mr-2"></i>Recompensas
                 </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes

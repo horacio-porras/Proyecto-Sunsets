@@ -227,6 +227,9 @@
                             <div class="space-y-3" id="order-summary">
                                 <!-- El resumen del pedido se actualizará dinámicamente aquí -->
                             </div>
+                            <div id="customer-summary" class="mt-4 border-t pt-4 text-sm text-gray-600 hidden">
+                                <!-- Información del cliente y entrega -->
+                            </div>
                             
                             <div class="mt-6">
                                 <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
@@ -439,26 +442,32 @@
         //Función para mostrar resumen del pedido
         function showOrderSummary() {
             const orderData = getOrderData();
-            const summaryElement = document.getElementById('order-summary');
+            const customerSummary = document.getElementById('customer-summary');
             
-            if (summaryElement) {
-                summaryElement.innerHTML = `
-                    <div class="border-t pt-3">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span>Cliente:</span>
-                            <span class="font-semibold">${orderData.customer.name}</span>
-                </div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span>Teléfono:</span>
-                            <span class="font-semibold">${orderData.customer.phone}</span>
-                </div>
-                        <div class="text-sm">
-                            <span class="block mb-1">Dirección:</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.address}</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.district}, ${orderData.delivery.canton}</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.province}</span>
+            if (customerSummary) {
+                const hasData = orderData.customer.name || orderData.customer.phone || orderData.delivery.address;
+                if (!hasData) {
+                    customerSummary.classList.add('hidden');
+                    customerSummary.innerHTML = '';
+                    return;
+                }
+
+                customerSummary.classList.remove('hidden');
+                customerSummary.innerHTML = `
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Cliente:</span>
+                        <span class="font-semibold text-gray-700">${orderData.customer.name || '—'}</span>
                     </div>
-                </div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Teléfono:</span>
+                        <span class="font-semibold text-gray-700">${orderData.customer.phone || '—'}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="block mb-1 text-gray-500">Dirección:</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.address || '—'}</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.district ? `${orderData.delivery.district}, ${orderData.delivery.canton}` : orderData.delivery.canton || '—'}</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.province || '—'}</span>
+                    </div>
                 `;
             }
         }
