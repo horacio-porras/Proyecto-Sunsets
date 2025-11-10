@@ -99,6 +99,14 @@ function updateAuthState() {
             const currentPage = currentPath === '/' ? '/index.html' : currentPath;
             highlightCurrentPage(currentPage);
         }, 100);
+
+        // Actualizar badge de notificaciones no leídas y establecer polling
+        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+        // limpiar intervalos previos
+        if (window._notifPollInterval) clearInterval(window._notifPollInterval);
+        window._notifPollInterval = setInterval(() => {
+            if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+        }, 60000); // cada 60s
     } else {
         //Usuario no logeado
         if (userNotLoggedIn) userNotLoggedIn.classList.remove('hidden');
@@ -110,6 +118,42 @@ function updateAuthState() {
         if (dropdown) {
             dropdown.classList.add('hidden');
         }
+    }
+}
+
+// Obtener y mostrar contador de notificaciones no leídas
+async function updateNotificationBadge() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const res = await fetch('/api/cliente/notificaciones/count', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const count = data.no_leidas || 0;
+        // Buscar el botón del usuario
+        const userBtn = document.getElementById('userDropdownBtn');
+        if (!userBtn) return;
+
+        // Buscar badge existente
+        let badge = document.getElementById('notifBadge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.id = 'notifBadge';
+                badge.className = 'ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-600 text-white';
+                // insert after the button's last child
+                userBtn.appendChild(badge);
+            }
+            badge.textContent = count > 99 ? '99+' : count;
+        } else {
+            if (badge) badge.remove();
+        }
+    } catch (err) {
+        console.error('Error al obtener contador de notificaciones:', err);
     }
 }
 

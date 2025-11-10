@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +8,103 @@
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .cart-btn-increase,
+        .cart-btn-decrease {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            min-height: 24px !important;
+            max-width: 24px !important;
+            max-height: 24px !important;
+            background-color: #e5e7eb !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            font-weight: normal !important;
+            color: #374151 !important;
+        }
+        
+        .cart-btn-remove {
+            all: unset !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            max-width: 32px !important;
+            max-height: 32px !important;
+            background-color: transparent !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+            color: #dc2626 !important;
+        }
+        
+        .cart-btn-increase:hover,
+        .cart-btn-decrease:hover {
+            background-color: #d1d5db !important;
+        }
+        
+        .cart-btn-remove:hover {
+            color: #b91c1c !important;
+        }
+        
+        #order-cart-items {
+            pointer-events: auto !important;
+        }
+        
+        #order-cart-items > div {
+            position: relative !important;
+            z-index: 1 !important;
+            pointer-events: auto !important;
+        }
+        
+        #order-cart-items * {
+            box-sizing: border-box !important;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+    </style>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
-
-    <!-- Order Process -->
-    <section class="py-12">
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Order Process -->
+        <section class="py-12 flex-grow">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
                 <!-- Progress Steps -->
@@ -26,21 +112,16 @@
                     <div class="flex items-center justify-center space-x-4">
                         <div class="flex items-center">
                             <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">1</div>
-                            <span class="ml-2 text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Carrito</span>
+                            <span class="ml-2 text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Información</span>
                         </div>
                         <div class="w-16 h-1 bg-gray-300"></div>
                         <div class="flex items-center">
                             <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
-                            <span class="ml-2 text-sm font-semibold text-gray-600">Información</span>
-                        </div>
-                        <div class="w-16 h-1 bg-gray-300"></div>
-                        <div class="flex items-center">
-                            <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
                             <span class="ml-2 text-sm font-semibold text-gray-600">Pago</span>
                         </div>
                         <div class="w-16 h-1 bg-gray-300"></div>
                         <div class="flex items-center">
-                            <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">4</div>
+                            <div class="bg-gray-300 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
                             <span class="ml-2 text-sm font-semibold text-gray-600">Confirmación</span>
                         </div>
                     </div>
@@ -52,78 +133,41 @@
                         <!-- Cart Items -->
                         <div class="bg-white rounded-lg shadow-md">
                             <div class="p-6 border-b border-gray-200">
-                                <h2 class="text-xl font-semibold">Tu Carrito (3 items)</h2>
+                                <div class="flex justify-between items-center">
+                                    <h2 class="text-xl font-semibold">Tu Carrito</h2>
+                                    <button onclick="window.location.href='/menu.html'" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Menú
+                                    </button>
+                                </div>
                             </div>
                             <div class="p-6">
-                                <div class="space-y-6">
-                                    <!-- Pizza Margherita -->
-                                    <div class="flex items-center space-x-4">
-                                        <img src="https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=80" alt="Pizza Margherita" class="w-20 h-20 rounded-lg object-cover">
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold">Pizza Margherita</h3>
-                                            <p class="text-sm text-gray-600">Salsa de tomate, mozzarella, albahaca</p>
-                                            <div class="flex items-center space-x-2 mt-2">
-                                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Vegetariano</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <div class="flex items-center border border-gray-300 rounded">
-                                                <button class="px-3 py-1 hover:bg-gray-100">-</button>
-                                                <span class="px-3 py-1">1</span>
-                                                <button class="px-3 py-1 hover:bg-gray-100">+</button>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="font-semibold">₡8,500</p>
-                                                <button class="text-red-600 text-sm hover:text-red-800">Eliminar</button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="space-y-6" id="order-cart-items">
+                                    <!-- Los items del carrito se cargarán dinámicamente aquí -->
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Pizza Pepperoni -->
-                                    <div class="flex items-center space-x-4">
-                                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=80" alt="Pizza Pepperoni" class="w-20 h-20 rounded-lg object-cover">
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold">Pizza Pepperoni</h3>
-                                            <p class="text-sm text-gray-600">Pepperoni, mozzarella, salsa de tomate</p>
-                                            <div class="flex items-center space-x-2 mt-2">
-                                                <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Picante</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <div class="flex items-center border border-gray-300 rounded">
-                                                <button class="px-3 py-1 hover:bg-gray-100">-</button>
-                                                <span class="px-3 py-1">1</span>
-                                                <button class="px-3 py-1 hover:bg-gray-100">+</button>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="font-semibold">₡9,200</p>
-                                                <button class="text-red-600 text-sm hover:text-red-800">Eliminar</button>
-                                            </div>
-                                        </div>
+                        <!-- Customer Information -->
+                        <div class="bg-white rounded-lg shadow-md">
+                            <div class="p-6 border-b border-gray-200">
+                                <h2 class="text-xl font-semibold">Información de Contacto</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                                        <input type="text" id="customerName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
                                     </div>
-
-                                    <!-- Limonada -->
-                                    <div class="flex items-center space-x-4">
-                                        <img src="https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=80" alt="Limonada" class="w-20 h-20 rounded-lg object-cover">
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold">Limonada Natural</h3>
-                                            <p class="text-sm text-gray-600">Limonada fresca con menta y limón</p>
-                                            <div class="flex items-center space-x-2 mt-2">
-                                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Vegetariano</span>
-                                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Vegano</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <div class="flex items-center border border-gray-300 rounded">
-                                                <button class="px-3 py-1 hover:bg-gray-100">-</button>
-                                                <span class="px-3 py-1">2</span>
-                                                <button class="px-3 py-1 hover:bg-gray-100">+</button>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="font-semibold">₡3,600</p>
-                                                <button class="text-red-600 text-sm hover:text-red-800">Eliminar</button>
-                                            </div>
-                                        </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                                        <input type="tel" id="customerPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                                        <input type="email" id="customerEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
                                     </div>
                                 </div>
                             </div>
@@ -135,68 +179,42 @@
                                 <h2 class="text-xl font-semibold">Información de Entrega</h2>
                             </div>
                             <div class="p-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
-                                        <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
-                                        <input type="tel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
-                                    </div>
-                                    
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Dirección de Entrega *</label>
-                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                                            <option value="">Selecciona una dirección guardada</option>
-                                            <option value="home">Casa - San José, Barrio Escalante</option>
-                                            <option value="work">Trabajo - San José, Centro</option>
-                                            <option value="new">Agregar nueva dirección</option>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Provincia *</label>
+                                        <select id="deliveryProvince" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                            <option value="">Selecciona una provincia</option>
+                                            <option value="San José">San José</option>
+                                            <option value="Alajuela">Alajuela</option>
+                                            <option value="Cartago">Cartago</option>
+                                            <option value="Heredia">Heredia</option>
+                                            <option value="Guanacaste">Guanacaste</option>
+                                            <option value="Puntarenas">Puntarenas</option>
+                                            <option value="Limón">Limón</option>
                                         </select>
                                     </div>
                                     
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Instrucciones Especiales</label>
-                                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Instrucciones para el repartidor, alergias, etc."></textarea>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Cantón *</label>
+                                            <input type="text" id="deliveryCanton" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Nombre del cantón">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Distrito *</label>
+                                            <input type="text" id="deliveryDistrict" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Nombre del distrito">
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Payment Method -->
-                        <div class="bg-white rounded-lg shadow-md">
-                            <div class="p-6 border-b border-gray-200">
-                                <h2 class="text-xl font-semibold">Método de Pago</h2>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:border-orange-500 cursor-pointer">
-                                        <input type="radio" name="payment" value="card" class="text-orange-600 focus:ring-orange-500">
-                                        <i class="fas fa-credit-card text-gray-400"></i>
-                                        <div>
-                                            <span class="font-semibold">Tarjeta de Crédito/Débito</span>
-                                            <p class="text-sm text-gray-600">Visa, Mastercard, American Express</p>
-                                        </div>
-                                    </label>
                                     
-                                    <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:border-orange-500 cursor-pointer">
-                                        <input type="radio" name="payment" value="cash" class="text-orange-600 focus:ring-orange-500">
-                                        <i class="fas fa-money-bill-wave text-gray-400"></i>
-                                        <div>
-                                            <span class="font-semibold">Efectivo</span>
-                                            <p class="text-sm text-gray-600">Paga al recibir tu pedido</p>
-                                        </div>
-                                    </label>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Dirección Completa *</label>
+                                        <textarea id="deliveryAddress" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Calle, avenida, número de casa, apartamento, etc."></textarea>
+                                    </div>
                                     
-                                    <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:border-orange-500 cursor-pointer">
-                                        <input type="radio" name="payment" value="sinpe" class="text-orange-600 focus:ring-orange-500">
-                                        <i class="fas fa-mobile-alt text-gray-400"></i>
-                                        <div>
-                                            <span class="font-semibold">SINPE Móvil</span>
-                                            <p class="text-sm text-gray-600">Transferencia bancaria</p>
-                                        </div>
-                                    </label>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Instrucciones Especiales</label>
+                                        <textarea id="deliveryInstructions" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Instrucciones para el repartidor, alergias, etc."></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -207,103 +225,77 @@
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-lg font-semibold mb-4">Resumen del Pedido</h3>
                             
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Pizza Margherita x1</span>
-                                    <span>₡8,500</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Pizza Pepperoni x1</span>
-                                    <span>₡9,200</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Limonada Natural x2</span>
-                                    <span>₡3,600</span>
-                                </div>
-                                
-                                <hr class="my-3">
-                                
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Subtotal</span>
-                                    <span>₡21,300</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Costo de entrega</span>
-                                    <span>₡1,500</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Impuestos</span>
-                                    <span>₡1,065</span>
-                                </div>
-                                
-                                <hr class="my-3">
-                                
-                                <div class="flex justify-between font-semibold text-lg">
-                                    <span>Total</span>
-                                    <span>₡23,865</span>
-                                </div>
+                            <div class="space-y-3" id="order-summary">
+                                <!-- El resumen del pedido se actualizará dinámicamente aquí -->
                             </div>
                             
                             <div class="mt-6">
-                                <div class="flex items-center space-x-2 mb-4">
-                                    <input type="checkbox" id="loyalty" class="text-orange-600 focus:ring-orange-500">
-                                    <label for="loyalty" class="text-sm text-gray-700">Usar 500 puntos de lealtad (-₡2,500)</label>
-                                </div>
-                                
-                                <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold">
+                                <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
+                                    <i class="fas fa-check"></i>
                                     Confirmar Pedido
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Delivery Info -->
+                            <!-- Delivery Info -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h3 class="text-lg font-semibold mb-4">Información de Entrega</h3>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-clock text-orange-600"></i>
+                                        <div>
+                                            <p class="font-semibold">Tiempo Estimado</p>
+                                            <p class="text-sm text-gray-600">30-45 minutos</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-map-marker-alt text-orange-600"></i>
+                                        <div>
+                                            <p class="font-semibold">Zona de Entrega</p>
+                                            <p class="text-sm text-gray-600">Radio de 5km del restaurante</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-motorcycle text-orange-600"></i>
+                                        <div>
+                                            <p class="font-semibold">Repartidor</p>
+                                            <p class="text-sm text-gray-600">Asignado automáticamente</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!-- Contact Info -->
                         <div class="bg-white rounded-lg shadow-md p-6">
-                            <h3 class="text-lg font-semibold mb-4">Información de Entrega</h3>
+                            <h3 class="text-lg font-semibold mb-4">¿Necesitas Ayuda?</h3>
                             
                             <div class="space-y-3">
                                 <div class="flex items-center space-x-3">
+                                    <i class="fas fa-phone text-orange-600"></i>
+                                    <div>
+                                        <p class="font-semibold">Teléfono</p>
+                                        <p class="text-sm text-gray-600">+506 6171-4020</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-envelope text-orange-600"></i>
+                                    <div>
+                                        <p class="font-semibold">Email</p>
+                                        <p class="text-sm text-gray-600">sunsetstarbaca@gmail.com</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3">
                                     <i class="fas fa-clock text-orange-600"></i>
                                     <div>
-                                        <p class="font-semibold">Tiempo Estimado</p>
-                                        <p class="text-sm text-gray-600">30-45 minutos</p>
+                                        <p class="font-semibold">Horarios</p>
+                                        <p class="text-sm text-gray-600">Miércoles - Domingo<br>12:00 PM - 08:00 PM</p>
                                     </div>
                                 </div>
-                                
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-map-marker-alt text-orange-600"></i>
-                                    <div>
-                                        <p class="font-semibold">Zona de Entrega</p>
-                                        <p class="text-sm text-gray-600">Radio de 5km del restaurante</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-motorcycle text-orange-600"></i>
-                                    <div>
-                                        <p class="font-semibold">Repartidor</p>
-                                        <p class="text-sm text-gray-600">Asignado automáticamente</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Loyalty Points -->
-                        <div class="bg-white rounded-lg shadow-md p-6">
-                            <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
-                            
-                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold">1,250</div>
-                                    <div class="text-orange-100">Puntos Disponibles</div>
-                                </div>
-                            </div>
-                            
-                            <p class="text-sm text-gray-600 mb-4">Ganarás 213 puntos con este pedido</p>
-                            
-                            <div class="text-xs text-gray-500">
-                                <p>• 1 punto por cada ₡100 gastado</p>
-                                <p>• 500 puntos = ₡2,500 de descuento</p>
-                                <p>• Puntos válidos por 1 año</p>
                             </div>
                         </div>
                     </div>
@@ -311,74 +303,297 @@
             </div>
         </div>
     </section>
+    </div>
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
     <script>
-        function placeOrder() {
-            //Simula el envío del pedido
-            alert('¡Pedido confirmado! Tu orden #12352 ha sido recibida y está siendo preparada. Recibirás actualizaciones por SMS.');
-            
-            //Redirige a la página de confirmación o dashboard
-            //window.location.href = 'cliente/dashboard.html';
-        }
-
-        //Función para verificar si el usuario está autenticado
-        function isUserLoggedIn() {
-            const userData = localStorage.getItem('userData');
-            const authToken = localStorage.getItem('authToken');
-            return userData && authToken;
-        }
-
-        //Función para manejar la visibilidad de elementos de lealtad
-        function handleLoyaltyElements() {
-            const loyaltyCheckbox = document.getElementById('loyalty');
-            const loyaltyLabel = document.querySelector('label[for="loyalty"]');
-            
-            if (!isUserLoggedIn()) {
-                //Si el usuario no está logueado, ocultar elementos de lealtad
-                if (loyaltyCheckbox) {
-                    loyaltyCheckbox.style.display = 'none';
-                }
-                if (loyaltyLabel) {
-                    loyaltyLabel.style.display = 'none';
-                }
-                
-                //Oculta información de puntos
-                const allParagraphs = document.querySelectorAll('p');
-                allParagraphs.forEach(el => {
-                    if (el.textContent.includes('Ganarás') || 
-                        el.textContent.includes('puntos') || 
-                        el.textContent.includes('lealtad')) {
-                        el.style.display = 'none';
-                    }
-                });
-                
-                //Oculta también los elementos de la lista de puntos
-                const pointsList = document.querySelectorAll('.text-xs.text-gray-500 p');
-                pointsList.forEach(el => {
-                    if (el.textContent.includes('punto') || el.textContent.includes('Puntos')) {
-                        el.style.display = 'none';
-                    }
-                });
-            }
-        }
-
-        //Maneja el toggle de puntos de lealtad
-        document.getElementById('loyalty').addEventListener('change', function() {
-            const totalElement = document.querySelector('.font-semibold.text-lg span:last-child');
-            if (this.checked) {
-                totalElement.textContent = '₡21,365';
-            } else {
-                totalElement.textContent = '₡23,865';
-            }
+        //Verifica si el usuario es un cliente autenticado y redirigir
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkUserAndRedirect, 100);
+            fillCustomerData();
         });
 
-        //Inicializa cuando se carga la página
+        //Función para llenar automáticamente los datos del cliente si está autenticado
+        async function fillCustomerData() {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (authToken) {
+                try {
+                    const response = await fetch('/api/auth/profile', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.data.user) {
+                        const user = data.data.user;
+                        
+                        const nameField = document.getElementById('customerName');
+                        const phoneField = document.getElementById('customerPhone');
+                        const emailField = document.getElementById('customerEmail');
+                        
+                        if (nameField && user.nombre) {
+                            nameField.value = user.nombre;
+                        }
+                        
+                        if (phoneField && user.telefono) {
+                            phoneField.value = user.telefono;
+                        }
+                        
+                        if (emailField && user.correo) {
+                            emailField.value = user.correo;
+                        }
+                        
+                        showOrderSummary();
+                        
+                        console.log('Datos del cliente llenados automáticamente');
+                    }
+                } catch (error) {
+                    console.error('Error al obtener datos del cliente:', error);
+                }
+            }
+        }
+
+        function checkUserAndRedirect() {
+            const userData = localStorage.getItem('userData');
+            const authToken = localStorage.getItem('authToken');
+            
+            if (userData && authToken) {
+                try {
+                    const user = JSON.parse(userData);
+                    
+                    if (user.tipoUsuario === 'Cliente') {
+                        window.location.href = '/cliente/pedidos.html';
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error al parsear userData:', error);
+                }
+            }
+
+        }
+
+        //Función para validar el formulario antes de procesar el pedido
+        function validateOrderForm() {
+            const requiredFields = [
+                { id: 'customerName', name: 'Nombre Completo' },
+                { id: 'customerPhone', name: 'Teléfono' },
+                { id: 'deliveryProvince', name: 'Provincia' },
+                { id: 'deliveryCanton', name: 'Cantón' },
+                { id: 'deliveryDistrict', name: 'Distrito' },
+                { id: 'deliveryAddress', name: 'Dirección Completa' }
+            ];
+
+            for (const field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value.trim()) {
+                    alert(`Por favor completa el campo: ${field.name}`);
+                    element.focus();
+                    return false;
+                }
+            }
+
+            const phone = document.getElementById('customerPhone').value;
+            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/;
+            if (!phoneRegex.test(phone)) {
+                alert('Por favor ingresa un número de teléfono válido');
+                document.getElementById('customerPhone').focus();
+                return false;
+            }
+
+            const email = document.getElementById('customerEmail').value;
+            if (email && email.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    alert('Por favor ingresa un correo electrónico válido');
+                    document.getElementById('customerEmail').focus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        //Función para obtener los datos del formulario
+        function getOrderData() {
+            return {
+                customer: {
+                    name: document.getElementById('customerName').value.trim(),
+                    phone: document.getElementById('customerPhone').value.trim(),
+                    email: document.getElementById('customerEmail').value.trim()
+                },
+                delivery: {
+                    province: document.getElementById('deliveryProvince').value,
+                    canton: document.getElementById('deliveryCanton').value.trim(),
+                    district: document.getElementById('deliveryDistrict').value.trim(),
+                    address: document.getElementById('deliveryAddress').value.trim(),
+                    instructions: document.getElementById('deliveryInstructions').value.trim()
+                }
+            };
+        }
+
+        //Función para mostrar resumen del pedido
+        function showOrderSummary() {
+            const orderData = getOrderData();
+            const summaryElement = document.getElementById('order-summary');
+            
+            if (summaryElement) {
+                summaryElement.innerHTML = `
+                    <div class="border-t pt-3">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Cliente:</span>
+                            <span class="font-semibold">${orderData.customer.name}</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Teléfono:</span>
+                            <span class="font-semibold">${orderData.customer.phone}</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="block mb-1">Dirección:</span>
+                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.address}</span>
+                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.district}, ${orderData.delivery.canton}</span>
+                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.province}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        //Función para enviar el pedido
+        async function placeOrder() {
+            try {
+                if (!validateOrderForm()) {
+                    return;
+                }
+
+                const orderData = getOrderData();
+                
+                const cartItems = getCartItems();
+                if (cartItems.length === 0) {
+                    alert('Tu carrito está vacío');
+                    return;
+                }
+
+                const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const taxes = subtotal * 0.13; // 13% IVA
+                const total = subtotal + taxes;
+
+                const orderPayload = {
+                    items: cartItems,
+                    customer: orderData.customer,
+                    delivery: orderData.delivery,
+                    payment: {
+                        method: 'efectivo'
+                    },
+                    subtotal: subtotal,
+                    deliveryFee: 0,
+                    taxes: taxes,
+                    total: total,
+                    loyaltyPointsUsed: 0
+                };
+
+                console.log('Enviando pedido:', orderPayload);
+
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                button.disabled = true;
+
+                const response = await fetch('/api/pedidos/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const orderData = {
+                        pedidoId: result.data.pedidoId,
+                        numeroPedido: result.data.numeroPedido,
+                        total: total,
+                        subtotal: subtotal,
+                        taxes: taxes,
+                        items: cartItems,
+                        customer: getOrderData().customer,
+                        delivery: getOrderData().delivery,
+                        payment: {
+                            method: 'efectivo'
+                        }
+                    };
+                    
+                    localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+                    
+                    window.location.href = '/pago.html';
+                } else {
+                    alert(`Error al crear el pedido: ${result.message || 'Error desconocido'}`);
+                }
+
+            } catch (error) {
+                console.error('Error al enviar pedido:', error);
+                alert('Error de conexión al enviar el pedido');
+            } finally {
+                const button = event.target;
+                button.innerHTML = '<i class="fas fa-check"></i> Confirmar Pedido';
+                button.disabled = false;
+            }
+        }
+
+        //Función para obtener items del carrito
+        function getCartItems() {
+            const cart = JSON.parse(localStorage.getItem('sunsets-cart') || '[]');
+            
+            if (cart.length === 0) {
+                alert('Tu carrito está vacío. Serás redirigido al menú para agregar productos.');
+                window.location.href = '/menu.html';
+                return [];
+            }
+            
+            return cart;
+        }
+
+        //Función para limpiar formulario
+        function clearForm() {
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('deliveryProvince').value = '';
+            document.getElementById('deliveryCanton').value = '';
+            document.getElementById('deliveryDistrict').value = '';
+            document.getElementById('deliveryAddress').value = '';
+            document.getElementById('deliveryInstructions').value = '';
+        }
+
+        //Función para limpiar carrito
+        function clearCart() {
+            localStorage.removeItem('sunsets-cart');
+            console.log('Carrito limpiado');
+        }
+
+        //Event listeners para actualizar el resumen en tiempo real
         document.addEventListener('DOMContentLoaded', function() {
-            handleLoyaltyElements();
+            const formFields = [
+                'customerName', 'customerPhone', 'customerEmail',
+                'deliveryProvince', 'deliveryCanton', 'deliveryDistrict', 'deliveryAddress'
+            ];
+
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', showOrderSummary);
+                    field.addEventListener('change', showOrderSummary);
+                }
+            });
+
+            showOrderSummary();
         });
     </script>
 </body>
-</html> 
+</html>
