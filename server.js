@@ -10,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 //const { authMiddleware, isAdmin } = require('./middlewares/auth');
 const empleadoRoutes = require('./routes/empleadoRoutes');
 const productoRoutes = require('./routes/productoRoutes');
+const opinionRoutes = require('./routes/opinionRoutes');
 
 
 const app = express();
@@ -69,7 +70,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 
 app.use('/api/empleado', empleadoRoutes);
 app.use('/api/producto', productoRoutes);
-
+app.use('/api/opiniones', require('./routes/opinionRoutes'));
 
 // Rutas protegidas solo para admin
 //app.use('/api/empleados', authMiddleware, isAdmin, empleadoRoutes);
