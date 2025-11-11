@@ -4,15 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Cliente - Sunset's Tarbaca</title>
+    <title>Dashboard - Sunset's Tarbaca</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
-<<<<<<< Updated upstream
-=======
     <style>
         html,
         body {
@@ -28,34 +27,12 @@
             flex: 1;
         }
     </style>
->>>>>>> Stashed changes
 </head>
 
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
-<<<<<<< Updated upstream
-    <!-- Dashboard Content -->
-    <div class="container mx-auto px-4 py-8">
-        <!-- Welcome Section -->
-        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
-            <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
-            <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
-        </div>
-
-
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Active Reservations -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Reservaciones Activas</h2>
-                    </div>
-                    <div class="p-6">
-=======
     <!-- Main Content -->
     <div class="main-content">
         <!-- Dashboard Content -->
@@ -162,6 +139,25 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Notifications and promotions -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Promociones y Beneficios</h2>
+                            <hr class="mb-4">
+                        </div>
+                        <div class="p-6 pt-0">
+                            <div id="notificacionesContainer" class="space-y-4">
+                                <!-- Aquí se cargarán dinámicamente las notificaciones -->
+                            </div>
+                            <div class="mt-6 text-center">
+                                <a href="/cliente/notificaciones.html"
+                                    class="text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver todas las notificaciones
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column -->
@@ -177,7 +173,6 @@
                             <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
                         </div>
 
->>>>>>> Stashed changes
                         <div class="space-y-4">
                             <div class="flex items-center space-x-3">
                                 <i class="fas fa-envelope text-gray-400"></i>
@@ -192,72 +187,6 @@
                                 <span class="text-sm" id="direccionTexto">-</span>
                             </div>
                         </div>
-<<<<<<< Updated upstream
-                        <div class="mt-6 text-center">
-                            <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md transition">Nueva Reservación</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Orders -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold">Pedidos Recientes</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Margherita + Limonada</h4>
-                                        <p class="text-sm text-gray-600">Orden #12345 • 15 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡10,300</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-utensils text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pasta Carbonara + Tiramisú</h4>
-                                        <p class="text-sm text-gray-600">Orden #12344 • 12 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡11,000</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-pizza-slice text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Pizza Pepperoni</h4>
-                                        <p class="text-sm text-gray-600">Orden #12343 • 10 Dic 2024</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡9,200</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Entregado</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-6 text-center">
-                            <a href="/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
-                        </div>
-=======
 
                         <div class="mt-6">
                             <a href="/cliente/perfil.html"
@@ -299,99 +228,17 @@
                                 Canjear Puntos
                             </a>
                         </div>
->>>>>>> Stashed changes
-                    </div>
-
-                    <!-- Notifications and promotions -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Promociones y Beneficios</h2>
-                            <hr class="mb-4">
-                        </div>
-<<<<<<< Updated upstream
-                        <h3 class="text-xl font-semibold user-name">-</h3>
-                        <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center space-x-3">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                            <span class="text-sm user-email">-</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <i class="fas fa-phone text-gray-400"></i>
-                            <span class="text-sm" id="telefonoUsuario">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <a href="/cliente/perfil.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
-                            Editar Perfil
-                        </a>
                     </div>
                 </div>
-
-                <!-- Loyalty Points -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
-                    
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold" id="puntosDisplay">-</div>
-                            <div class="text-orange-100">Puntos Acumulados</div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Próximo nivel:</span>
-                            <span class="text-sm font-semibold">Plata (2,000 pts)</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-orange-600 h-2 rounded-full" id="progresoBar" style="width: 0%"></div>
-                        </div>
-                        <div class="text-xs text-gray-500 text-center" id="progresoText">Calculando progreso...</div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <a href="#rewards" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md transition text-center block">
-                            Canjear Puntos
-                        </a>
-                    </div>
-                </div>
-=======
-                        <div class="p-6 pt-0">
-                            <div id="notificacionesContainer" class="space-y-4">
-                                <!-- Aquí se cargarán dinámicamente las notificaciones -->
-                            </div>
-                            <div class="mt-6 text-center">
-                                <a href="/cliente/notificaciones.html"
-                                    class="text-orange-600 hover:text-orange-700 font-semibold">
-                                    Ver todas las notificaciones
-                                </a>
-                            </div>
-                        </div>
-                    </div>
->>>>>>> Stashed changes
-
-
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <img src="/sunsets_logo_b.png" alt="Sunset's Tarbaca Logo" class="h-16 w-auto mx-auto mb-4">
-            <p class="text-gray-300">&copy; 2025 Sunset's Tarbaca. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
     <script>
         //Carga los datos del perfil del usuario al cargar la página
-<<<<<<< Updated upstream
-        document.addEventListener('DOMContentLoaded', function() {
-=======
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM cargado, verificando elementos...');
             const direccionElement = document.getElementById('direccionPrincipal');
@@ -401,10 +248,11 @@
                 direccionTextoElement: !!direccionTextoElement
             });
 
->>>>>>> Stashed changes
             loadUserProfile();
+            loadRecentOrders();
         });
 
+        //Carga el perfil del usuario
         async function loadUserProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -458,16 +306,12 @@
                         const year = fecha.getFullYear();
                         fechaRegistroElement.textContent = `Cliente desde ${day}/${month}/${year}`;
                     }
-<<<<<<< Updated upstream
-                    
-=======
 
                     //Cargar dirección principal con un pequeño delay para asegurar que los elementos estén listos
                     setTimeout(async () => {
                         await loadMainAddress();
                     }, 100);
 
->>>>>>> Stashed changes
                     //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
@@ -478,8 +322,6 @@
             }
         }
 
-<<<<<<< Updated upstream
-=======
         //Carga la dirección principal del usuario
         async function loadMainAddress() {
             try {
@@ -606,7 +448,6 @@
         window.testAddressAPI = testAddressAPI;
 
         //Actualiza el progreso de lealtad
->>>>>>> Stashed changes
         function updateLoyaltyProgress(puntos) {
             const progresoBar = document.getElementById('progresoBar');
             const progresoText = document.getElementById('progresoText');
@@ -640,7 +481,6 @@
                 progresoBar.style.width = `${Math.min(progreso, 100)}%`;
                 progresoText.textContent = `${puntosRestantes} puntos más para ${siguienteNivel.nombre}`;
             } else {
-                // Usuario en el nivel más alto
                 progresoBar.style.width = '100%';
                 progresoText.textContent = '¡Nivel máximo alcanzado!';
             }
@@ -650,11 +490,6 @@
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
-<<<<<<< Updated upstream
-    </script>
-
-</body>
-=======
 
         //Función para cargar los últimos 3 pedidos del cliente
         async function loadRecentOrders() {
@@ -810,8 +645,7 @@
                     return;
                 }
 
-                // Llamar al endpoint del cliente: /api/cliente/notificaciones
-                const res = await fetch('/api/cliente/notificaciones', {
+                const res = await fetch('/api/notificaciones', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -863,5 +697,4 @@
 
 </body>
 
->>>>>>> Stashed changes
 </html>
