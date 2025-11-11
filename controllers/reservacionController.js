@@ -76,6 +76,8 @@ const buildNotasFinales = (notas, preferenciaMesa) => {
 const createReservation = async (req, res) => {
     try {
         const userId = req.user.id;
+        const userNombre = req.user.nombre;
+        const userCorreo = req.user.correo;
         const {
             fecha_reserva,
             hora_reserva,
@@ -136,6 +138,28 @@ const createReservation = async (req, res) => {
             ]
         );
 
+        // Generar número de reservación y enviar correo de confirmación al usuario autenticado
+        const idReserva = result.insertId;
+        const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
+
+        try {
+            console.log(`[Reservación] (Auth) Enviando correo de confirmación a: ${userCorreo}`);
+            const { previewUrl } = await sendReservationEmail({
+                to: userCorreo,
+                nombre: userNombre,
+                numeroReserva,
+                fecha: fecha_reserva,
+                hora: hora_reserva,
+                personas: cantidad_personas
+            });
+            req._emailPreviewUrl = previewUrl;
+            console.log(`[Reservación] (Auth) ✓ Correo de confirmación enviado exitosamente`);
+        } catch (mailErr) {
+            console.error('[Reservación] (Auth) ✗ ERROR al enviar correo de confirmación:', mailErr.message);
+            console.error('[Reservación] (Auth) Detalles completos del error:', mailErr);
+            // No fallar la reservación si el correo falla
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Reservación creada exitosamente',
@@ -147,7 +171,9 @@ const createReservation = async (req, res) => {
                     cantidad_personas: cantidadFinal,
                     estado_reserva: ESTADO_RESERVA_PENDIENTE
                 },
-                max_capacidad: MAX_PERSONAS_RESERVA
+                max_capacidad: MAX_PERSONAS_RESERVA,
+                numero_reserva: numeroReserva,
+                preview_url: req._emailPreviewUrl
             }
         });
     } catch (error) {
@@ -161,6 +187,8 @@ const createReservation = async (req, res) => {
 
 const createPublicReservation = async (req, res) => {
     try {
+    console.log('[Reservación] Iniciando creación de reservación pública');
+    console.log('[Reservación] Datos recibidos:', req.body);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -207,6 +235,7 @@ const createPublicReservation = async (req, res) => {
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
         try {
+            console.log(`[Reservación] Enviando correo de confirmación a: ${correo}`);
             const { previewUrl } = await sendReservationEmail({
                 to: correo,
                 nombre,
@@ -216,8 +245,11 @@ const createPublicReservation = async (req, res) => {
                 personas: cantidad_personas
             });
             req._emailPreviewUrl = previewUrl;
+            console.log(`[Reservación] ✓ Correo de confirmación enviado exitosamente`);
         } catch (mailErr) {
-            console.warn('No se pudo enviar correo de confirmación:', mailErr.message);
+            console.error('[Reservación] ✗ ERROR al enviar correo de confirmación:', mailErr.message);
+            console.error('[Reservación] Detalles completos del error:', mailErr);
+            // No fallar la reservación si el correo falla
         }
 
         return res.status(201).json({

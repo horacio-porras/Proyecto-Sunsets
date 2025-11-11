@@ -94,6 +94,7 @@ async function sendDailyReminders() {
 
 /**
  * Envía un correo de recordatorio para una reservación específica
+ * Usa el mismo sistema de mailer.js para consistencia
  */
 async function sendReminderEmail(reservacion) {
   const { nombre, correo, numero_reserva, fecha_reserva, hora_reserva, cantidad_personas } = reservacion;
@@ -106,20 +107,11 @@ async function sendReminderEmail(reservacion) {
     day: 'numeric'
   });
 
-  // Crear plantilla de correo de recordatorio
+  const { getMailProvider } = require('./mailer');
   const nodemailer = require('nodemailer');
-  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM } = process.env;
+  const { MAIL_FROM, REPLY_TO } = process.env;
 
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP no configurado. No se pueden enviar recordatorios.');
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT || 587),
-    secure: String(SMTP_SECURE || 'false') === 'true',
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
+  const provider = await getMailProvider();
 
   const subject = `⏰ Recordatorio: Tu reservación en Sunset's Tarbaca es mañana`;
   const html = `
@@ -145,12 +137,36 @@ async function sendReminderEmail(reservacion) {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: MAIL_FROM,
-    to: correo,
-    subject,
-    html
-  });
+  const text = `Recordatorio de Reservación\n\n` +
+    `Hola ${nombre || 'Cliente'},\n` +
+    `Te recordamos que tienes una reservación mañana en Sunset's Tarbaca:\n\n` +
+    `Fecha: ${fechaFormateada}\n` +
+    `Hora: ${hora_reserva}\n` +
+    `Personas: ${cantidad_personas}\n` +
+    `Número de reserva: ${numero_reserva}\n\n` +
+    `Si necesitas modificar o cancelar, contáctanos al +506 6171-4020.\n` +
+    `Nos vemos mañana!`;
+
+  // Enviar según el proveedor configurado
+  if (provider.type === 'resend') {
+    await provider.client.emails.send({
+      from: provider.from,
+      to: [correo],
+      subject,
+      text,
+      html,
+      reply_to: REPLY_TO || undefined,
+    });
+  } else if (provider.type === 'smtp' || provider.type === 'smtp-test') {
+    await provider.transporter.sendMail({
+      from: provider.from,
+      to: correo,
+      replyTo: REPLY_TO || undefined,
+      subject,
+      text,
+      html
+    });
+  }
 }
 
 module.exports = {
