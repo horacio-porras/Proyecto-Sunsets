@@ -9,7 +9,7 @@ const {
     cancelReservation
 } = require('../controllers/reservacionController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const { createReservationValidation } = require('../validators/reservationValidator');
+const { createReservationValidation } = require('../validators/authValidator');
 
 router.post('/', createReservationValidation, (req, res, next) => {
     const authHeader = req.headers.authorization || '';
