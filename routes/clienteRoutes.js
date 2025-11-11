@@ -9,6 +9,33 @@ const {
     canjearRecompensa
 } = require('../controllers/recompensaController');
 
+// Controladores del cliente
+const { actualizarPreferenciaNotificacion, obtenerPromocionesPersonalizadas, verificarPromocionesPorHorario, obtenerNotificaciones, marcarNotificacionLeida } = require('../controllers/clienteController');
+
+// Actualiza la preferencia de notificaciones
+router.patch('/notificaciones', authenticateToken, actualizarPreferenciaNotificacion);
+
+// Obtiene promociones personalizadas según historial
+router.get('/notificaciones/personalizadas', authenticateToken, obtenerPromocionesPersonalizadas);
+
+// Obtiene notificaciones del usuario
+router.get('/notificaciones', authenticateToken, obtenerNotificaciones);
+
+// Obtener cantidad de notificaciones no leídas
+router.get('/notificaciones/count', authenticateToken, async (req, res, next) => {
+    try {
+        return await require('../controllers/clienteController').obtenerNoLeidas(req, res);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Marca una notificación como leída
+router.patch('/notificaciones/:id/leida', authenticateToken, marcarNotificacionLeida);
+
+// Verifica promociones válidas según horario actual
+router.post('/verificar-promocion-horaria', authenticateToken, verificarPromocionesPorHorario);
+
 //Obtiene los puntos de lealtad del cliente logueado
 router.get('/puntos', authenticateToken, async (req, res) => {
     try {
@@ -99,7 +126,6 @@ router.get('/recompensas', authenticateToken, getRecompensasCliente);
 
 //Canje de recompensas
 router.post('/recompensas/:id/canjear', authenticateToken, canjearRecompensa);
-
 //Obtiene las direcciones del cliente logueado
 router.get('/direcciones', authenticateToken, async (req, res) => {
     try {

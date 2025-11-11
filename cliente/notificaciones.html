@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notificaciones - Sunset's Tarbaca</title>
+  <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="/js/auth.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script src="/js/footer.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <div id="navbar-container"></div>
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h1 class="text-2xl font-bold mb-4">Notificaciones</h1>
+      <p class="text-sm text-gray-600 mb-4">Aquí verás las promociones y mensajes que te hemos enviado.</p>
+      <div id="notificationsContainer" class="space-y-3">
+        <div id="loading" class="text-gray-500">Cargando notificaciones...</div>
+      </div>
+    </div>
+  </main>
+  <div id="footer-container" class="mt-auto"></div>
+
+  <script>
+    async function loadNotifications() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const container = document.getElementById('notificationsContainer');
+      container.innerHTML = '<div id="loading" class="text-gray-500">Cargando notificaciones...</div>';
+
+      try {
+        const res = await fetch('/api/cliente/notificaciones', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) {
+          container.innerHTML = '<div class="text-red-500">No se pudieron cargar las notificaciones.</div>';
+          return;
+        }
+
+        const nots = data.notificaciones || [];
+        if (nots.length === 0) {
+          container.innerHTML = '<div class="text-gray-600">No hay notificaciones.</div>';
+          return;
+        }
+
+        container.innerHTML = '';
+        nots.forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'p-4 bg-gray-50 rounded-lg flex items-start justify-between';
+          div.innerHTML = `
+            <div>
+              <div class="font-semibold">${n.titulo}</div>
+              <div class="text-sm text-gray-600">${n.contenido}</div>
+              <div class="text-xs text-gray-400 mt-2">${new Date(n.fecha_envio).toLocaleString('es-ES')}</div>
+            </div>
+            <div class="ml-4 flex flex-col items-end">
+              <button class="mark-read text-sm text-blue-600 hover:underline" data-id="${n.id_notificacion}">${n.leida ? 'Leída' : 'Marcar como leída'}</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        // attach handlers
+        document.querySelectorAll('.mark-read').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            try {
+              const res = await fetch(`/api/cliente/notificaciones/${id}/leida`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              const r = await res.json();
+              if (r.success) {
+                // reload
+                await loadNotifications();
+              } else {
+                alert('No se pudo marcar como leída');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error al marcar notificación');
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error('Error al cargar notificaciones:', err);
+        container.innerHTML = '<div class="text-red-500">Error al cargar notificaciones.</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadNotifications();
+    });
+  </script>
+</body>
+</html>

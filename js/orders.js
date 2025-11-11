@@ -344,12 +344,13 @@ async function updateOrderSummary() {
     const taxes = subtotalAfterPromotions * taxRate;
     let totalBeforeRewards = subtotalAfterPromotions + deliveryFee + taxes;
     let total = totalBeforeRewards;
+
     const activeReward = getActiveReward();
     let rewardDiscount = 0;
 
     summaryContainer.innerHTML = '';
 
-    orderCart.forEach(item => {
+    orderCart.forEach((item) => {
         const itemRow = document.createElement('div');
         itemRow.className = 'flex justify-between';
         itemRow.innerHTML = `
@@ -381,6 +382,14 @@ async function updateOrderSummary() {
             `;
             summaryContainer.appendChild(promoRow);
         });
+
+        const subtotalDiscountedRow = document.createElement('div');
+        subtotalDiscountedRow.className = 'flex justify-between';
+        subtotalDiscountedRow.innerHTML = `
+            <span class="text-gray-600">Subtotal después de promociones</span>
+            <span>₡${Math.round(subtotalAfterPromotions).toLocaleString()}</span>
+        `;
+        summaryContainer.appendChild(subtotalDiscountedRow);
     }
 
     const deliveryRow = document.createElement('div');
@@ -459,13 +468,14 @@ async function updateOrderSummary() {
         total
     };
 
-    await updateLoyaltyInfo(subtotal);
+    await updateLoyaltyInfo(subtotalAfterPromotions);
 }
 
 //Función para obtener puntos del usuario logueado
 async function getUserLoyaltyPoints() {
     try {
-        const token = localStorage.getItem('token');
+        // Usar la clave estándar 'authToken' definida en auth.js
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
         
         if (!token) {
@@ -563,7 +573,7 @@ function updateLoyaltyCheckbox(userPoints) {
 }
 
 //Función para procesar el pedido
-function placeOrder() {
+async function placeOrder() {
     if (orderCart.length === 0) {
         alert('Tu carrito está vacío. Agrega algunos productos antes de continuar.');
         return;
@@ -579,13 +589,28 @@ function placeOrder() {
         return;
     }
     
-    const orderTotals = window.currentOrderTotals || {
-        subtotal: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-        taxes: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * taxRate,
-        deliveryFee,
-        rewardDiscount: 0,
-        total: orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + deliveryFee + (orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * taxRate)
-    };
+    await updateOrderSummary();
+
+    const fallbackTotals = (() => {
+        const subtotalFallback = orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const taxesFallback = subtotalFallback * taxRate;
+        const totalBeforeRewardsFallback = subtotalFallback + deliveryFee + taxesFallback;
+        return {
+            subtotal: subtotalFallback,
+            subtotalAfterPromotions: subtotalFallback,
+            taxes: taxesFallback,
+            deliveryFee,
+            promotionDiscount: 0,
+            promotionsApplied: [],
+            rewardDiscount: 0,
+            loyaltyDiscount: 0,
+            totalBeforeRewards: totalBeforeRewardsFallback,
+            totalBeforeLoyalty: totalBeforeRewardsFallback,
+            total: totalBeforeRewardsFallback
+        };
+    })();
+
+    const orderTotals = window.currentOrderTotals || fallbackTotals;
 
     const activeReward = getActiveReward();
 
@@ -597,24 +622,11 @@ function placeOrder() {
         subtotalAfterPromotions: orderTotals.subtotalAfterPromotions ?? orderTotals.subtotal,
         deliveryFee: orderTotals.deliveryFee,
         taxes: orderTotals.taxes,
-        promotionDiscount: orderTotals.promotionDiscount || 0,
-        promotionsApplied: orderTotals.promotionsApplied || [],
-        rewardDiscount: orderTotals.rewardDiscount || 0,
-        loyaltyDiscount: orderTotals.loyaltyDiscount || 0,
         timestamp: new Date().toISOString(),
         status: 'pending'
     };
-
-    if (activeReward) {
-        order.rewardCanje = {
-            id_canje: activeReward.id_canje,
-            nombre: activeReward.nombre,
-            valor_canje: activeReward.valor_canje
-        };
-    }
     
-    order.totalBeforeLoyalty = orderTotals.totalBeforeLoyalty ?? orderTotals.total;
-    order.total = orderTotals.total;
+    order.total = order.subtotal + order.deliveryFee + order.taxes;
     
     console.log('Datos del pedido preparados:', order);
     
@@ -689,8 +701,19 @@ function handleLoyaltyElements() {
 function setupLoyaltyToggle() {
     const loyaltyCheckbox = document.getElementById('loyalty');
     if (loyaltyCheckbox) {
-        loyaltyCheckbox.addEventListener('change', () => {
-            updateOrderSummary().catch((error) => console.error('Error al actualizar resumen del pedido:', error));
+        loyaltyCheckbox.addEventListener('change', function() {
+            const totalElement = document.getElementById('orderTotal');
+            const subtotal = orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const taxes = subtotal * taxRate;
+            const total = subtotal + deliveryFee + taxes;
+            
+            if (this.checked) {
+                const discount = 2500;
+                const discountedTotal = Math.max(0, total - discount);
+                totalElement.textContent = `₡${Math.round(discountedTotal).toLocaleString()}`;
+            } else {
+                totalElement.textContent = `₡${Math.round(total).toLocaleString()}`;
+            }
         });
     }
 }

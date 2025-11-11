@@ -1,4 +1,31 @@
 const { pool } = require('../config/database');
+const nodemailer = require('nodemailer');
+let Queue = null;
+try {
+    Queue = require('bull');
+} catch (e) {
+    Queue = null;
+}
+
+let emailQueue = null;
+if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+    try {
+        const redisConfig = process.env.REDIS_URL
+            ? process.env.REDIS_URL
+            : {
+                  host: process.env.REDIS_HOST,
+                  port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379,
+                  password: process.env.REDIS_PASS || undefined
+              };
+
+        if (Queue) {
+            emailQueue = new Queue('emailQueue', redisConfig);
+        }
+    } catch (err) {
+        console.warn('No se pudo inicializar la cola de correos (Redis). Se usará envío directo si está disponible.');
+        emailQueue = null;
+    }
+}
 
 const normalizeBoolean = (value) => ['true', '1', 1, true, 'on', 'yes'].includes(value);
 
@@ -28,8 +55,8 @@ const parsePromocionPayload = (payload = {}) => {
         }
 
         productosSeleccionados = productosPayload
-            .map(value => parseInt(value, 10))
-            .filter(value => !Number.isNaN(value));
+            .map((value) => parseInt(value, 10))
+            .filter((value) => !Number.isNaN(value));
 
         if (productosSeleccionados.length === 0) {
             throw new Error('Selecciona al menos un producto válido para la promoción');
@@ -67,13 +94,14 @@ const parsePromocionPayload = (payload = {}) => {
 const buildVigenciaLabel = (inicio, fin) => {
     if (!inicio && !fin) return 'Sin límite definido';
 
-    const format = (date) => date.toLocaleString('es-CR', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    const format = (date) =>
+        date.toLocaleString('es-CR', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
     if (inicio && fin) {
         return `Del ${format(inicio)} al ${format(fin)}`;
@@ -88,7 +116,7 @@ const buildVigenciaLabel = (inicio, fin) => {
 
 const mapProductosPorPromocion = (productosRelacionados) => {
     const mapa = new Map();
-    productosRelacionados.forEach(item => {
+    productosRelacionados.forEach((item) => {
         if (!mapa.has(item.id_promocion)) {
             mapa.set(item.id_promocion, []);
         }
@@ -98,6 +126,80 @@ const mapProductosPorPromocion = (productosRelacionados) => {
         });
     });
     return mapa;
+};
+
+const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => {
+    try {
+        const [clientes] = await pool.execute(`
+            SELECT u.id_usuario, u.correo, u.nombre
+            FROM cliente c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            WHERE c.notificaciones_activas = TRUE
+        `);
+
+        let transporter = null;
+        try {
+            if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+                transporter = nodemailer.createTransport({
+                    host: process.env.SMTP_HOST,
+                    port: parseInt(process.env.SMTP_PORT || '587', 10),
+                    secure: process.env.SMTP_SECURE === 'true',
+                    auth: {
+                        user: process.env.SMTP_USER,
+                        pass: process.env.SMTP_PASS
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('No se pudo configurar transporter SMTP, continuará sin envío de correo:', err.message || err);
+            transporter = null;
+        }
+
+        for (const cliente of clientes) {
+            await pool.execute(
+                `INSERT INTO notificacion (
+                    id_usuario, titulo, contenido, tipo_notificacion,
+                    leida, fecha_envio, canal_envio
+                ) VALUES (?, ?, ?, 'Promoción', FALSE, NOW(), 'Correo')`,
+                [cliente.id_usuario, titulo, contenido]
+            );
+
+            if (emailQueue && cliente.correo) {
+                try {
+                    await emailQueue.add(
+                        'sendEmail',
+                        {
+                            to: cliente.correo,
+                            subject: `[Sunset's Tarbaca] ${titulo}`,
+                            text: contenido,
+                            html: `<p>${contenido}</p>`,
+                            from: process.env.EMAIL_FROM || 'no-reply@sunsets.local'
+                        },
+                        { attempts: 3, backoff: 5000 }
+                    );
+                    continue;
+                } catch (queueError) {
+                    console.error('Error al encolar correo:', queueError);
+                }
+            }
+
+            if (transporter && cliente.correo) {
+                try {
+                    await transporter.sendMail({
+                        from: process.env.EMAIL_FROM || 'no-reply@sunsets.local',
+                        to: cliente.correo,
+                        subject: `[Sunset's Tarbaca] ${titulo}`,
+                        text: contenido,
+                        html: `<p>${contenido}</p>`
+                    });
+                } catch (mailErr) {
+                    console.error(`Error al enviar correo a ${cliente.correo}:`, mailErr.message || mailErr);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error al enviar notificaciones de promoción:', error);
+    }
 };
 
 const getPromociones = async (req, res) => {
@@ -129,7 +231,7 @@ const getPromociones = async (req, res) => {
 
         const mapaProductos = mapProductosPorPromocion(productosRelacionados);
 
-        const promociones = promocionesRows.map(row => {
+        const promociones = promocionesRows.map((row) => {
             const fechaInicio = row.fecha_inicio ? new Date(row.fecha_inicio) : null;
             const fechaFin = row.fecha_fin ? new Date(row.fecha_fin) : null;
 
@@ -137,17 +239,13 @@ const getPromociones = async (req, res) => {
                 ...row,
                 vigencia: buildVigenciaLabel(fechaInicio, fechaFin),
                 porcentaje_descuento: row.valor_descuento,
-                productos: row.alcance === 'producto'
-                    ? (mapaProductos.get(row.id_promocion) || [])
-                    : []
+                productos: row.alcance === 'producto' ? mapaProductos.get(row.id_promocion) || [] : []
             };
         });
 
         res.json({
             success: true,
-            data: {
-                promociones
-            }
+            data: { promociones }
         });
     } catch (error) {
         console.error('Error al obtener promociones:', error);
@@ -182,9 +280,7 @@ const getPromocionesActivasPublic = async (req, res) => {
         if (promocionesRows.length === 0) {
             return res.json({
                 success: true,
-                data: {
-                    promociones: []
-                }
+                data: { promociones: [] }
             });
         }
 
@@ -217,16 +313,12 @@ const getPromocionesActivasPublic = async (req, res) => {
             alcance: row.alcance,
             fecha_inicio: row.fecha_inicio,
             fecha_fin: row.fecha_fin,
-            productos: row.alcance === 'producto'
-                ? (productosPorPromocion.get(row.id_promocion) || [])
-                : []
+            productos: row.alcance === 'producto' ? productosPorPromocion.get(row.id_promocion) || [] : []
         }));
 
         res.json({
             success: true,
-            data: {
-                promociones
-            }
+            data: { promociones }
         });
     } catch (error) {
         console.error('Error al obtener promociones activas:', error);
@@ -286,7 +378,7 @@ const createPromocion = async (req, res) => {
         const idPromocion = result.insertId;
 
         if (alcance === 'producto' && productosSeleccionados.length > 0) {
-            const valores = productosSeleccionados.map(productoId => [productoId, idPromocion, new Date()]);
+            const valores = productosSeleccionados.map((productoId) => [productoId, idPromocion, new Date()]);
             await connection.query(
                 `INSERT INTO producto_promocion (id_producto, id_promocion, fecha_aplicacion)
                  VALUES ?`,
@@ -296,12 +388,14 @@ const createPromocion = async (req, res) => {
 
         await connection.commit();
 
+        if (activa) {
+            enviarNotificacionesPromocion(idPromocion, nombrePromocion, descripcion || '');
+        }
+
         res.status(201).json({
             success: true,
             message: 'Promoción creada correctamente',
-            data: {
-                id_promocion: idPromocion
-            }
+            data: { id_promocion: idPromocion }
         });
     } catch (error) {
         await connection.rollback();
@@ -365,13 +459,10 @@ const updatePromocion = async (req, res) => {
             ]
         );
 
-        await connection.execute(
-            `DELETE FROM producto_promocion WHERE id_promocion = ?`,
-            [promocionId]
-        );
+        await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
 
         if (alcance === 'producto' && productosSeleccionados.length > 0) {
-            const valores = productosSeleccionados.map(productoId => [productoId, promocionId, new Date()]);
+            const valores = productosSeleccionados.map((productoId) => [productoId, promocionId, new Date()]);
             await connection.query(
                 `INSERT INTO producto_promocion (id_producto, id_promocion, fecha_aplicacion)
                  VALUES ?`,
@@ -421,10 +512,7 @@ const actualizarEstadoPromocion = async (req, res) => {
             });
         }
 
-        await pool.execute(
-            `UPDATE promocion SET activa = ? WHERE id_promocion = ?`,
-            [normalizeBoolean(activa) ? 1 : 0, promocionId]
-        );
+        await pool.execute(`UPDATE promocion SET activa = ? WHERE id_promocion = ?`, [normalizeBoolean(activa) ? 1 : 0, promocionId]);
 
         res.json({
             success: true,
@@ -460,15 +548,8 @@ const deletePromocion = async (req, res) => {
             });
         }
 
-        await connection.execute(
-            `DELETE FROM producto_promocion WHERE id_promocion = ?`,
-            [promocionId]
-        );
-
-        await connection.execute(
-            `DELETE FROM promocion WHERE id_promocion = ?`,
-            [promocionId]
-        );
+        await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
+        await connection.execute(`DELETE FROM promocion WHERE id_promocion = ?`, [promocionId]);
 
         await connection.commit();
 
@@ -477,18 +558,101 @@ const deletePromocion = async (req, res) => {
             message: 'Promoción eliminada correctamente'
         });
     } catch (error) {
-        if (connection) {
-            await connection.rollback();
-        }
+        await connection.rollback();
         console.error('Error al eliminar promoción:', error);
         res.status(500).json({
             success: false,
             message: 'No se pudo eliminar la promoción'
         });
     } finally {
-        if (connection) {
-            connection.release();
+        connection.release();
+    }
+};
+
+const crearPromocion = async (req, res) => {
+    try {
+        const {
+            nombre_promocion,
+            descripcion,
+            tipo_promocion,
+            valor_descuento,
+            fecha_inicio,
+            fecha_fin,
+            hora_inicio,
+            hora_fin,
+            activa,
+            puntos_requeridos
+        } = req.body;
+
+        const [result] = await pool.execute(
+            `INSERT INTO promocion (
+                nombre_promocion, descripcion, tipo_promocion, valor_descuento,
+                fecha_inicio, fecha_fin, hora_inicio, hora_fin, activa, puntos_requeridos
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                nombre_promocion,
+                descripcion,
+                tipo_promocion,
+                valor_descuento,
+                fecha_inicio,
+                fecha_fin,
+                hora_inicio,
+                hora_fin,
+                activa,
+                puntos_requeridos
+            ]
+        );
+
+        const idPromocion = result.insertId;
+
+        if (activa) {
+            enviarNotificacionesPromocion(idPromocion, nombre_promocion, descripcion || '');
         }
+
+        res.json({
+            success: true,
+            id_promocion: idPromocion,
+            message: 'Promoción creada correctamente'
+        });
+    } catch (error) {
+        console.error('Error al crear promoción:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+const obtenerPromocionesActivas = async (req, res) => {
+    try {
+        const [promociones] = await pool.execute(`
+            SELECT * FROM promocion
+            WHERE activa = 1
+              AND (fecha_inicio IS NULL OR CURDATE() >= fecha_inicio)
+              AND (fecha_fin IS NULL OR CURDATE() <= fecha_fin)
+              AND (hora_inicio IS NULL OR CURTIME() >= hora_inicio)
+              AND (hora_fin IS NULL OR CURTIME() <= hora_fin)
+            ORDER BY tipo_promocion ASC
+        `);
+        res.json({ success: true, promociones });
+    } catch (error) {
+        console.error('Error al obtener promociones activas:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    }
+};
+
+const obtenerPromocionesFuturas = async (req, res) => {
+    try {
+        const [promociones] = await pool.execute(`
+            SELECT * FROM promocion
+            WHERE fecha_inicio IS NOT NULL
+              AND fecha_inicio > CURDATE()
+            ORDER BY fecha_inicio ASC
+        `);
+        res.json({ success: true, promociones });
+    } catch (error) {
+        console.error('Error al obtener promociones futuras:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
 };
 
@@ -498,6 +662,8 @@ module.exports = {
     createPromocion,
     updatePromocion,
     actualizarEstadoPromocion,
-    deletePromocion
+    deletePromocion,
+    crearPromocion,
+    obtenerPromocionesActivas,
+    obtenerPromocionesFuturas
 };
-
