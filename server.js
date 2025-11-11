@@ -18,6 +18,7 @@ const reservacionesRoutes = require('./routes/reservacionesRoutes');
 const recompensasRoutes = require('./routes/recompensasRoutes');
 const { sendDailyReminders } = require('./utils/reminderService');
 const reminderRoutes = require('./routes/reminderRoutes');
+const opinionesRoutes = require('./routes/opinionesRoutes');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
@@ -84,6 +85,7 @@ app.use('/api/reservaciones', reservacionesRoutes);
 app.use('/api/promociones', promocionesRoutes);
 app.use('/api/recompensas', recompensasRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/opiniones', opinionesRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
