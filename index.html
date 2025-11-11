@@ -1,17 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sunset's Tarbaca - Pizzería & Restaurante</title>
     <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
     <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+    .estrella {
+        color: lightgray;
+        cursor: pointer;
+        transition: transform 0.3s, color 0.3s;
+    }
+
+    .estrella:hover {
+        transform: scale(1.25);
+        color: #ffc107;
+    }
+
+    .estrella.seleccionada {
+        color: #ffc107;
+        transform: scale(1.15);
+    }
+</style>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
 </head>
+
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
@@ -54,7 +74,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Producto 1 -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400" alt="Pizza Margherita" class="w-full h-48 object-cover">
+                    <img src="https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400" alt="Pizza Margherita"
+                        class="w-full h-48 object-cover">
                     <div class="p-4">
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-lg">Pizza Margherita</h4>
@@ -70,7 +91,8 @@
 
                 <!-- Producto 2 -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400" alt="Pizza Pepperoni" class="w-full h-48 object-cover">
+                    <img src="https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400" alt="Pizza Pepperoni"
+                        class="w-full h-48 object-cover">
                     <div class="p-4">
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-lg">Pizza Pepperoni</h4>
@@ -86,7 +108,8 @@
 
                 <!-- Producto 3 -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" alt="Pizza Hawaiana" class="w-full h-48 object-cover">
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" alt="Pizza Hawaiana"
+                        class="w-full h-48 object-cover">
                     <div class="p-4">
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-lg">Pizza Hawaiana</h4>
@@ -102,7 +125,8 @@
 
                 <!-- Producto 4 -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400" alt="Pizza Vegetariana" class="w-full h-48 object-cover">
+                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400"
+                        alt="Pizza Vegetariana" class="w-full h-48 object-cover">
                     <div class="p-4">
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-lg">Pizza Vegetariana</h4>
@@ -125,7 +149,8 @@
             <h3 class="text-3xl font-bold text-center mb-12">Explora Nuestras Categorías</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-pizza-slice text-white text-2xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Pizzas</h4>
@@ -139,7 +164,8 @@
                     <p class="text-gray-600">Desayunos completos y deliciosos para empezar el día</p>
                 </div>
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="bg-gradient-to-r from-orange-500 to-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-wine-glass text-white text-2xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Bebidas</h4>
@@ -161,7 +187,9 @@
                     <p class="text-gray-600 mb-6">
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a dictum est. Nullam ac dignissim leo. Maecenas libero sem, tempus at purus at, mollis consequat enim. In hac habitasse platea dictumst. Praesent id feugiat urna. Sed eget dolor sed purus viverra cursus a nec elit. Phasellus ultrices commodo elementum.
                     </p>
-                    <a href="about.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition">Conoce Más</a>
+                    <a href="about.html"
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition">Conoce
+                        Más</a>
                 </div>
                 <div>
                     <img src="https://lh3.googleusercontent.com/gps-cs-s/AC9h4npQw0uaBLBdiEyMp8Wrglhp7-DsO46mdSQYR1aJiZvlNF5rDa2AkhZ8yB8Wn3eZ759sDCyrOnmeDzqgAgzMMO6f9hCsTXsr99R2vtYKUjbkwjDr3R5oLSYvGr8kBITfMDDIdtRj=s680-w600-h510-rw" alt="Restaurante" class="rounded-lg shadow-lg">
@@ -169,6 +197,49 @@
             </div>
         </div>
     </section>
+ <section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6 lg:px-16 max-w-4xl">
+
+        <h3 class="text-4xl font-bold text-center mb-12 tracking-tight">
+            Opiniones de Nuestros Clientes
+        </h3>
+
+        <!-- Card de formulario -->
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 mb-14 transform transition hover:scale-[1.01]">
+            <form id="opinionForm" class="space-y-6">
+
+                <input type="hidden" id="id_producto" value="1">
+                <input type="hidden" id="id_cliente">
+
+                <label class="font-semibold block text-gray-700">Calificación</label>
+
+                <!-- Estrellas -->
+                <div class="flex gap-2 text-4xl estrellas" id="estrellas">
+                    <span data-value="1" class="estrella">★</span>
+                    <span data-value="2" class="estrella">★</span>
+                    <span data-value="3" class="estrella">★</span>
+                    <span data-value="4" class="estrella">★</span>
+                    <span data-value="5" class="estrella">★</span>
+                </div>
+
+                <textarea id="comentario" placeholder="Escribe tu comentario"
+                    class="w-full p-4 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"></textarea>
+
+                <button
+                    class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold transition hover:scale-[1.02]">
+                    Enviar Opinión
+                </button>
+            </form>
+        </div>
+
+        <h4 class="text-2xl font-semibold mb-6">Opiniones Recientes</h4>
+
+        <div id="opinionesList" class="space-y-6"></div>
+
+    </div>
+</section>
+
+
 
     <!-- Contact Info -->
     <section class="py-16 bg-gray-50">
@@ -176,21 +247,24 @@
             <h3 class="text-3xl font-bold text-center mb-12">Información de Contacto</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-map-marker-alt text-white text-xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Ubicación</h4>
                     <p class="text-gray-600">San José, Costa Rica<br>Tarbaca</p>
                 </div>
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-clock text-white text-xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Horarios</h4>
                     <p class="text-gray-600">Miércoles - Domingo<br>12:00 PM - 08:00 PM</p>
                 </div>
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="bg-gradient-to-r from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-phone text-white text-xl"></i>
                     </div>
                     <h4 class="text-xl font-semibold mb-2">Contacto</h4>
@@ -203,12 +277,12 @@
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
-    <!-- ChatBot -->
+    <!-- ChatBot
     <div class="fixed bottom-4 right-4 z-50">
         <button id="chatbotButton" onclick="toggleChat()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition">
             <i class="fas fa-comments text-xl"></i>
         </button>
-    </div>
+    </div> -->
 
     <style>
         /* Efecto de pulse para el botón de chatbot */
@@ -220,6 +294,7 @@
             animation: pulseAdd 0.3s ease;
         }
         
+        /* Efecto de parallax para el fondo del hero */
         #hero-background {
             transform: translateZ(0) scale(1.15);
             will-change: transform;
@@ -316,6 +391,27 @@
                 }, 300);
             }
         }
+
+        window.addEventListener('mouseover', initLandbot, { once: true });
+        window.addEventListener('touchstart', initLandbot, { once: true });
+        var myLandbot;
+        function initLandbot() {
+            if (!myLandbot) {
+                var s = document.createElement('script');
+                s.type = "module"
+                s.async = true;
+                s.addEventListener('load', function () {
+                    var myLandbot = new Landbot.Livechat({
+                        configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-3178601-8RWZXAO24J2AZAKM/index.json',
+                    });
+                });
+                s.src = 'https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs';
+                var x = document.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+            }
+        }
     </script>
+    <script src="/js/opiniones.js"></script>
 </body>
-</html> 
+
+</html>

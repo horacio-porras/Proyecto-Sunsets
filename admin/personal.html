@@ -215,6 +215,22 @@
             </table>
             </div>
         </div>
+        <div id="personalPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div id="personalPaginationSummary" class="text-sm text-gray-600">
+                Mostrando 0 - 0 de 0 empleados
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="personalPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left mr-1"></i> Anterior
+                </button>
+                <div id="personalPaginationInfo" class="text-sm font-semibold text-gray-700">
+                    Página 1 de 1
+                </div>
+                <button id="personalNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de empleado -->
@@ -307,10 +323,20 @@
         //Variables globales
         let empleados = [];
         let empleadoEditando = null;
+        let empleadosFiltrados = [];
+        let empleadosPaginaActual = 1;
+        const EMPLEADOS_POR_PAGINA = 8;
 
+        let personalPaginationControls;
+        let personalPaginationSummary;
+        let personalPaginationInfo;
+        let personalPrevPageBtn;
+        let personalNextPageBtn;
+ 
         //Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             loadNavbar('personal');
+            inicializarControlesPaginacionPersonal();
             cargarEmpleados();
             cargarEstadisticas();
             setupEventListeners();
@@ -337,6 +363,22 @@
             });
         }
 
+        function inicializarControlesPaginacionPersonal() {
+            personalPaginationControls = document.getElementById('personalPaginationControls');
+            personalPaginationSummary = document.getElementById('personalPaginationSummary');
+            personalPaginationInfo = document.getElementById('personalPaginationInfo');
+            personalPrevPageBtn = document.getElementById('personalPrevPageBtn');
+            personalNextPageBtn = document.getElementById('personalNextPageBtn');
+
+            if (personalPrevPageBtn) {
+                personalPrevPageBtn.addEventListener('click', () => cambiarPaginaPersonal(-1));
+            }
+
+            if (personalNextPageBtn) {
+                personalNextPageBtn.addEventListener('click', () => cambiarPaginaPersonal(1));
+            }
+        }
+
         //Carga los empleados desde la API
         async function cargarEmpleados() {
             try {
@@ -357,7 +399,9 @@
 
                 if (data.success) {
                     empleados = data.data.empleados;
-                    renderizarEmpleados(empleados);
+                    empleadosFiltrados = [...empleados];
+                    empleadosPaginaActual = 1;
+                    renderizarEmpleados();
                 } else {
                     throw new Error(data.message || 'Error al cargar empleados');
                 }
@@ -376,7 +420,10 @@
                 }
                 
                 mostrarError(errorMessage);
-                renderizarEmpleados([]);
+                empleados = [];
+                empleadosFiltrados = [];
+                empleadosPaginaActual = 1;
+                renderizarEmpleados();
             }
         }
 
@@ -419,10 +466,10 @@
         }
 
         //Renderiza empleados en la tabla
-        function renderizarEmpleados(empleadosParaMostrar) {
+        function renderizarEmpleados() {
             const tbody = document.getElementById('tablaEmpleados');
-            
-            if (!empleadosParaMostrar || empleadosParaMostrar.length === 0) {
+ 
+            if (!empleadosFiltrados || empleadosFiltrados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-8 text-gray-500">
@@ -431,13 +478,30 @@
                         </td>
                     </tr>
                 `;
+                if (personalPaginationControls) {
+                    personalPaginationControls.classList.add('hidden');
+                }
                 return;
             }
 
-            tbody.innerHTML = empleadosParaMostrar.map(empleado => {
+            const totalEmpleados = empleadosFiltrados.length;
+            const totalPaginas = Math.ceil(totalEmpleados / EMPLEADOS_POR_PAGINA) || 1;
+
+            if (empleadosPaginaActual > totalPaginas) {
+                empleadosPaginaActual = totalPaginas;
+            }
+            if (empleadosPaginaActual < 1) {
+                empleadosPaginaActual = 1;
+            }
+
+            const inicio = (empleadosPaginaActual - 1) * EMPLEADOS_POR_PAGINA;
+            const fin = Math.min(inicio + EMPLEADOS_POR_PAGINA, totalEmpleados);
+            const empleadosPagina = empleadosFiltrados.slice(inicio, fin);
+
+            tbody.innerHTML = empleadosPagina.map(empleado => {
                 const estadoClass = empleado.estado === 'activo' ? 
                     'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                
+ 
                 const rolClass = empleado.tipoUsuario === 'Administrador' ? 
                     'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
 
@@ -480,11 +544,11 @@
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center space-x-2">
                                 <button onclick="editarEmpleado(${empleado.id})" 
-                                        class="text-blue-600 hover:text-blue-800 transition">
+                                        class="text-orange-600 hover:text-orange-700 transition">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="eliminarEmpleado(${empleado.id}, '${empleado.nombre}')" 
-                                        class="text-red-600 hover:text-red-800 transition">
+                                        class="text-red-600 hover:text-red-700 transition">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -492,22 +556,57 @@
                     </tr>
                 `;
             }).join('');
+
+            renderizarControlesPaginacionPersonal(totalEmpleados, inicio, fin, totalPaginas);
         }
 
         //Filtra empleados
         function filtrarEmpleados() {
             const busqueda = document.getElementById('buscarEmpleado').value.toLowerCase();
             const filtroEstado = document.getElementById('filtroEstado').value;
-
-            let empleadosFiltrados = empleados.filter(empleado => {
+ 
+            empleadosFiltrados = empleados.filter(empleado => {
                 const coincideBusqueda = empleado.nombre.toLowerCase().includes(busqueda) ||
                                        empleado.correo.toLowerCase().includes(busqueda);
                 const coincideEstado = !filtroEstado || empleado.estado === filtroEstado;
                 
                 return coincideBusqueda && coincideEstado;
             });
+ 
+            empleadosPaginaActual = 1;
+            renderizarEmpleados();
+         }
 
-            renderizarEmpleados(empleadosFiltrados);
+        function cambiarPaginaPersonal(offset) {
+            irAPaginaPersonal(empleadosPaginaActual + offset);
+        }
+
+        function irAPaginaPersonal(pagina) {
+            const totalPaginas = Math.ceil((empleadosFiltrados?.length || 0) / EMPLEADOS_POR_PAGINA) || 1;
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+            empleadosPaginaActual = pagina;
+            renderizarEmpleados();
+        }
+
+        function renderizarControlesPaginacionPersonal(totalEmpleados, inicio, fin, totalPaginas) {
+            if (!personalPaginationControls || !personalPaginationSummary || !personalPaginationInfo || !personalPrevPageBtn || !personalNextPageBtn) {
+                return;
+            }
+
+            if (totalEmpleados === 0) {
+                personalPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            personalPaginationControls.classList.remove('hidden');
+
+            personalPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalEmpleados} empleados`;
+            personalPaginationInfo.textContent = `Página ${empleadosPaginaActual} de ${totalPaginas}`;
+
+            personalPrevPageBtn.disabled = empleadosPaginaActual <= 1;
+            personalNextPageBtn.disabled = empleadosPaginaActual >= totalPaginas;
         }
 
         //Abre el modal para nuevo empleado

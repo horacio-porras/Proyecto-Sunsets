@@ -108,7 +108,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold mb-2">
-                        <i class="fas fa-boxes mr-3"></i>Inventario
+                        <i class="fas fa-boxes mr-3"></i>Gestión de Inventario
                     </h1>
                     <p class="text-gray-300">Consulta y registra movimientos de inventario</p>
                 </div>
@@ -229,6 +229,22 @@
                 </table>
             </div>
         </div>
+        <div id="inventarioPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div id="inventarioPaginationSummary" class="text-sm text-gray-600">
+                Mostrando 0 - 0 de 0 items
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="inventarioPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left mr-1"></i> Anterior
+                </button>
+                <div id="inventarioPaginationInfo" class="text-sm font-semibold text-gray-700">
+                    Página 1 de 1
+                </div>
+                <button id="inventarioNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
 
         <!-- Mensaje cuando no hay items -->
         <div id="mensajeVacio" class="hidden text-center py-12">
@@ -321,10 +337,20 @@
     <script>
         //Variables globales
         let inventario = [];
+        let inventarioFiltrado = [];
+        let inventarioPaginaActual = 1;
+        const INVENTARIO_ITEMS_POR_PAGINA = 10;
 
+        let inventarioPaginationControls;
+        let inventarioPaginationSummary;
+        let inventarioPaginationInfo;
+        let inventarioPrevPageBtn;
+        let inventarioNextPageBtn;
+ 
         //Carga el contenido al inicializar
         document.addEventListener('DOMContentLoaded', () => {
             loadNavbar();
+            inicializarControlesPaginacion();
             cargarInventario();
             cargarEstadisticas();
             setupEventListeners();
@@ -380,6 +406,22 @@
             }
         }
 
+        function inicializarControlesPaginacion() {
+            inventarioPaginationControls = document.getElementById('inventarioPaginationControls');
+            inventarioPaginationSummary = document.getElementById('inventarioPaginationSummary');
+            inventarioPaginationInfo = document.getElementById('inventarioPaginationInfo');
+            inventarioPrevPageBtn = document.getElementById('inventarioPrevPageBtn');
+            inventarioNextPageBtn = document.getElementById('inventarioNextPageBtn');
+
+            if (inventarioPrevPageBtn) {
+                inventarioPrevPageBtn.addEventListener('click', () => cambiarPaginaInventario(-1));
+            }
+
+            if (inventarioNextPageBtn) {
+                inventarioNextPageBtn.addEventListener('click', () => cambiarPaginaInventario(1));
+            }
+        }
+
         //Carga el inventario
         async function cargarInventario() {
             try {
@@ -400,7 +442,9 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    inventario = data.data.items;
+                    inventario = data.data.items || [];
+                    inventarioFiltrado = [...inventario];
+                    inventarioPaginaActual = 1;
                     renderizarInventario();
                 } else {
                     throw new Error(data.message || 'Error al cargar inventario');
@@ -408,7 +452,10 @@
             } catch (error) {
                 console.error('Error al cargar inventario:', error);
                 mostrarError('Error al cargar inventario: ' + error.message);
-                renderizarInventario([]);
+                inventario = [];
+                inventarioFiltrado = [];
+                inventarioPaginaActual = 1;
+                renderizarInventario();
             }
         }
 
@@ -447,11 +494,11 @@
         }
 
         //Renderiza el inventario
-        function renderizarInventario(items = inventario) {
+        function renderizarInventario() {
             const tbody = document.getElementById('tablaInventario');
             const mensajeVacio = document.getElementById('mensajeVacio');
 
-            if (!items || items.length === 0) {
+            if (!inventarioFiltrado || inventarioFiltrado.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center py-8 text-gray-500">
@@ -460,12 +507,30 @@
                         </td>
                     </tr>
                 `;
+                if (inventarioPaginationControls) {
+                    inventarioPaginationControls.classList.add('hidden');
+                }
                 mensajeVacio.classList.add('hidden');
                 return;
             }
 
             mensajeVacio.classList.add('hidden');
-            tbody.innerHTML = items.map(item => {
+
+            const totalItems = inventarioFiltrado.length;
+            const totalPaginas = Math.ceil(totalItems / INVENTARIO_ITEMS_POR_PAGINA) || 1;
+
+            if (inventarioPaginaActual > totalPaginas) {
+                inventarioPaginaActual = totalPaginas;
+            }
+            if (inventarioPaginaActual < 1) {
+                inventarioPaginaActual = 1;
+            }
+
+            const inicio = (inventarioPaginaActual - 1) * INVENTARIO_ITEMS_POR_PAGINA;
+            const fin = Math.min(inicio + INVENTARIO_ITEMS_POR_PAGINA, totalItems);
+            const itemsPagina = inventarioFiltrado.slice(inicio, fin);
+
+            tbody.innerHTML = itemsPagina.map(item => {
                 const estadoClass = getEstadoClass(item.estado_stock);
                 const estadoText = getEstadoText(item.estado_stock);
                 const areaText = getAreaText(item.area);
@@ -519,6 +584,8 @@
                     </tr>
                 `;
             }).join('');
+
+            renderizarControlesPaginacionInventario(totalItems, inicio, fin, totalPaginas);
         }
 
         //Filtra el inventario
@@ -527,7 +594,7 @@
             const filtroStock = document.getElementById('filtroStock').value;
             const busqueda = document.getElementById('buscarItem').value.toLowerCase();
 
-            let itemsFiltrados = inventario.filter(item => {
+            inventarioFiltrado = inventario.filter(item => {
                 const cumpleArea = !filtroArea || item.area === filtroArea;
                 const cumpleStock = !filtroStock || item.estado_stock === filtroStock;
                 const cumpleBusqueda = !busqueda || item.nombre.toLowerCase().includes(busqueda);
@@ -535,7 +602,40 @@
                 return cumpleArea && cumpleStock && cumpleBusqueda;
             });
 
-            renderizarInventario(itemsFiltrados);
+            inventarioPaginaActual = 1;
+            renderizarInventario();
+        }
+
+        function cambiarPaginaInventario(offset) {
+            irAPaginaInventario(inventarioPaginaActual + offset);
+        }
+
+        function irAPaginaInventario(pagina) {
+            const totalPaginas = Math.ceil((inventarioFiltrado?.length || 0) / INVENTARIO_ITEMS_POR_PAGINA) || 1;
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+            inventarioPaginaActual = pagina;
+            renderizarInventario();
+        }
+
+        function renderizarControlesPaginacionInventario(totalItems, inicio, fin, totalPaginas) {
+            if (!inventarioPaginationControls || !inventarioPaginationSummary || !inventarioPaginationInfo || !inventarioPrevPageBtn || !inventarioNextPageBtn) {
+                return;
+            }
+
+            if (totalItems === 0) {
+                inventarioPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            inventarioPaginationControls.classList.remove('hidden');
+
+            inventarioPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalItems} items`;
+            inventarioPaginationInfo.textContent = `Página ${inventarioPaginaActual} de ${totalPaginas}`;
+
+            inventarioPrevPageBtn.disabled = inventarioPaginaActual <= 1;
+            inventarioNextPageBtn.disabled = inventarioPaginaActual >= totalPaginas;
         }
 
         //Registra un movimiento

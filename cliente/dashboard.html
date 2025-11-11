@@ -11,6 +11,7 @@
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         html, body {
             height: 100%;
@@ -24,6 +25,124 @@
         .main-content {
             flex: 1;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background-color: rgba(17, 24, 39, 0.55);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            max-width: 50rem;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .table-preference {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-preference span {
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .table-preference.active {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+
+        .table-preference.active span {
+            color: #ffffff;
+        }
+
+        .table-preference:not(.active):hover {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+
+        .table-preference:not(.active):hover span {
+            color: #ffffff;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            white-space: nowrap;
+        }
+
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmado { background-color: #dbeafe; color: #1e40af; }
+        .status-preparando { background-color: #fed7aa; color: #ea580c; }
+        .status-listo { background-color: #bbf7d0; color: #166534; }
+        .status-en_camino { background-color: #c7d2fe; color: #3730a3; }
+        .status-entregado { background-color: #dcfce7; color: #166534; }
+        .status-cancelado { background-color: #fecaca; color: #dc2626; }
+
+        .badge-discount { background-color: #bbf7d0; color: #166534; }
+        .badge-product { background-color: #dbeafe; color: #1d4ed8; }
+        .badge-experience { background-color: #ede9fe; color: #5b21b6; }
+        .badge-redeemed { background-color: #fed7aa; color: #c2410c; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -52,35 +171,35 @@
                         <hr class="mb-4">
                     </div>
                     <div class="p-6 pt-0">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div>
-                                    <h4 class="font-semibold">Cena Familiar</h4>
-                                    <p class="text-sm text-gray-600">20 Dic 2024 • 7:00 PM • 4 personas</p>
-                                    <p class="text-sm text-gray-600">Mesa interior, ventana</p>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
-                                    <div class="mt-2">
-                                        <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div>
-                                    <h4 class="font-semibold">Cumpleaños Ana</h4>
-                                    <p class="text-sm text-gray-600">25 Dic 2024 • 8:00 PM • 6 personas</p>
-                                    <p class="text-sm text-gray-600">Terraza, decoración especial</p>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Confirmada</span>
-                                    <div class="mt-2">
-                                        <button class="text-sm text-orange-600 hover:text-orange-700">Modificar</button>
-                                    </div>
-                                </div>
-                            </div>
+                        <div id="reservationsLoading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                            <p class="mt-2 text-gray-600">Cargando reservaciones activas...</p>
                         </div>
+
+                        <div id="reservationsContainer" class="space-y-4 hidden">
+                            <!-- Reservaciones activas se cargan dinámicamente -->
+                        </div>
+
+                        <div id="reservationsEmpty" class="text-center py-8 hidden">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes reservaciones próximas</h3>
+                            <p class="text-gray-600">Agenda una nueva reservación y aparecerá aquí.</p>
+                        </div>
+
+                        <div id="reservationsError" class="text-center py-8 hidden">
+                            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar reservaciones</h3>
+                            <p class="text-gray-600 mb-4" data-error-message>No se pudieron cargar tus reservaciones activas.</p>
+                            <button onclick="loadActiveReservations()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                                <i class="fas fa-redo"></i>
+                                Reintentar
+                            </button>
+                        </div>
+
                         <div class="mt-6 text-center">
                             <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
                                 <i class="fas fa-calendar-alt"></i>
@@ -120,8 +239,10 @@
                                 Hacer Pedido
                             </a>
                         </div>
-                        <div class="mt-6 text-center">
-                            <a href="/cliente/mis-pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todos los pedidos</a>
+                        <div class="mt-6">
+                            <a href="/cliente/mis-pedidos.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
+                                Ver todos los pedidos
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -186,10 +307,10 @@
                     </div>
                     
                     <div class="mt-6">
-                        <a href="#rewards" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center block flex items-center justify-center gap-2">
-                            <i class="fas fa-trophy"></i>
+                        <button onclick="openRewardsModal()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center flex items-center justify-center gap-2">
+                            <i class="fas fa-gift"></i>
                             Canjear Puntos
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -202,7 +323,148 @@
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
+    <!-- Reservation Management Modal -->
+    <div id="reservationModal" class="modal">
+        <div class="modal-content p-6 md:p-8">
+            <div class="modal-header mb-6">
+                <div>
+                    <h3 id="reservationModalTitle" class="text-2xl font-semibold text-gray-800">Gestionar reservación</h3>
+                    <p id="reservationModalSubtitle" class="text-sm text-gray-500 mt-1">Actualiza los detalles de tu reservación para mantenerlos al día.</p>
+                </div>
+                <button type="button" class="modal-close" onclick="closeReservationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="reservationModalForm" class="space-y-6">
+                <input type="hidden" id="reservationId">
+
+                <hr class="border-gray-200">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
+                        <input type="date" id="reservationDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="fecha"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Hora *</label>
+                        <select id="reservationTime" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Selecciona un horario</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                            <option value="21:00">9:00 PM</option>
+                        </select>
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="hora"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de personas *</label>
+                        <select id="reservationPeople" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Selecciona la cantidad de personas</option>
+                            <option value="1">1 persona</option>
+                            <option value="2">2 personas</option>
+                            <option value="3">3 personas</option>
+                            <option value="4">4 personas</option>
+                            <option value="5">5 personas</option>
+                            <option value="6">6 personas</option>
+                            <option value="7">7 personas</option>
+                            <option value="8">8 personas</option>
+                        </select>
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="personas"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado actual</label>
+                        <div id="reservationStatusBadge" class="status-badge status-pendiente">Pendiente</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Preferencia de mesa</label>
+                    <div id="reservationTablePreferences" class="flex flex-wrap gap-3">
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Interior" class="hidden">
+                            <span>Interior</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Terraza" class="hidden">
+                            <span>Terraza</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Ventana" class="hidden">
+                            <span>Ventana</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Cualquiera" class="hidden">
+                            <span>Cualquiera</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="submit" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center gap-2">
+                        <i class="fas fa-edit"></i>
+                        Actualizar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rewards Modal -->
+    <div id="rewardsModal" class="modal">
+        <div class="modal-content p-6 md:p-8 max-w-4xl">
+            <div class="modal-header mb-6">
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-800">Catálogo de Recompensas</h3>
+                    <p class="text-sm text-gray-500 mt-1">Canjea tus puntos por descuentos y experiencias exclusivas.</p>
+                </div>
+                <button type="button" class="modal-close" onclick="closeRewardsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="rewardsLoading" class="text-center py-10 hidden">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                <p class="mt-3 text-gray-600">Cargando opciones de canje...</p>
+            </div>
+
+            <div id="rewardsError" class="text-center py-10 hidden">
+                <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">No se pudieron cargar las recompensas</h4>
+                <p class="text-gray-600 mb-4">Inténtalo de nuevo en unos segundos.</p>
+                <button onclick="fetchRewardsCatalog()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    Reintentar
+                </button>
+            </div>
+
+            <div id="rewardsEmpty" class="text-center py-10 hidden">
+                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-gift text-gray-400 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Aún no hay recompensas disponibles</h4>
+                <p class="text-gray-600">Sigue acumulando puntos para desbloquear beneficios exclusivos.</p>
+            </div>
+
+            <div id="rewardsContent" class="space-y-6 hidden"></div>
+        </div>
+    </div>
+
     <script>
+        let reservasCapacidadMaxima = 8;
+        let currentReservationEditing = null;
+        let currentUserPoints = 0;
+
         //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM cargado, verificando elementos...');
@@ -213,7 +475,9 @@
                 direccionTextoElement: !!direccionTextoElement
             });
             
+            setupReservationModal();
             loadUserProfile();
+            loadActiveReservations();
             loadRecentOrders();
         });
 
@@ -244,7 +508,10 @@
                     if (puntosDisplayElement) {
                         puntosDisplayElement.textContent = puntos;
                     }
-                    
+                    currentUserPoints = puntos;
+
+                    updateRewardPointsDisplay(puntos);
+
                     updateLoyaltyProgress(puntos);
                     
                     //Actualiza información del usuario
@@ -284,6 +551,14 @@
                 }
             } catch (error) {
                 console.error('Error al cargar perfil del usuario:', error);
+            }
+        }
+
+        function updateRewardPointsDisplay(updatedPoints) {
+            currentUserPoints = updatedPoints;
+            const puntosDisplayElement = document.getElementById('puntosDisplay');
+            if (puntosDisplayElement) {
+                puntosDisplayElement.textContent = updatedPoints.toLocaleString();
             }
         }
 
@@ -411,6 +686,9 @@
         }
 
         window.testAddressAPI = testAddressAPI;
+        window.openRewardsModal = openRewardsModal;
+        window.closeRewardsModal = closeRewardsModal;
+        window.redeemReward = redeemReward;
 
         //Actualiza el progreso de lealtad
         function updateLoyaltyProgress(puntos) {
@@ -450,6 +728,991 @@
                 progresoText.textContent = '¡Nivel máximo alcanzado!';
             }
         }
+
+        //Reservaciones activas
+        async function loadActiveReservations() {
+            const loadingElement = document.getElementById('reservationsLoading');
+            const containerElement = document.getElementById('reservationsContainer');
+            const emptyElement = document.getElementById('reservationsEmpty');
+            const errorElement = document.getElementById('reservationsError');
+
+            if (!loadingElement || !containerElement || !emptyElement || !errorElement) {
+                return;
+            }
+
+            loadingElement.classList.remove('hidden');
+            containerElement.classList.add('hidden');
+            emptyElement.classList.add('hidden');
+            errorElement.classList.add('hidden');
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                loadingElement.classList.add('hidden');
+                showReservationsError('Debes iniciar sesión para ver tus reservaciones activas.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/reservaciones/activas', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const data = result.data || {};
+                    const reservaciones = Array.isArray(data.reservaciones) ? data.reservaciones : [];
+                    if (typeof data.max_capacidad === 'number') {
+                        reservasCapacidadMaxima = data.max_capacidad;
+                    }
+                    renderActiveReservations(reservaciones);
+                } else {
+                    const message = result.message || 'No se pudieron cargar tus reservaciones activas.';
+                    showReservationsError(message);
+                }
+            } catch (error) {
+                showReservationsError('Ocurrió un problema al conectar con el servidor.');
+            }
+        }
+
+        function renderActiveReservations(reservaciones) {
+            const loadingElement = document.getElementById('reservationsLoading');
+            const containerElement = document.getElementById('reservationsContainer');
+            const emptyElement = document.getElementById('reservationsEmpty');
+            const errorElement = document.getElementById('reservationsError');
+
+            if (!loadingElement || !containerElement || !emptyElement || !errorElement) {
+                return;
+            }
+
+            loadingElement.classList.add('hidden');
+            errorElement.classList.add('hidden');
+
+            const visibles = reservaciones.filter(reserva => (reserva.estado_reserva || '').toLowerCase() !== 'listo');
+
+            if (visibles.length === 0) {
+                emptyElement.classList.remove('hidden');
+                containerElement.classList.add('hidden');
+                return;
+            }
+
+            emptyElement.classList.add('hidden');
+            containerElement.classList.remove('hidden');
+            containerElement.innerHTML = '';
+
+            visibles.forEach(reservacion => {
+                const card = createReservationCard(reservacion);
+                containerElement.appendChild(card);
+            });
+        }
+
+        function createReservationCard(reservacion) {
+            const card = document.createElement('div');
+            card.className = 'flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 bg-gray-50 rounded-lg';
+
+            const leftSection = document.createElement('div');
+
+            const title = document.createElement('h4');
+            title.className = 'font-semibold';
+            title.textContent = `Reservación #${reservacion.id_reservacion.toString().padStart(5, '0')}`;
+            leftSection.appendChild(title);
+
+            const details = document.createElement('p');
+            details.className = 'text-sm text-gray-600';
+            details.textContent = `${formatReservationDateLabel(reservacion.fecha_reserva)} • ${formatReservationTimeLabel(reservacion.hora_reserva)} • ${formatPeopleLabel(reservacion.cantidad_personas)}`;
+            leftSection.appendChild(details);
+
+            if (reservacion.preferencia_mesa) {
+                const preference = document.createElement('p');
+                preference.className = 'text-sm text-gray-600';
+                preference.textContent = `Mesa: ${reservacion.preferencia_mesa}`;
+                leftSection.appendChild(preference);
+            }
+
+            if (reservacion.notas_especiales) {
+                const notes = document.createElement('p');
+                notes.className = 'text-sm text-gray-600';
+                notes.textContent = `Notas: ${reservacion.notas_especiales}`;
+                leftSection.appendChild(notes);
+            }
+
+            const rightSection = document.createElement('div');
+            rightSection.className = 'text-left md:text-right flex flex-col items-start md:items-end gap-3';
+
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'flex items-center gap-2';
+
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.className = 'inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-semibold';
+            editButton.innerHTML = '<i class="fas fa-edit"></i>';
+            editButton.addEventListener('click', () => openReservationModal(reservacion));
+            actionsContainer.appendChild(editButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-semibold';
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.addEventListener('click', () => cancelReservation(reservacion, deleteButton));
+            actionsContainer.appendChild(deleteButton);
+
+            rightSection.appendChild(actionsContainer);
+
+            card.appendChild(leftSection);
+            card.appendChild(rightSection);
+
+            return card;
+        }
+
+        async function cancelReservation(reservacion, triggerButton) {
+            if (!reservacion || !reservacion.id_reservacion) {
+                return;
+            }
+
+            const confirmation = await Swal.fire({
+                icon: 'warning',
+                title: 'Cancelar reservación',
+                text: '¿Estás seguro de que deseas cancelar esta reservación?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No, mantener'
+            });
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicia sesión',
+                    text: 'Debes iniciar sesión para cancelar tus reservaciones.',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            if (triggerButton) {
+                triggerButton.disabled = true;
+                triggerButton.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+
+            try {
+                const response = await fetch(`/api/reservaciones/${reservacion.id_reservacion}/cancel`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    const message = result.message || 'No se pudo cancelar la reservación.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo cancelar',
+                        text: message,
+                        confirmButtonText: 'Entendido'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reservación cancelada',
+                    text: 'La reservación fue cancelada correctamente.',
+                    confirmButtonText: 'Entendido'
+                }).then(() => {
+                    loadActiveReservations();
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error inesperado',
+                    text: 'Ocurrió un problema al cancelar tu reservación. Intenta nuevamente.',
+                    confirmButtonText: 'Entendido'
+                });
+            } finally {
+                if (triggerButton) {
+                    triggerButton.disabled = false;
+                    triggerButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+            }
+        }
+
+    function setupReservationModal() {
+        const modal = document.getElementById('reservationModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeReservationModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modalElement = document.getElementById('reservationModal');
+                if (modalElement && modalElement.classList.contains('show')) {
+                    closeReservationModal();
+                }
+            }
+        });
+
+        const form = document.getElementById('reservationModalForm');
+        if (form) {
+            form.addEventListener('submit', handleReservationUpdate);
+        }
+
+        const preferenceLabels = document.querySelectorAll('#reservationTablePreferences .table-preference');
+        preferenceLabels.forEach(label => {
+            label.addEventListener('click', () => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+                updateReservationPreferenceStyles();
+            });
+        });
+
+        updateReservationPreferenceStyles();
+        clearReservationErrors();
+    }
+
+    function openReservationModal(reservacion) {
+        currentReservationEditing = reservacion;
+
+        const modal = document.getElementById('reservationModal');
+        if (!modal) {
+            return;
+        }
+
+        clearReservationErrors();
+
+        const title = document.getElementById('reservationModalTitle');
+        if (title) {
+            title.textContent = `Reservación #${reservacion.id_reservacion.toString().padStart(5, '0')}`;
+        }
+
+        const subtitle = document.getElementById('reservationModalSubtitle');
+        if (subtitle) {
+            subtitle.textContent = `${formatReservationDateLabel(reservacion.fecha_reserva)} • ${formatReservationTimeLabel(reservacion.hora_reserva)} • ${formatPeopleLabel(reservacion.cantidad_personas)}`;
+        }
+
+        const reservationIdInput = document.getElementById('reservationId');
+        if (reservationIdInput) {
+            reservationIdInput.value = reservacion.id_reservacion;
+        }
+
+        const dateInput = document.getElementById('reservationDate');
+        if (dateInput) {
+            dateInput.value = formatDateForInput(reservacion.fecha_reserva);
+        }
+
+        const timeSelect = document.getElementById('reservationTime');
+        if (timeSelect) {
+            timeSelect.value = formatTimeForInput(reservacion.hora_reserva);
+        }
+
+        const peopleSelect = document.getElementById('reservationPeople');
+        if (peopleSelect) {
+            peopleSelect.value = reservacion.cantidad_personas || '';
+        }
+
+        const notesTextarea = document.getElementById('reservationNotes');
+        if (notesTextarea) {
+            notesTextarea.value = reservacion.notas_especiales || '';
+        }
+
+        const statusBadge = document.getElementById('reservationStatusBadge');
+        if (statusBadge) {
+            const statusInfo = getReservationStatusInfo(reservacion.estado_reserva);
+            statusBadge.textContent = statusInfo.text;
+            statusBadge.className = `status-badge ${statusInfo.class}`;
+        }
+
+        setSelectedTablePreference(reservacion.preferencia_mesa || null);
+        updateReservationPreferenceStyles();
+
+        modal.classList.add('show');
+    }
+
+    function openRewardsModal() {
+        const modal = document.getElementById('rewardsModal');
+        if (!modal) {
+            return;
+        }
+        modal.classList.add('show');
+        fetchRewardsCatalog();
+    }
+
+    function closeRewardsModal() {
+        const modal = document.getElementById('rewardsModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    (function attachRewardsModalOutsideClick() {
+        const modal = document.getElementById('rewardsModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeRewardsModal();
+            }
+        });
+    })();
+
+    async function fetchRewardsCatalog() {
+        const loadingElement = document.getElementById('rewardsLoading');
+        const contentElement = document.getElementById('rewardsContent');
+        const emptyElement = document.getElementById('rewardsEmpty');
+        const errorElement = document.getElementById('rewardsError');
+
+        if (!loadingElement || !contentElement || !emptyElement || !errorElement) {
+            return;
+        }
+
+        loadingElement.classList.remove('hidden');
+        contentElement.classList.add('hidden');
+        emptyElement.classList.add('hidden');
+        errorElement.classList.add('hidden');
+        contentElement.innerHTML = '';
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            loadingElement.classList.add('hidden');
+            errorElement.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/cliente/recompensas', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+            console.log('Respuesta de recompensas:', response.status, result);
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'No se pudo cargar el catálogo de recompensas');
+            }
+
+            const rewards = Array.isArray(result.data?.recompensas) ? result.data.recompensas : [];
+
+            if (typeof result.data?.puntosActuales === 'number') {
+                updateRewardPointsDisplay(result.data.puntosActuales);
+            }
+
+            if (rewards.length === 0) {
+                loadingElement.classList.add('hidden');
+                emptyElement.classList.remove('hidden');
+                return;
+            }
+
+            renderRewardsList(rewards);
+            loadingElement.classList.add('hidden');
+            contentElement.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error al cargar recompensas:', error);
+            loadingElement.classList.add('hidden');
+            errorElement.classList.remove('hidden');
+        }
+    }
+
+    function renderRewardsList(rewards) {
+        const contentElement = document.getElementById('rewardsContent');
+        if (!contentElement) {
+            return;
+        }
+
+        contentElement.innerHTML = '';
+
+        rewards.forEach(reward => {
+            reward.puntos_requeridos = Number(reward.puntos_requeridos || 0);
+            reward.valor_recompensa = reward.valor_recompensa != null ? Number(reward.valor_recompensa) : null;
+
+            const card = document.createElement('div');
+            card.className = 'border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow bg-white';
+
+            const puntosRequeridos = reward.puntos_requeridos;
+            const valorRecompensa = reward.valor_recompensa;
+            const yaCanjeada = !!reward.ya_canjeada;
+            const canRedeem = !yaCanjeada && currentUserPoints >= puntosRequeridos && reward.disponible;
+            const tipo = reward.tipo_recompensa;
+
+            card.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="status-badge ${getRewardTypeBadgeClass(tipo)}">
+                                ${formatRewardType(tipo)}
+                            </span>
+                            ${reward.disponible ? '' : '<span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">No disponible</span>'}
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">${reward.nombre_recompensa}</h4>
+                        <p class="text-sm text-gray-600 mb-3">${reward.descripcion || 'Sin descripción disponible.'}</p>
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>${puntosRequeridos.toLocaleString()} puntos</span>
+                            </div>
+                            ${valorRecompensa != null
+                                ? `<div class="flex items-center gap-2">
+                                        <i class="fas fa-tag text-orange-500"></i>
+                                        <span>${tipo === 'descuento' ? `Descuento de ${formatRewardValue(valorRecompensa)}` : `Valor estimado: ₡${valorRecompensa.toLocaleString()}`}</span>
+                                   </div>`
+                                : ''
+                            }
+                            ${reward.vigencia
+                                ? `<div class="flex items-center gap-2">
+                                        <i class="fas fa-clock text-blue-500"></i>
+                                        <span>${reward.vigencia}</span>
+                                   </div>`
+                                : ''
+                            }
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-stretch gap-2 min-w-[200px]">
+                        <button 
+                            ${canRedeem ? '' : 'disabled'}
+                            onclick="redeemReward(${reward.id_recompensa})"
+                            class="px-4 py-2 rounded-md font-semibold transition ${canRedeem ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 flex items-center justify-center gap-2' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}">
+                            ${canRedeem ? '<i class="fas fa-gift"></i> Canjear' : yaCanjeada ? '<i class="fas fa-check"></i> Ya canjeada' : '<i class="fas fa-ban"></i> Puntos insuficientes'}
+                        </button>
+                        <div class="text-xs text-gray-500 text-center">
+                            ${buildRewardHelperText(reward, puntosRequeridos)}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            contentElement.appendChild(card);
+        });
+    }
+
+    function formatRewardType(type) {
+        switch (type) {
+            case 'descuento':
+                return 'Descuento Especial';
+            case 'producto':
+                return 'Producto Exclusivo';
+            case 'experiencia':
+                return 'Experiencia';
+            default:
+                return 'Recompensa';
+        }
+    }
+
+    function formatRewardValue(valor) {
+        if (valor === null || valor === undefined) {
+            return '';
+        }
+
+        const numeric = Number(valor);
+        if (Number.isNaN(numeric)) {
+            return valor;
+        }
+
+        if (numeric <= 100) {
+            return `${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)}%`;
+        }
+
+        return `₡${numeric.toLocaleString()}`;
+    }
+
+    function buildRewardHelperText(reward, puntosRequeridos = Number(reward.puntos_requeridos || 0)) {
+        if (reward.ya_canjeada) {
+            return 'Ya canjeaste esta recompensa.';
+        }
+        if (!reward.disponible) {
+            return 'Actualmente no disponible para canje.';
+        }
+        if (currentUserPoints < puntosRequeridos) {
+            const faltan = puntosRequeridos - currentUserPoints;
+            return `Te faltan ${faltan.toLocaleString()} puntos para canjear esta recompensa.`;
+        }
+        if (reward.tipo_recompensa === 'descuento') {
+            return 'Se aplicará el descuento automáticamente en tu próxima compra.';
+        }
+        return 'Recibirás confirmación de tu canje por correo.';
+    }
+
+    function getRewardTypeBadgeClass(type) {
+        switch (type) {
+            case 'descuento':
+                return 'badge-discount';
+            case 'producto':
+                return 'badge-product';
+            case 'experiencia':
+                return 'badge-experience';
+            default:
+                return 'badge-discount';
+        }
+    }
+
+    async function redeemReward(rewardId) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para canjear recompensas.',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        const rewardsButtons = document.querySelectorAll(`#rewardsContent button`);
+        rewardsButtons.forEach(btn => btn.disabled = true);
+
+        try {
+            const response = await fetch(`/api/cliente/recompensas/${rewardId}/canjear`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'No se pudo completar el canje.');
+            }
+
+            const puntosRestantes = result.data?.puntos_restantes ?? currentUserPoints;
+            updateRewardPointsDisplay(puntosRestantes);
+
+            if (result.data?.canje && result.data?.recompensa) {
+                if (result.data.recompensa.tipo_recompensa === 'descuento' && result.data.canje.estado_canje === 'pendiente') {
+                    storePendingReward(result.data);
+                }
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Canje exitoso',
+                text: result.message || 'Tus puntos fueron canjeados correctamente.',
+                confirmButtonText: 'Perfecto'
+            });
+
+            closeRewardsModal();
+            loadUserProfile();
+        } catch (error) {
+            console.error('Error al canjear recompensa:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo canjear',
+                text: error.message || 'Ocurrió un problema al procesar tu canje.',
+                confirmButtonText: 'Entendido'
+            });
+        } finally {
+            fetchRewardsCatalog();
+        }
+    }
+
+    function storePendingReward(data) {
+        const payload = {
+            id_canje: data.canje?.id_canje,
+            nombre: data.recompensa?.nombre_recompensa,
+            valor_canje: data.recompensa?.valor_recompensa || 0,
+            tipo_promocion: data.recompensa?.tipo_recompensa,
+            fecha_canje: data.canje?.fecha_canje,
+            estado_canje: data.canje?.estado_canje
+        };
+
+        localStorage.setItem('sunsets-active-reward', JSON.stringify(payload));
+    }
+
+
+    function closeReservationModal() {
+        const modal = document.getElementById('reservationModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('show');
+        currentReservationEditing = null;
+
+        const form = document.getElementById('reservationModalForm');
+        if (form) {
+            form.reset();
+        }
+
+        updateReservationPreferenceStyles();
+        clearReservationErrors();
+    }
+
+    function updateReservationPreferenceStyles() {
+        const preferenceLabels = document.querySelectorAll('#reservationTablePreferences .table-preference');
+        preferenceLabels.forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        });
+    }
+
+    function getSelectedTablePreference() {
+        const selected = document.querySelector('#reservationTablePreferences input[type="radio"]:checked');
+        return selected ? selected.value : null;
+    }
+
+    function setSelectedTablePreference(value) {
+        const radios = document.querySelectorAll('#reservationTablePreferences input[type="radio"]');
+        radios.forEach(radio => {
+            radio.checked = value ? radio.value === value : false;
+        });
+    }
+
+    function clearReservationErrors() {
+        const errorElements = document.querySelectorAll('[data-reservation-error]');
+        errorElements.forEach(element => {
+            element.textContent = '';
+            element.classList.add('hidden');
+        });
+    }
+
+    function showReservationError(fieldKey, message) {
+        const errorElement = document.querySelector(`[data-reservation-error="${fieldKey}"]`);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+    }
+
+    function showReservationErrors(errors) {
+        if (!Array.isArray(errors)) {
+            return;
+        }
+
+        const messages = [];
+
+        errors.forEach(error => {
+            if (!error || !error.message) {
+                return;
+            }
+
+            if (error.field) {
+                showReservationError(error.field, error.message);
+            }
+            messages.push(error.message);
+        });
+
+        if (messages.length > 0) {
+            const uniqueMessages = [...new Set(messages)];
+            Swal.fire({
+                icon: 'warning',
+                title: 'Revisa tu reservación',
+                html: `<ul class="text-left space-y-1">${uniqueMessages.map(msg => `<li>• ${msg}</li>`).join('')}</ul>`,
+                confirmButtonText: 'Entendido'
+            });
+        }
+    }
+
+    function formatDateForInput(fecha) {
+        if (!fecha) {
+            return '';
+        }
+        if (fecha.includes('T')) {
+            return fecha.split('T')[0];
+        }
+        return fecha;
+    }
+
+    function formatTimeForInput(hora) {
+        if (!hora) {
+            return '';
+        }
+        if (hora.includes(':')) {
+            const segments = hora.split(':');
+            return `${segments[0].padStart(2, '0')}:${(segments[1] || '00').padStart(2, '0')}`;
+        }
+        return hora;
+    }
+
+    function mapBackendFieldToErrorKey(field) {
+        switch (field) {
+            case 'fecha_reserva':
+                return 'fecha';
+            case 'hora_reserva':
+                return 'hora';
+            case 'cantidad_personas':
+                return 'personas';
+            default:
+                return null;
+        }
+    }
+
+    async function handleReservationUpdate(event) {
+        event.preventDefault();
+
+        if (!currentReservationEditing) {
+            return;
+        }
+
+        clearReservationErrors();
+
+        const dateValue = document.getElementById('reservationDate').value;
+        const timeValue = document.getElementById('reservationTime').value;
+        const peopleValue = document.getElementById('reservationPeople').value;
+        const notesValue = document.getElementById('reservationNotes').value.trim();
+        const preferenceValue = getSelectedTablePreference();
+
+        const errors = [];
+
+        if (!dateValue) {
+            errors.push({ field: 'fecha', message: 'Selecciona una fecha para la reservación.' });
+        }
+
+        if (!timeValue) {
+            errors.push({ field: 'hora', message: 'Selecciona un horario disponible.' });
+        }
+
+        const peopleNumber = Number(peopleValue);
+        if (!peopleValue) {
+            errors.push({ field: 'personas', message: 'Selecciona la cantidad de personas.' });
+        } else if (!Number.isInteger(peopleNumber) || peopleNumber <= 0) {
+            errors.push({ field: 'personas', message: 'La cantidad de personas debe ser un número válido.' });
+        } else if (peopleNumber > reservasCapacidadMaxima) {
+            errors.push({ field: 'personas', message: `La capacidad máxima por reservación es de ${reservasCapacidadMaxima} personas.` });
+        }
+
+        if (dateValue && timeValue) {
+            const nuevaFecha = new Date(`${dateValue}T${timeValue}:00`);
+            if (Number.isNaN(nuevaFecha.getTime())) {
+                errors.push({ field: 'fecha', message: 'La combinación de fecha y hora no es válida.' });
+            } else {
+                const ahora = new Date();
+                if (nuevaFecha < ahora) {
+                    errors.push({ field: 'fecha', message: 'La reservación debe mantenerse en una fecha y hora futuras.' });
+                }
+            }
+        }
+
+        if (errors.length > 0) {
+            showReservationErrors(errors);
+            return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para modificar tus reservaciones.',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        const saveButton = document.getElementById('reservationSaveBtn');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.classList.add('opacity-70', 'cursor-not-allowed');
+        }
+
+        try {
+            const response = await fetch(`/api/reservaciones/${currentReservationEditing.id_reservacion}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    fecha_reserva: dateValue,
+                    hora_reserva: timeValue,
+                    cantidad_personas: peopleNumber,
+                    notas_especiales: notesValue || undefined,
+                    preferencia_mesa: preferenceValue || undefined
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                if (Array.isArray(result.errors) && result.errors.length > 0) {
+                    const mappedErrors = result.errors.map(error => {
+                        const fieldKey = mapBackendFieldToErrorKey(error.field);
+                        return fieldKey ? { field: fieldKey, message: error.message } : null;
+                    }).filter(Boolean);
+
+                    if (mappedErrors.length > 0) {
+                        showReservationErrors(mappedErrors);
+                    }
+                }
+
+                const message = result.message || 'No se pudo actualizar la reservación.';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo actualizar',
+                    text: message,
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Reservación actualizada',
+                text: 'Los cambios se guardaron correctamente.',
+                confirmButtonText: 'Perfecto'
+            }).then(() => {
+                closeReservationModal();
+                loadActiveReservations();
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error inesperado',
+                text: 'Ocurrió un problema al actualizar tu reservación. Intenta nuevamente.',
+                confirmButtonText: 'Entendido'
+            });
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        }
+    }
+
+    async function handleReservationCancellation(reservationId, deleteButton) {
+        if (!currentReservationEditing) {
+            return;
+        }
+
+        const confirmation = await Swal.fire({
+            icon: 'warning',
+            title: 'Cancelar reservación',
+            text: '¿Estás seguro de que deseas cancelar esta reservación?',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No, mantener'
+        });
+
+        if (!confirmation.isConfirmed) {
+            return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para cancelar tus reservaciones.',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        deleteButton.disabled = true;
+        deleteButton.classList.add('opacity-70', 'cursor-not-allowed');
+
+        try {
+            const response = await fetch(`/api/reservaciones/${currentReservationEditing.id_reservacion}/cancel`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                const message = result.message || 'No se pudo cancelar la reservación.';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo cancelar',
+                    text: message,
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Reservación cancelada',
+                text: 'La reservación fue cancelada correctamente.',
+                confirmButtonText: 'Entendido'
+            }).then(() => {
+                closeReservationModal();
+                loadActiveReservations();
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error inesperado',
+                text: 'Ocurrió un problema al cancelar tu reservación. Intenta nuevamente.',
+                confirmButtonText: 'Entendido'
+            });
+        } finally {
+            deleteButton.disabled = false;
+            deleteButton.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
+    }
+
+        function formatReservationDateLabel(fechaISO) {
+            if (!fechaISO) {
+                return '-';
+            }
+            const [year, month, day] = fechaISO.split('-').map(Number);
+            const date = new Date(year, (month || 1) - 1, day || 1);
+            return date.toLocaleDateString('es-ES', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function formatReservationTimeLabel(hora) {
+            if (!hora) {
+                return '-';
+            }
+            const segments = hora.split(':');
+            const hour = Number(segments[0] || 0);
+            const minutes = (segments[1] || '00').padStart(2, '0');
+            const period = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = ((hour + 11) % 12) + 1;
+            return `${hour12}:${minutes} ${period}`;
+        }
+
+        function formatPeopleLabel(cantidad) {
+            if (!cantidad) {
+                return '0 personas';
+            }
+            const numero = Number(cantidad);
+            return `${numero} ${numero === 1 ? 'persona' : 'personas'}`;
+        }
+
+        function getReservationStatusInfo(estado) {
+            const map = {
+                pendiente: { text: 'Pendiente', class: 'status-pendiente' },
+                confirmada: { text: 'Confirmada', class: 'status-confirmado' },
+                en_proceso: { text: 'En proceso', class: 'status-preparando' },
+                completada: { text: 'Completada', class: 'status-listo' },
+                cancelada: { text: 'Cancelada', class: 'status-cancelado' },
+                rechazada: { text: 'Rechazada', class: 'status-cancelado' }
+            };
+            return map[estado] || { text: 'Pendiente', class: 'status-pendiente' };
+        }
+
+        window.loadActiveReservations = loadActiveReservations;
 
         //Función para formatear números con comas
         function formatNumber(num) {
@@ -547,7 +1810,7 @@
                 </div>
                 <div class="text-right">
                     <p class="font-semibold">${orderTotal}</p>
-                    <span class="text-sm ${statusInfo.class} px-2 py-1 rounded">${statusInfo.text}</span>
+                    <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
             </div>
             `;
 
@@ -580,15 +1843,15 @@
         //Función para obtener información del estado (reutilizada de mis-pedidos.html)
         function getStatusInfo(estado) {
             const statusMap = {
-                'pendiente': { text: 'Pendiente', class: 'bg-yellow-100 text-yellow-800' },
-                'confirmado': { text: 'Confirmado', class: 'bg-blue-100 text-blue-800' },
-                'preparando': { text: 'Preparando', class: 'bg-orange-100 text-orange-800' },
-                'listo': { text: 'Listo', class: 'bg-green-100 text-green-800' },
-                'en_camino': { text: 'En Camino', class: 'bg-purple-100 text-purple-800' },
-                'entregado': { text: 'Entregado', class: 'bg-green-100 text-green-800' },
-                'cancelado': { text: 'Cancelado', class: 'bg-red-100 text-red-800' }
+                'pendiente': { text: 'Pendiente', class: 'status-pendiente' },
+                'confirmado': { text: 'Confirmado', class: 'status-confirmado' },
+                'preparando': { text: 'Preparando', class: 'status-preparando' },
+                'listo': { text: 'Listo', class: 'status-listo' },
+                'en_camino': { text: 'En Camino', class: 'status-en_camino' },
+                'entregado': { text: 'Entregado', class: 'status-entregado' },
+                'cancelado': { text: 'Cancelado', class: 'status-cancelado' }
             };
-            return statusMap[estado] || { text: 'Desconocido', class: 'bg-gray-100 text-gray-800' };
+            return statusMap[estado] || { text: 'Pendiente', class: 'status-pendiente' };
         }
 
         //Función para formatear fecha (reutilizada de mis-pedidos.html)

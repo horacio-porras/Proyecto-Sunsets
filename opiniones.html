@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Opiniones</title>
+</head>
+<body>
+    <h1>Opiniones del producto 1</h1>
+
+    <h2>Agregar Opinión</h2>
+    <form id="opinionForm">
+        <input type="hidden" id="id_producto" value="1">
+        <label>Id Cliente: <input type="number" id="id_cliente" required></label><br>
+        <label>Calificación: <input type="number" id="calificacion" min="1" max="5" required></label><br>
+        <label>Comentario: <textarea id="comentario" required></textarea></label><br>
+        <button type="submit">Enviar Opinión</button>
+    </form>
+
+    <h2>Opiniones existentes</h2>
+    <div id="opinionesContainer"></div>
+
+    <script>
+        const form = document.getElementById('opinionForm');
+        const opinionesContainer = document.getElementById('opinionesContainer');
+        const productoId = document.getElementById('id_producto').value;
+
+        // Función para mostrar opiniones
+        async function cargarOpiniones() {
+            const res = await fetch(`/api/opiniones/producto/${productoId}`);
+            const data = await res.json();
+
+            opinionesContainer.innerHTML = '';
+            if (data.success && data.opiniones.length > 0) {
+                data.opiniones.forEach(op => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <strong>Cliente #${op.id_cliente}</strong> - Calificación: ${op.calificacion} <br>
+                        Comentario: ${op.comentario} <br>
+                        Fecha: ${new Date(op.fecha_opinion).toLocaleString()}<hr>
+                    `;
+                    opinionesContainer.appendChild(div);
+                });
+            } else {
+                opinionesContainer.innerHTML = '<p>No hay opiniones aún.</p>';
+            }
+        }
+
+        // Al enviar el formulario
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                id_producto: parseInt(productoId),
+                id_cliente: parseInt(document.getElementById('id_cliente').value),
+                calificacion: parseInt(document.getElementById('calificacion').value),
+                comentario: document.getElementById('comentario').value
+            };
+
+            const res = await fetch('/api/opiniones', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('Opinión agregada correctamente');
+                form.reset();
+                cargarOpiniones();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+
+        // Cargar opiniones al abrir la página
+        cargarOpiniones();
+    </script>
+</body>
+</html>

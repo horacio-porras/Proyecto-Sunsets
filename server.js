@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cron = require('node-cron');
 //Carga las variables de entorno desde config.env
 require('dotenv').config({ path: './config.env' });
 
@@ -12,6 +13,15 @@ const clienteRoutes = require('./routes/clienteRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
 const inventarioRoutes = require('./routes/inventarioRoutes');
+const promocionesRoutes = require('./routes/promocionesRoutes');
+const reservacionesRoutes = require('./routes/reservacionesRoutes');
+const recompensasRoutes = require('./routes/recompensasRoutes');
+const { sendDailyReminders } = require('./utils/reminderService');
+const reminderRoutes = require('./routes/reminderRoutes');
+const opinionesRoutes = require('./routes/opinionesRoutes');
+
+//Importa las rutas del chatbot
+const chatbotRoutes = require('./routes/chatbotRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -71,6 +81,12 @@ app.use('/api/cliente', clienteRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/empleados', empleadoRoutes);
 app.use('/api/inventario', inventarioRoutes);
+app.use('/api/reservaciones', reservacionesRoutes);
+app.use('/api/promociones', promocionesRoutes);
+app.use('/api/recompensas', recompensasRoutes);
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/opiniones', opinionesRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {
@@ -152,6 +168,19 @@ async function startServer() {
             console.log(`API: http://localhost:${PORT}/api`);
             console.log(`Health check: http://localhost:${PORT}/api/health`);
             console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+            
+            // Inicializar tarea programada de recordatorios
+            // Se ejecuta todos los días a las 10:00 AM
+            cron.schedule('0 10 * * *', async () => {
+                console.log('[CRON] Ejecutando tarea de recordatorios diarios...');
+                try {
+                    await sendDailyReminders();
+                } catch (error) {
+                    console.error('[CRON] Error en tarea de recordatorios:', error);
+                }
+            });
+            
+            console.log('Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
         });
 
     } catch (error) {

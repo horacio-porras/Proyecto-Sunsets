@@ -102,7 +102,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Order Process -->
+    <!-- Order Process -->
         <section class="py-12 flex-grow">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
@@ -143,27 +143,27 @@
                             <div class="p-6">
                                 <div class="space-y-6" id="order-cart-items">
                                     <!-- Los items del carrito se cargarán dinámicamente aquí -->
-                                </div>
-                            </div>
-                        </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                         <!-- Customer Information -->
                         <div class="bg-white rounded-lg shadow-md">
                             <div class="p-6 border-b border-gray-200">
                                 <h2 class="text-xl font-semibold">Información de Contacto</h2>
-                            </div>
+                                            </div>
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
                                         <input type="text" id="customerName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre completo">
-                                    </div>
+                                        </div>
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
                                         <input type="tel" id="customerPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
                                     </div>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
                                         <input type="email" id="customerEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
@@ -193,13 +193,13 @@
                                         </select>
                                     </div>
                                     
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Cantón *</label>
                                             <input type="text" id="deliveryCanton" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Nombre del cantón">
-                                        </div>
-                                        
-                                        <div>
+                                    </div>
+                                    
+                                    <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Distrito *</label>
                                             <input type="text" id="deliveryDistrict" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Nombre del distrito">
                                         </div>
@@ -226,6 +226,9 @@
                             
                             <div class="space-y-3" id="order-summary">
                                 <!-- El resumen del pedido se actualizará dinámicamente aquí -->
+                            </div>
+                            <div id="customer-summary" class="mt-4 border-t pt-4 text-sm text-gray-600 hidden">
+                                <!-- Información del cliente y entrega -->
                             </div>
                             
                             <div class="mt-6">
@@ -277,9 +280,9 @@
                                     <div>
                                         <p class="font-semibold">Teléfono</p>
                                         <p class="text-sm text-gray-600">+506 6171-4020</p>
-                                    </div>
                                 </div>
-                                
+                            </div>
+                            
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-envelope text-orange-600"></i>
                                     <div>
@@ -439,25 +442,31 @@
         //Función para mostrar resumen del pedido
         function showOrderSummary() {
             const orderData = getOrderData();
-            const summaryElement = document.getElementById('order-summary');
+            const customerSummary = document.getElementById('customer-summary');
             
-            if (summaryElement) {
-                summaryElement.innerHTML = `
-                    <div class="border-t pt-3">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span>Cliente:</span>
-                            <span class="font-semibold">${orderData.customer.name}</span>
-                        </div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span>Teléfono:</span>
-                            <span class="font-semibold">${orderData.customer.phone}</span>
-                        </div>
-                        <div class="text-sm">
-                            <span class="block mb-1">Dirección:</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.address}</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.district}, ${orderData.delivery.canton}</span>
-                            <span class="font-semibold block text-right leading-tight">${orderData.delivery.province}</span>
-                        </div>
+            if (customerSummary) {
+                const hasData = orderData.customer.name || orderData.customer.phone || orderData.delivery.address;
+                if (!hasData) {
+                    customerSummary.classList.add('hidden');
+                    customerSummary.innerHTML = '';
+                    return;
+                }
+
+                customerSummary.classList.remove('hidden');
+                customerSummary.innerHTML = `
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Cliente:</span>
+                        <span class="font-semibold text-gray-700">${orderData.customer.name || '—'}</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Teléfono:</span>
+                        <span class="font-semibold text-gray-700">${orderData.customer.phone || '—'}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="block mb-1 text-gray-500">Dirección:</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.address || '—'}</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.district ? `${orderData.delivery.district}, ${orderData.delivery.canton}` : orderData.delivery.canton || '—'}</span>
+                        <span class="font-semibold block text-right leading-tight text-gray-700">${orderData.delivery.province || '—'}</span>
                     </div>
                 `;
             }
@@ -531,7 +540,7 @@
                     localStorage.setItem('pendingOrder', JSON.stringify(orderData));
                     
                     window.location.href = '/pago.html';
-                } else {
+            } else {
                     alert(`Error al crear el pedido: ${result.message || 'Error desconocido'}`);
                 }
 
@@ -596,4 +605,4 @@
     </script>
 
 </body>
-</html>
+</html> 

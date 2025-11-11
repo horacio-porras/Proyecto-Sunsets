@@ -81,7 +81,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadOrderData();
-            displayOrderDetails();
+            displayOrderDetails().catch(error => console.error('Error al mostrar detalles del pedido:', error));
         });
 
         //Carga los datos del pedido
@@ -95,7 +95,7 @@
         }
 
         //Muestra los detalles del pedido
-        function displayOrderDetails() {
+        async function displayOrderDetails() {
             const detailsContainer = document.getElementById('order-details');
             if (!detailsContainer || !orderData) return;
 
@@ -104,6 +104,7 @@
             const payment = orderData.payment;
 
             const items = orderData.items || [];
+            const orderSummaryHTML = await renderOrderSummary(orderData);
             
             detailsContainer.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
@@ -128,32 +129,7 @@
                 
                 <div class="border-t pt-4 mt-4">
                     <h4 class="font-semibold text-gray-700 mb-2">Resumen del Pedido</h4>
-                    <div class="space-y-2">
-                        ${items.length > 0 ? items.map(item => `
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
-                                <span>₡${(item.price * item.quantity).toLocaleString()}</span>
-                            </div>
-                        `).join('') : '<p class="text-gray-500 text-center py-4">No hay items disponibles</p>'}
-                        <hr class="my-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span>₡${(orderData.subtotal || 0).toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Costo de entrega</span>
-                            <span>₡${(orderData.deliveryFee || 0).toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Impuestos</span>
-                            <span>₡${Math.round(orderData.taxes || 0).toLocaleString()}</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="flex justify-between font-semibold text-lg">
-                            <span>Total</span>
-                            <span>₡${Math.round(orderData.total || 0).toLocaleString()}</span>
-                        </div>
-                    </div>
+                    ${orderSummaryHTML}
                 </div>
                 
                 <div class="border-t pt-4 mt-4 text-center">
@@ -186,11 +162,417 @@
         function getPaymentMethodName(method) {
             const methods = {
                 'efectivo': 'Pago en Efectivo',
-                'tarjeta': 'Tarjeta de Crédito/Débito',
-                'transferencia': 'Transferencia Bancaria',
                 'sinpe': 'SINPE Móvil'
             };
             return methods[method] || method;
+        }
+
+        let activePromotions = [];
+        let promotionsLoaded = false;
+        let promotionsLoadingPromise = null;
+
+        function normalizePromotion(promo = {}) {
+            const porcentaje = Number(
+                promo?.porcentaje_descuento ??
+                promo?.valor_descuento ??
+                promo?.porcentaje ??
+                promo?.valor ??
+                0
+            );
+
+            let productos = [];
+            if (Array.isArray(promo?.productos)) {
+                productos = promo.productos
+                    .map((producto) => Number(producto?.id_producto ?? producto?.id ?? producto))
+                    .filter((id) => !Number.isNaN(id));
+            }
+
+            return {
+                id: Number(promo?.id_promocion ?? promo?.id ?? 0),
+                nombre: promo?.nombre_promocion ?? promo?.nombre ?? 'Promoción',
+                descripcion: promo?.descripcion ?? '',
+                alcance: promo?.alcance === 'producto' ? 'producto' : 'general',
+                porcentaje: porcentaje > 0 ? porcentaje : 0,
+                productos
+            };
+        }
+
+        async function loadActivePromotions() {
+            if (promotionsLoaded) {
+                return activePromotions;
+            }
+
+            if (promotionsLoadingPromise) {
+                return promotionsLoadingPromise;
+            }
+
+            promotionsLoadingPromise = (async () => {
+                try {
+                    const response = await fetch('/api/promociones/public/activas');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const promociones = data?.data?.promociones || data?.promociones || [];
+                    activePromotions = Array.isArray(promociones)
+                        ? promociones.map(normalizePromotion).filter(promo => promo.porcentaje > 0)
+                        : [];
+                } catch (error) {
+                    console.error('Error al cargar promociones activas:', error);
+                    activePromotions = [];
+                } finally {
+                    promotionsLoaded = true;
+                    promotionsLoadingPromise = null;
+                }
+
+                return activePromotions;
+            })();
+
+            return promotionsLoadingPromise;
+        }
+
+        function calculatePromotionsDiscount(subtotal, cartItems, promotions) {
+            if (!Array.isArray(cartItems) || cartItems.length === 0 || !Array.isArray(promotions) || promotions.length === 0) {
+                return { discount: 0, breakdown: [] };
+            }
+
+            const subtotalByProduct = new Map();
+
+            cartItems.forEach((item) => {
+                if (!item) return;
+                const quantity = Number(item.quantity);
+                const price = Number(item.price);
+                if (Number.isNaN(quantity) || Number.isNaN(price) || quantity <= 0 || price < 0) {
+                    return;
+                }
+
+                const lineSubtotal = price * quantity;
+                const productId = Number(item.id);
+
+                if (!Number.isNaN(productId)) {
+                    subtotalByProduct.set(productId, (subtotalByProduct.get(productId) || 0) + lineSubtotal);
+                }
+            });
+
+            let totalDiscount = 0;
+            const breakdown = [];
+
+            promotions.forEach((promo) => {
+                if (!promo || promo.porcentaje <= 0) {
+                    return;
+                }
+
+                const porcentaje = promo.porcentaje / 100;
+                let applicableSubtotal = 0;
+
+                if (promo.alcance === 'producto') {
+                    if (!Array.isArray(promo.productos) || promo.productos.length === 0) {
+                        return;
+                    }
+
+                    promo.productos.forEach((productId) => {
+                        const subtotalProducto = subtotalByProduct.get(Number(productId));
+                        if (subtotalProducto) {
+                            applicableSubtotal += subtotalProducto;
+                        }
+                    });
+                } else {
+                    applicableSubtotal = subtotal;
+                }
+
+                if (applicableSubtotal <= 0) {
+                    return;
+                }
+
+                const discountAmount = applicableSubtotal * porcentaje;
+
+                if (discountAmount <= 0) {
+                    return;
+                }
+
+                totalDiscount += discountAmount;
+                breakdown.push({
+                    label: promo.nombre,
+                    amount: discountAmount,
+                    alcance: promo.alcance
+                });
+            });
+
+            if (totalDiscount > subtotal) {
+                totalDiscount = subtotal;
+            }
+
+            return {
+                discount: totalDiscount,
+                breakdown
+            };
+        }
+
+        async function computeFinancialBreakdown(order) {
+             const items = Array.isArray(order.items) ? order.items : [];
+             const subtotalFallback = items.reduce((sum, item) => {
+                 const price = Number(item.price) || 0;
+                 const quantity = Number(item.quantity) || 0;
+                 return sum + price * quantity;
+             }, 0);
+ 
+            const subtotalRaw = Number(order.subtotal);
+            const subtotal = Number.isFinite(subtotalRaw) && subtotalRaw > 0 ? subtotalRaw : subtotalFallback;
+
+            const storedPromotionDiscount = Number(order.promotionDiscount);
+            let promotionDiscount = Number.isFinite(storedPromotionDiscount) && storedPromotionDiscount > 0
+                ? storedPromotionDiscount
+                : 0;
+
+            let promotionsApplied = Array.isArray(order.promotionsApplied)
+                ? order.promotionsApplied.map(promo => ({
+                    label: promo.label || promo.nombre || 'Descuento',
+                    amount: Number(promo.amount) || Number(promo.valor) || 0,
+                    alcance: promo.alcance || 'general'
+                })).filter(promo => promo.amount > 0)
+                : [];
+
+            const hasStoredPromotions = promotionsApplied.length > 0;
+            if (hasStoredPromotions && promotionDiscount <= 0) {
+                promotionDiscount = promotionsApplied.reduce((sum, promo) => sum + (promo.amount || 0), 0);
+            }
+
+            let subtotalAfterPromotions = Number(order.subtotalAfterPromotions);
+            if (!Number.isFinite(subtotalAfterPromotions) || subtotalAfterPromotions <= 0) {
+                subtotalAfterPromotions = Math.max(0, subtotal - promotionDiscount);
+            }
+
+            if (!hasStoredPromotions && promotionDiscount <= 0) {
+                const promotions = await loadActivePromotions();
+                const { discount, breakdown } = calculatePromotionsDiscount(subtotal, items, promotions);
+                promotionDiscount = discount;
+                promotionsApplied = breakdown;
+                subtotalAfterPromotions = Math.max(0, subtotal - promotionDiscount);
+            }
+
+            let deliveryFee = Number(order.deliveryFee);
+            if (!Number.isFinite(deliveryFee)) {
+                const deliveryFeeFromDelivery = Number(order.delivery?.fee);
+                deliveryFee = Number.isFinite(deliveryFeeFromDelivery) ? deliveryFeeFromDelivery : deliveryFee >= 0 ? deliveryFee : 1500;
+            }
+            if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
+                deliveryFee = 1500;
+            }
+
+            let taxes = Number(order.taxes);
+            if (!Number.isFinite(taxes)) {
+                taxes = subtotalAfterPromotions * 0.05;
+            }
+
+            const rewardDiscountRaw = Number(order.rewardDiscount);
+            const rewardDiscount = Number.isFinite(rewardDiscountRaw) && rewardDiscountRaw > 0
+                ? rewardDiscountRaw
+                : Number(order.rewardCanje?.valor_canje) || 0;
+
+            const loyaltyDiscountRaw = Number(order.loyaltyDiscount);
+            const loyaltyDiscount = Number.isFinite(loyaltyDiscountRaw) && loyaltyDiscountRaw > 0
+                ? loyaltyDiscountRaw
+                : 0;
+
+            const totalRaw = Number(order.total);
+            const total = Number.isFinite(totalRaw) && totalRaw >= 0
+                ? totalRaw
+                : Math.max(0, subtotalAfterPromotions + deliveryFee + taxes - rewardDiscount - loyaltyDiscount);
+ 
+            return {
+                items,
+                subtotal,
+                promotionDiscount,
+                promotionsLines: promotionsApplied,
+                deliveryFee,
+                taxes,
+                rewardDiscount,
+                loyaltyDiscount,
+                total
+            };
+        }
+
+        async function renderOrderSummary(order) {
+            try {
+                const breakdown = await computeFinancialBreakdown(order);
+                const {
+                    items,
+                    subtotal,
+                    promotionDiscount,
+                    promotionsLines,
+                    deliveryFee,
+                    taxes,
+                    rewardDiscount,
+                    loyaltyDiscount,
+                    total
+                } = breakdown;
+
+                if (items.length === 0) {
+                    return '<p class="text-gray-500 text-center py-4">No hay items disponibles</p>';
+                }
+
+                const itemsHTML = items.map(item => `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
+                        <span>₡${(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                `).join('');
+
+                const promotionsHTML = renderPromotionsSection({ promotionsApplied: promotionsLines, promotionDiscount }, promotionDiscount);
+                const rewardsLoyaltyHTML = renderRewardsAndLoyalty({ rewardDiscount, loyaltyDiscount }, rewardDiscount, loyaltyDiscount);
+
+                return `
+                    <div class="space-y-2">
+                        ${itemsHTML}
+                        <hr class="my-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span>₡${subtotal.toLocaleString()}</span>
+                        </div>
+                        ${promotionsHTML}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Costo de entrega</span>
+                            <span>₡${deliveryFee.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Impuestos</span>
+                            <span>₡${Math.round(taxes).toLocaleString()}</span>
+                        </div>
+                        ${rewardsLoyaltyHTML}
+                        <hr class="my-2">
+                        <div class="flex justify-between font-semibold text-lg">
+                            <span>Total</span>
+                            <span>₡${Math.round(total).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error al renderizar resumen del pedido en confirmación:', error);
+                return renderFallbackSummaryHTML(order);
+            }
+        }
+
+        function renderFallbackSummaryHTML(order) {
+            const items = Array.isArray(order.items) ? order.items : [];
+            if (items.length === 0) {
+                return '<p class="text-gray-500 text-center py-4">No hay items disponibles</p>';
+            }
+
+            const subtotal = items.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.quantity) || 0)), 0);
+            const deliveryFee = Number(order.deliveryFee) || 1500;
+            const taxes = Number(order.taxes) || Math.round(subtotal * 0.05);
+            const rewardDiscount = Number(order.rewardDiscount) || 0;
+            const loyaltyDiscount = Number(order.loyaltyDiscount) || 0;
+            const total = Math.max(0, subtotal + deliveryFee + taxes - rewardDiscount - loyaltyDiscount);
+
+            const itemsHTML = items.map(item => `
+                <div class="flex justify-between">
+                    <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
+                    <span>₡${(item.price * item.quantity).toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            const rewardRow = rewardDiscount > 0 ? `
+                <div class="flex justify-between text-green-600 font-semibold">
+                    <span>Descuento por recompensa</span>
+                    <span>-₡${Math.round(rewardDiscount).toLocaleString()}</span>
+                </div>
+            ` : '';
+
+            const loyaltyRow = loyaltyDiscount > 0 ? `
+                <div class="flex justify-between text-green-600 font-semibold">
+                    <span>Descuento por puntos de lealtad</span>
+                    <span>-₡${Math.round(loyaltyDiscount).toLocaleString()}</span>
+                </div>
+            ` : '';
+
+            return `
+                <div class="space-y-2">
+                    ${itemsHTML}
+                    <hr class="my-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span>₡${subtotal.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Costo de entrega</span>
+                        <span>₡${deliveryFee.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Impuestos</span>
+                        <span>₡${Math.round(taxes).toLocaleString()}</span>
+                    </div>
+                    ${rewardRow}
+                    ${loyaltyRow}
+                    <hr class="my-2">
+                    <div class="flex justify-between font-semibold text-lg">
+                        <span>Total</span>
+                        <span>₡${Math.round(total).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPromotionsSection(order, promotionDiscountOverride) {
+            const promotions = order.promotionsApplied || [];
+            const promotionDiscount = Number(promotionDiscountOverride ?? order.promotionDiscount) || 0;
+
+            if ((!Array.isArray(promotions) || promotions.length === 0) && promotionDiscount <= 0) {
+                return '';
+            }
+
+            const lines = [];
+
+            if (Array.isArray(promotions) && promotions.length > 0) {
+                promotions.forEach((promo) => {
+                    if (!promo) return;
+                    const label = promo.label || 'Descuento';
+                    const amount = Number(promo.amount) || 0;
+                    if (amount <= 0) return;
+                    lines.push(`
+                        <div class="flex justify-between text-green-600 font-semibold">
+                            <span>${label}</span>
+                            <span>-₡${Math.round(amount).toLocaleString()}</span>
+                        </div>
+                    `);
+                });
+            } else if (promotionDiscount > 0) {
+                lines.push(`
+                    <div class="flex justify-between text-green-600 font-semibold">
+                        <span>Descuento promocional</span>
+                        <span>-₡${Math.round(promotionDiscount).toLocaleString()}</span>
+                    </div>
+                `);
+            }
+
+            return lines.join('');
+        }
+
+        function renderRewardsAndLoyalty(order, rewardDiscountOverride, loyaltyDiscountOverride) {
+            const lines = [];
+            const rewardDiscount = Number(rewardDiscountOverride ?? order.rewardDiscount) || 0;
+            const loyaltyDiscount = Number(loyaltyDiscountOverride ?? order.loyaltyDiscount) || 0;
+
+            if (rewardDiscount > 0) {
+                lines.push(`
+                    <div class="flex justify-between text-green-600 font-semibold">
+                        <span>Descuento por recompensa</span>
+                        <span>-₡${Math.round(rewardDiscount).toLocaleString()}</span>
+                    </div>
+                `);
+            }
+
+            if (loyaltyDiscount > 0) {
+                lines.push(`
+                    <div class="flex justify-between text-green-600 font-semibold">
+                        <span>Descuento por puntos de lealtad</span>
+                        <span>-₡${Math.round(loyaltyDiscount).toLocaleString()}</span>
+                    </div>
+                `);
+            }
+
+            return lines.join('');
         }
 
     </script>

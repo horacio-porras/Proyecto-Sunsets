@@ -82,7 +82,9 @@ router.post('/', authenticateToken, async (req, res) => {
             deliveryFee, 
             taxes, 
             total,
-            loyaltyPointsUsed 
+            loyaltyPointsUsed,
+            rewardCanjeId,
+            rewardDiscount 
         } = req.body;
 
         //Verifica el tipo de usuario
@@ -116,16 +118,73 @@ router.post('/', authenticateToken, async (req, res) => {
         }
         //Para empleados y administradores, clienteId será null (pedido como invitado)
 
-        //Determina el área de asignación y obtiene empleado disponible
+        //Determina el área de asignación (sin asignar empleado automáticamente)
         const areaAsignacion = await determinarAreaAsignacion(items, connection);
-        const empleadoAsignado = await obtenerEmpleadoDisponible(areaAsignacion, connection);
+        const empleadoAsignado = null; // Los pedidos se crean sin asignar
 
+        let descuentoPorRecompensa = 0;
+        let canjeAsociado = null;
+
+        if (rewardCanjeId) {
+            const [canjeRows] = await connection.execute(
+                `SELECT 
+                    cp.id_canje,
+                    cp.id_cliente,
+                    cp.valor_canje,
+                    cp.estado_canje
+                 FROM canje_puntos cp
+                 WHERE cp.id_canje = ? FOR UPDATE`,
+                [rewardCanjeId]
+            );
+
+            if (canjeRows.length === 0) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'La recompensa seleccionada no está disponible'
+                });
+            }
+
+            canjeAsociado = canjeRows[0];
+
+            if (canjeAsociado.id_cliente !== clienteId) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'No puedes aplicar una recompensa que no pertenece a tu cuenta'
+                });
+            }
+
+            if (canjeAsociado.estado_canje !== 'pendiente') {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: 'Esta recompensa ya fue utilizada o no está disponible'
+                });
+            }
+
+            const descuentoSolicitado = Number(rewardDiscount) || 0;
+            const valorDisponible = Number(canjeAsociado.valor_canje) || 0;
+
+            descuentoPorRecompensa = Math.max(0, Math.min(descuentoSolicitado, valorDisponible));
+        }
+
+        const deliveryAmount = Number(deliveryFee) || 0;
+        const subtotalAmount = Number(subtotal) || 0;
+        const taxesAmount = Number(taxes) || 0;
+        const descuentoTotal = descuentoPorRecompensa;
+
+        let totalCalculado = subtotalAmount + deliveryAmount + taxesAmount - descuentoTotal;
+        if (totalCalculado < 0) {
+            totalCalculado = 0;
+        }
 
         const [pedidoResult] = await connection.execute(
             `INSERT INTO pedido (
                 id_cliente, 
                 id_direccion,
                 id_empleado_asignado,
+                area_asignacion,
                 subtotal, 
                 impuestos, 
                 descuentos,
@@ -135,18 +194,19 @@ router.post('/', authenticateToken, async (req, res) => {
                 metodo_pago, 
                 notas_especiales,
                 puntos_otorgados
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), ?, ?, ?)`,
             [
                 clienteId,
                 delivery.addressId || null,
                 empleadoAsignado,
-                subtotal,
-                taxes,
-                loyaltyPointsUsed || 0,
-                total,
+                areaAsignacion,
+                subtotalAmount,
+                taxesAmount,
+                descuentoTotal,
+                totalCalculado,
                 payment.method,
                 delivery.instructions || null,
-                Math.floor(subtotal / 100)
+                Math.floor(subtotalAmount / 100)
             ]
         );
 
@@ -171,7 +231,7 @@ router.post('/', authenticateToken, async (req, res) => {
             );
         }
 
-        const puntosGanados = Math.floor(subtotal / 100);
+        const puntosGanados = Math.floor(subtotalAmount / 100);
         
         //Solo aplica puntos de lealtad si es un cliente registrado
         if (clienteId && userRole === 'Cliente') {
@@ -192,6 +252,15 @@ router.post('/', authenticateToken, async (req, res) => {
             }
         }
 
+        if (canjeAsociado) {
+            await connection.execute(
+                `UPDATE canje_puntos
+                 SET estado_canje = 'aplicado'
+                 WHERE id_canje = ?`,
+                [canjeAsociado.id_canje]
+            );
+        }
+
         await connection.commit();
 
         res.json({
@@ -208,7 +277,7 @@ router.post('/', authenticateToken, async (req, res) => {
         console.error('Error al crear pedido:', error);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
+            message: error.message || 'Error interno del servidor'
         });
     } finally {
         connection.release();
@@ -420,6 +489,171 @@ router.get('/assigned', authenticateToken, async (req, res) => {
     }
 });
 
+//Endpoint para obtener pedidos sin asignar
+router.get('/unassigned', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        //Obtener información del empleado
+        const [empleadoRows] = await pool.execute(`
+            SELECT e.id_empleado, e.area_trabajo 
+            FROM empleado e 
+            WHERE e.id_usuario = ?
+        `, [userId]);
+
+        if (empleadoRows.length === 0) {
+            return res.status(403).json({
+                success: false,
+                message: 'Usuario no es un empleado'
+            });
+        }
+
+        const empleado = empleadoRows[0];
+        const areaTrabajo = empleado.area_trabajo;
+
+        //Obtener pedidos sin asignar que correspondan al área del empleado
+        const [pedidosRows] = await pool.execute(`
+            SELECT 
+                p.id_pedido,
+                p.total,
+                p.estado_pedido,
+                p.fecha_pedido,
+                p.notas_especiales,
+                COALESCE(u.nombre, p.cliente_invitado_nombre) as cliente_nombre,
+                COALESCE(u.telefono, p.cliente_invitado_telefono) as cliente_telefono,
+                COALESCE(u.correo, p.cliente_invitado_email) as cliente_email,
+                COUNT(dp.id_detalle) as total_items
+            FROM pedido p
+            LEFT JOIN cliente c ON p.id_cliente = c.id_cliente
+            LEFT JOIN usuario u ON c.id_usuario = u.id_usuario
+            LEFT JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+            WHERE p.id_empleado_asignado IS NULL 
+            AND p.estado_pedido IN ('pendiente', 'confirmado')
+            AND p.area_asignacion = ?
+            GROUP BY p.id_pedido
+            ORDER BY p.fecha_pedido ASC
+        `, [areaTrabajo]);
+
+        res.json({
+            success: true,
+            data: {
+                pedidos: pedidosRows
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error al obtener pedidos sin asignar:', error);
+        console.error('❌ Stack trace:', error.stack);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+//Endpoint para asignar pedido a empleado
+router.put('/:id/assign', authenticateToken, async (req, res) => {
+    try {
+        const pedidoId = req.params.id;
+        const userId = req.user.id;
+        
+        //Obtener información del empleado
+        const [empleadoRows] = await pool.execute(`
+            SELECT e.id_empleado, e.area_trabajo 
+            FROM empleado e 
+            WHERE e.id_usuario = ?
+        `, [userId]);
+
+        if (empleadoRows.length === 0) {
+            return res.status(403).json({
+                success: false,
+                message: 'Usuario no es un empleado'
+            });
+        }
+
+        const empleado = empleadoRows[0];
+
+        //Verificar que el pedido existe y no está asignado
+        const [pedidoRows] = await pool.execute(`
+            SELECT id_pedido, estado_pedido, id_empleado_asignado
+            FROM pedido 
+            WHERE id_pedido = ?
+        `, [pedidoId]);
+
+        if (pedidoRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pedido no encontrado'
+            });
+        }
+
+        const pedido = pedidoRows[0];
+
+        if (pedido.id_empleado_asignado !== null) {
+            return res.status(400).json({
+                success: false,
+                message: 'El pedido ya está asignado'
+            });
+        }
+
+        //Verificar que el pedido corresponde al área del empleado
+        const [pedidoAreaRows] = await pool.execute(`
+            SELECT area_asignacion
+            FROM pedido
+            WHERE id_pedido = ?
+        `, [pedidoId]);
+
+        if (pedidoAreaRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pedido no encontrado'
+            });
+        }
+
+        const areaAsignacion = pedidoAreaRows[0].area_asignacion;
+        
+        if (areaAsignacion !== empleado.area_trabajo) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permisos para asignar este pedido'
+            });
+        }
+
+        //Asignar el pedido al empleado
+        await pool.execute(`
+            UPDATE pedido 
+            SET id_empleado_asignado = ?
+            WHERE id_pedido = ?
+        `, [empleado.id_empleado, pedidoId]);
+
+        res.json({
+            success: true,
+            message: 'Pedido asignado exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al asignar pedido:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+//Función auxiliar para determinar área de asignación
+function determinarAreaAsignacionSimple(categorias) {
+    if (categorias.some(cat => cat.includes('bebida') || cat.includes('bebidas'))) {
+        return 'bebidas';
+    }
+    
+    if (categorias.some(cat => cat.includes('postre') || cat.includes('postres'))) {
+        return 'postres';
+    }
+    
+    return 'cocina';
+}
+
 //Endpoint para obtener detalles completos de un pedido específico (para empleados y administradores)
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
@@ -621,7 +855,7 @@ router.post('/guest', async (req, res) => {
         }
 
         const areaAsignacion = await determinarAreaAsignacion(items, connection);
-        const empleadoAsignado = await obtenerEmpleadoDisponible(areaAsignacion, connection);
+        const empleadoAsignado = null; // Los pedidos se crean sin asignar
 
         //Crea dirección para invitado
         let direccionId = null;
@@ -650,6 +884,7 @@ router.post('/guest', async (req, res) => {
                 cliente_invitado_email,
                 id_direccion, 
                 id_empleado_asignado,
+                area_asignacion,
                 subtotal, 
                 impuestos, 
                 descuentos, 
@@ -659,7 +894,7 @@ router.post('/guest', async (req, res) => {
                 metodo_pago, 
                 notas_especiales,
                 puntos_otorgados
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), ?, ?, ?)`,
             [
                 null,
                 customer.name,
@@ -667,6 +902,7 @@ router.post('/guest', async (req, res) => {
                 customer.email || null,
                 direccionId,
                 empleadoAsignado,
+                areaAsignacion,
                 subtotal, 
                 taxes, 
                 loyaltyPointsUsed || 0, 

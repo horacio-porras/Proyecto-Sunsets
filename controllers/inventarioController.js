@@ -1,5 +1,50 @@
 const { pool } = require('../config/database');
 
+const parseDiscountPayload = (payload = {}) => {
+    const descuentoActivoRaw = payload.descuentoActivo;
+    const porcentajeDescuentoRaw = payload.porcentajeDescuento;
+    const fechaInicioRaw = payload.fechaInicioDescuento;
+    const fechaFinRaw = payload.fechaFinDescuento;
+
+    const descuentoActivo = ['true', '1', 1, true, 'on', 'yes'].includes(descuentoActivoRaw);
+
+    let porcentajeDescuento = null;
+    if (porcentajeDescuentoRaw !== undefined && porcentajeDescuentoRaw !== null && porcentajeDescuentoRaw !== '') {
+        porcentajeDescuento = parseFloat(porcentajeDescuentoRaw);
+        if (Number.isNaN(porcentajeDescuento)) {
+            throw new Error('El porcentaje de descuento debe ser un número válido');
+        }
+        if (porcentajeDescuento <= 0 || porcentajeDescuento >= 100) {
+            throw new Error('El porcentaje de descuento debe estar entre 0 y 100');
+        }
+    } else if (descuentoActivo) {
+        throw new Error('Debes especificar un porcentaje para activar el descuento');
+    }
+
+    const parseDate = (value) => {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error('Las fechas de descuento deben tener un formato válido');
+        }
+        return date;
+    };
+
+    const fechaInicioDescuento = parseDate(fechaInicioRaw);
+    const fechaFinDescuento = parseDate(fechaFinRaw);
+
+    if (fechaInicioDescuento && fechaFinDescuento && fechaInicioDescuento > fechaFinDescuento) {
+        throw new Error('La fecha de inicio del descuento no puede ser posterior a la fecha de finalización');
+    }
+
+    return {
+        descuentoActivo,
+        porcentajeDescuento: porcentajeDescuento,
+        fechaInicioDescuento,
+        fechaFinDescuento
+    };
+};
+
 //Obtiene inventario
 const getInventario = async (req, res) => {
     try {
@@ -396,6 +441,66 @@ const registrarMovimiento = async (req, res) => {
     }
 };
 
+//Obtiene los movimientos de un item de inventario
+const obtenerMovimientosInventario = async (req, res) => {
+    try {
+        const itemId = req.params.itemId;
+
+        const itemQuery = `SELECT id_inventario, nombre_item FROM inventario WHERE id_inventario = ?`;
+        const [itemRows] = await pool.execute(itemQuery, [itemId]);
+
+        if (itemRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Item de inventario no encontrado'
+            });
+        }
+
+        const movimientosQuery = `
+            SELECT 
+                mi.id_movimiento,
+                mi.id_inventario,
+                mi.tipo_movimiento,
+                mi.cantidad,
+                mi.motivo,
+                mi.fecha_movimiento,
+                mi.tipo_responsable,
+                CASE 
+                    WHEN mi.tipo_responsable = 'empleado' THEN ue.nombre
+                    WHEN mi.tipo_responsable = 'administrador' THEN ua.nombre
+                    ELSE NULL
+                END AS usuario_registro
+            FROM movimiento_inventario mi
+            LEFT JOIN empleado e ON mi.tipo_responsable = 'empleado' AND mi.id_responsable = e.id_empleado
+            LEFT JOIN usuario ue ON e.id_usuario = ue.id_usuario
+            LEFT JOIN administrador a ON mi.tipo_responsable = 'administrador' AND mi.id_responsable = a.id_admin
+            LEFT JOIN usuario ua ON a.id_usuario = ua.id_usuario
+            WHERE mi.id_inventario = ?
+            ORDER BY mi.fecha_movimiento DESC
+        `;
+
+        const [movimientos] = await pool.execute(movimientosQuery, [itemId]);
+
+        res.json({
+            success: true,
+            data: {
+                item: {
+                    id: itemRows[0].id_inventario,
+                    nombre: itemRows[0].nombre_item
+                },
+                movimientos
+            }
+        });
+    } catch (error) {
+        console.error('Error en obtenerMovimientosInventario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error del servidor al obtener movimientos',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
 //Obtiene las estadísticas de inventario
 const getEstadisticasInventario = async (req, res) => {
     try {
@@ -447,6 +552,25 @@ const getProductos = async (req, res) => {
                 p.sin_gluten,
                 p.disponible,
                 p.tiempo_preparacion,
+                p.descuento_activo,
+                p.porcentaje_descuento,
+                p.fecha_inicio_descuento,
+                p.fecha_fin_descuento,
+                CASE 
+                    WHEN p.descuento_activo = 1 
+                        AND p.porcentaje_descuento IS NOT NULL 
+                        AND (p.fecha_inicio_descuento IS NULL OR p.fecha_inicio_descuento <= NOW())
+                        AND (p.fecha_fin_descuento IS NULL OR p.fecha_fin_descuento >= NOW())
+                    THEN ROUND(p.precio * (1 - (p.porcentaje_descuento / 100)), 2)
+                    ELSE p.precio
+                END AS precio_final,
+                CASE 
+                    WHEN p.descuento_activo = 1 
+                        AND p.porcentaje_descuento IS NOT NULL 
+                        AND (p.fecha_inicio_descuento IS NULL OR p.fecha_inicio_descuento <= NOW())
+                        AND (p.fecha_fin_descuento IS NULL OR p.fecha_fin_descuento >= NOW())
+                    THEN 1 ELSE 0
+                END AS descuento_vigente,
                 c.id_categoria as categoria_id,
                 c.nombre_categoria as categoria
             FROM producto p
@@ -524,6 +648,16 @@ const crearProducto = async (req, res) => {
         const userId = req.user.id;
         const { nombre, categoria, precio, disponible, descripcion, imagen } = req.body;
 
+        let discountData;
+        try {
+            discountData = parseDiscountPayload(req.body);
+        } catch (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError.message
+            });
+        }
+
         if (!nombre || !categoria || precio === undefined || disponible === undefined) {
             return res.status(400).json({
                 success: false,
@@ -551,8 +685,19 @@ const crearProducto = async (req, res) => {
         const idCategoria = categoriaRows[0].id_categoria;
 
         const insertQuery = `
-            INSERT INTO producto (id_categoria, nombre, precio, disponible, descripcion, imagen_url)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO producto (
+                id_categoria, 
+                nombre, 
+                precio, 
+                disponible, 
+                descripcion, 
+                imagen_url,
+                descuento_activo,
+                porcentaje_descuento,
+                fecha_inicio_descuento,
+                fecha_fin_descuento
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await pool.execute(insertQuery, [
@@ -561,7 +706,11 @@ const crearProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null
+            imagen || null,
+            discountData.descuentoActivo ? 1 : 0,
+            discountData.porcentajeDescuento,
+            discountData.fechaInicioDescuento,
+            discountData.fechaFinDescuento
         ]);
 
         res.status(201).json({
@@ -644,12 +793,34 @@ const actualizarProducto = async (req, res) => {
 
         const updateQuery = `
             UPDATE producto 
-            SET id_categoria = ?, nombre = ?, precio = ?, disponible = ?, descripcion = ?, imagen_url = ?
+            SET 
+                id_categoria = ?, 
+                nombre = ?, 
+                precio = ?, 
+                disponible = ?, 
+                descripcion = ?, 
+                imagen_url = ?,
+                descuento_activo = ?,
+                porcentaje_descuento = ?,
+                fecha_inicio_descuento = ?,
+                fecha_fin_descuento = ?
             WHERE id_producto = ?
         `;
 
         console.log('Ejecutando query de actualización:', updateQuery);
-        console.log('Parámetros:', [idCategoria, nombre, precio, disponible ? 1 : 0, descripcion || null, imagen || null, productoId]);
+        console.log('Parámetros:', [
+            idCategoria,
+            nombre,
+            precio,
+            disponible ? 1 : 0,
+            descripcion || null,
+            imagen || null,
+            discountData.descuentoActivo ? 1 : 0,
+            discountData.porcentajeDescuento,
+            discountData.fechaInicioDescuento,
+            discountData.fechaFinDescuento,
+            productoId
+        ]);
 
         await pool.execute(updateQuery, [
             idCategoria,
@@ -658,6 +829,10 @@ const actualizarProducto = async (req, res) => {
             disponible ? 1 : 0,
             descripcion || null,
             imagen || null,
+            discountData.descuentoActivo ? 1 : 0,
+            discountData.porcentajeDescuento,
+            discountData.fechaInicioDescuento,
+            discountData.fechaFinDescuento,
             productoId
         ]);
 
@@ -748,6 +923,7 @@ module.exports = {
     actualizarItemInventario,
     eliminarItemInventario,
     registrarMovimiento,
+    obtenerMovimientosInventario,
     getEstadisticasInventario,
     getProductos,
     actualizarDisponibilidadProducto,

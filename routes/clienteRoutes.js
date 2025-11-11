@@ -4,6 +4,10 @@ const { pool } = require('../config/database');
 
 //Middleware para verificar autenticación
 const { authenticateToken } = require('../middleware/auth');
+const {
+    getRecompensasCliente,
+    canjearRecompensa
+} = require('../controllers/recompensaController');
 
 //Obtiene los puntos de lealtad del cliente logueado
 router.get('/puntos', authenticateToken, async (req, res) => {
@@ -89,6 +93,12 @@ router.post('/puntos/actualizar', authenticateToken, async (req, res) => {
         });
     }
 });
+
+//Catálogo de recompensas disponible para clientes
+router.get('/recompensas', authenticateToken, getRecompensasCliente);
+
+//Canje de recompensas
+router.post('/recompensas/:id/canjear', authenticateToken, canjearRecompensa);
 
 //Obtiene las direcciones del cliente logueado
 router.get('/direcciones', authenticateToken, async (req, res) => {

@@ -12,6 +12,50 @@
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
     <style>
+        .section-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .section-btn:hover {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+        
+        .section-btn:hover i {
+            color: #ffffff;
+        }
+        
+        .section-btn.active {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .section-btn.active i {
+            color: #ffffff;
+        }
+        
+        .orders-section {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .orders-section .section-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -87,29 +131,32 @@
     <div class="container mx-auto px-4 py-8">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
-            <div class="mb-8">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
-                        <p class="text-gray-600 mt-2">Administra los pedidos asignados a tu área</p>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-list mr-3"></i>Gestión de Pedidos
+                        </h1>
+                        <p class="text-gray-300">Administra los pedidos asignados a tu área</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <button onclick="refreshPedidos()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
-                            <i class="fas fa-sync-alt"></i>
-                            Actualizar
-                        </button>
-                        <div class="flex items-center gap-2">
-                            <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-                            <select id="estadoFilter" onchange="filterPedidos()" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                                <option value="">Todos los estados</option>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="confirmado">Confirmado</option>
-                                <option value="preparando">Preparando</option>
-                                <option value="listo">Listo</option>
-                                <option value="en_camino">En Camino</option>
-                                <option value="entregado">Entregado</option>
-                                <option value="cancelado">Cancelado</option>
-                            </select>
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="flex items-center justify-center mb-2">
+                                    <i id="areaIcon" class="fas fa-utensils text-2xl text-orange-300"></i>
+                                </div>
+                                <div class="text-sm text-gray-300">Área de Trabajo</div>
+                                <div class="text-lg font-semibold text-white" id="areaTrabajo">-</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="flex items-center justify-center mb-2">
+                                    <i class="fas fa-list text-2xl text-gray-300"></i>
+                                </div>
+                                <div class="text-sm text-gray-300">Total Pedidos</div>
+                                <div class="text-lg font-semibold text-white" id="totalPedidos">-</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -166,20 +213,158 @@
                 </div>
             </div>
 
-            <!-- Pedidos List -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold">Pedidos Asignados</h2>
+            <!-- Sistema de Pestañas -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Menú Lateral -->
+                <div class="lg:w-1/4">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <nav class="space-y-2">
+                            <button onclick="showSection('assigned')" 
+                                    class="section-btn w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex items-center active"
+                                    data-section="assigned">
+                                <i class="fas fa-list-check mr-3 text-orange-500"></i>
+                                <span>Pedidos Asignados</span>
+                            </button>
+                            <button onclick="showSection('unassigned')" 
+                                    class="section-btn w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex items-center"
+                                    data-section="unassigned">
+                                <i class="fas fa-user-plus mr-3 text-orange-500"></i>
+                                <span>Pedidos Sin Asignar</span>
+                            </button>
+                        </nav>
+                    </div>
                 </div>
-                <div class="p-6">
-                    <div id="pedidosContainer" class="space-y-4">
-                        <!-- Loading state -->
-                        <div class="text-center py-12">
-                            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+
+                <!-- Contenido Principal -->
+                <div class="lg:w-3/4">
+                    <!-- Sección Pedidos Asignados -->
+                    <div id="assigned-section" class="orders-section">
+                        <div class="section-content">
+                            <!-- Controles de Pedidos Asignados -->
+                            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    <h2 class="text-xl font-semibold text-gray-800">Pedidos Asignados</h2>
+                                    <div class="flex flex-col xl:flex-row xl:items-center gap-4 w-full lg:w-auto">
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+                                            <select id="estadoFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="">Todos los estados</option>
+                                                <option value="pendiente">Pendiente</option>
+                                                <option value="confirmado">Confirmado</option>
+                                                <option value="preparando">Preparando</option>
+                                                <option value="listo">Listo</option>
+                                                <option value="en_camino">En Camino</option>
+                                                <option value="entregado">Entregado</option>
+                                                <option value="cancelado">Cancelado</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                                            <select id="ordenarPedidos" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="fecha_desc" selected>Más recientes</option>
+                                                <option value="fecha_asc">Más antiguos</option>
+                                            </select>
+                                        </div>
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                            <input id="buscarPedidoId" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar por ID" class="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 w-full lg:w-48" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 class="text-xl font-semibold mb-3 text-gray-700">Cargando pedidos</h3>
-                            <p class="text-gray-500">Obteniendo los pedidos asignados a tu área</p>
+
+                            <!-- Lista de Pedidos Asignados -->
+                            <div class="bg-white rounded-lg shadow-md">
+                                <div class="p-6">
+                                    <div id="pedidosContainer" class="space-y-4">
+                                        <!-- Loading state -->
+                                        <div class="text-center py-12">
+                                            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-700">Cargando pedidos</h3>
+                                            <p class="text-gray-500">Obteniendo los pedidos asignados a tu área</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="assignedPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div id="assignedPaginationSummary" class="text-sm text-gray-600">
+                                    Mostrando 0 - 0 de 0 pedidos
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="assignedPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                                    </button>
+                                    <div id="assignedPaginationInfo" class="text-sm font-semibold text-gray-700">
+                                        Página 1 de 1
+                                    </div>
+                                    <button id="assignedNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Pedidos Sin Asignar -->
+                    <div id="unassigned-section" class="orders-section hidden">
+                        <div class="section-content">
+                            <!-- Controles de Pedidos Sin Asignar -->
+                            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <h2 class="text-xl font-semibold text-gray-800">Pedidos Sin Asignar</h2>
+                                    <div class="flex flex-col xl:flex-row xl:items-center gap-4 w-full md:w-auto">
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                                            <select id="ordenarPedidosSinAsignar" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="fecha_desc" selected>Más recientes</option>
+                                                <option value="fecha_asc">Más antiguos</option>
+                                            </select>
+                                        </div>
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                            <input id="buscarPedidoSinAsignarId" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar por ID" class="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 w-full md:w-48" />
+                                        </div>
+                                        <button onclick="refreshPedidosSinAsignar()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition flex items-center gap-2 font-semibold">
+                                            <i class="fas fa-sync-alt"></i>
+                                            Actualizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Pedidos Sin Asignar -->
+                            <div class="bg-white rounded-lg shadow-md">
+                                <div class="p-6">
+                                    <div id="pedidosSinAsignarContainer" class="space-y-4">
+                                        <!-- Loading state -->
+                                        <div class="text-center py-12">
+                                            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-700">Cargando pedidos sin asignar</h3>
+                                            <p class="text-gray-500">Obteniendo los pedidos disponibles para asignar</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="unassignedPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div id="unassignedPaginationSummary" class="text-sm text-gray-600">
+                                    Mostrando 0 - 0 de 0 pedidos
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="unassignedPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                                    </button>
+                                    <div id="unassignedPaginationInfo" class="text-sm font-semibold text-gray-700">
+                                        Página 1 de 1
+                                    </div>
+                                    <button id="unassignedNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -216,14 +401,45 @@
     <script>
         let pedidosData = [];
         let filteredPedidos = [];
+        let pedidosSinAsignarData = [];
+        let filteredPedidosSinAsignar = [];
+
+        const ASSIGNED_ITEMS_PER_PAGE = 5;
+        const UNASSIGNED_ITEMS_PER_PAGE = 5;
+        let assignedCurrentPage = 1;
+        let unassignedCurrentPage = 1;
+
+        let assignedPaginationControls;
+        let assignedPaginationSummary;
+        let assignedPaginationInfo;
+        let assignedPrevPageBtn;
+        let assignedNextPageBtn;
+
+        let unassignedPaginationControls;
+        let unassignedPaginationSummary;
+        let unassignedPaginationInfo;
+        let unassignedPrevPageBtn;
+        let unassignedNextPageBtn;
+
+        let assignedSearchTerm = '';
+        let assignedSortOrder = 'fecha_desc';
+        let unassignedSearchTerm = '';
+        let unassignedSortOrder = 'fecha_desc';
 
         //Carga los datos cuando la página se carga
         document.addEventListener('DOMContentLoaded', function() {
             loadNavbar('pedidos');
+            initializeAssignedPaginationControls();
+            initializeUnassignedPaginationControls();
+            setupAssignedControls();
+            setupUnassignedControls();
+            cargarAreaEmpleado();
             cargarPedidosAsignados();
+            cargarPedidosSinAsignar();
             setupModalEventListeners();
             
             setInterval(cargarPedidosAsignados, 30000);
+            setInterval(cargarPedidosSinAsignar, 30000);
         });
 
         //Configura los event listeners del modal
@@ -244,6 +460,210 @@
             });
         }
 
+        function initializeAssignedPaginationControls() {
+            assignedPaginationControls = document.getElementById('assignedPaginationControls');
+            assignedPaginationSummary = document.getElementById('assignedPaginationSummary');
+            assignedPaginationInfo = document.getElementById('assignedPaginationInfo');
+            assignedPrevPageBtn = document.getElementById('assignedPrevPageBtn');
+            assignedNextPageBtn = document.getElementById('assignedNextPageBtn');
+
+            if (assignedPrevPageBtn) {
+                assignedPrevPageBtn.addEventListener('click', () => changeAssignedPage(-1));
+            }
+
+            if (assignedNextPageBtn) {
+                assignedNextPageBtn.addEventListener('click', () => changeAssignedPage(1));
+            }
+        }
+
+        function initializeUnassignedPaginationControls() {
+            unassignedPaginationControls = document.getElementById('unassignedPaginationControls');
+            unassignedPaginationSummary = document.getElementById('unassignedPaginationSummary');
+            unassignedPaginationInfo = document.getElementById('unassignedPaginationInfo');
+            unassignedPrevPageBtn = document.getElementById('unassignedPrevPageBtn');
+            unassignedNextPageBtn = document.getElementById('unassignedNextPageBtn');
+
+            if (unassignedPrevPageBtn) {
+                unassignedPrevPageBtn.addEventListener('click', () => changeUnassignedPage(-1));
+            }
+
+            if (unassignedNextPageBtn) {
+                unassignedNextPageBtn.addEventListener('click', () => changeUnassignedPage(1));
+            }
+        }
+
+        function changeAssignedPage(offset) {
+            goToAssignedPage(assignedCurrentPage + offset);
+        }
+
+        function goToAssignedPage(page) {
+            const totalPages = Math.ceil(filteredPedidos.length / ASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            assignedCurrentPage = page;
+            renderPedidos();
+        }
+
+        function changeUnassignedPage(offset) {
+            goToUnassignedPage(unassignedCurrentPage + offset);
+        }
+
+        function goToUnassignedPage(page) {
+            const totalPages = Math.ceil(filteredPedidosSinAsignar.length / UNASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            unassignedCurrentPage = page;
+            renderPedidosSinAsignar();
+        }
+
+        function renderAssignedPagination(totalPages, startIndex, endIndex) {
+            if (!assignedPaginationControls || !assignedPaginationSummary || !assignedPaginationInfo || !assignedPrevPageBtn || !assignedNextPageBtn) {
+                return;
+            }
+
+            if (filteredPedidos.length === 0) {
+                assignedPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            assignedPaginationControls.classList.remove('hidden');
+
+            const total = filteredPedidos.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            assignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} pedidos`;
+            assignedPaginationInfo.textContent = `Página ${assignedCurrentPage} de ${totalPages}`;
+
+            assignedPrevPageBtn.disabled = assignedCurrentPage <= 1;
+            assignedNextPageBtn.disabled = assignedCurrentPage >= totalPages;
+        }
+
+        function renderUnassignedPagination(totalPages, startIndex, endIndex) {
+            if (!unassignedPaginationControls || !unassignedPaginationSummary || !unassignedPaginationInfo || !unassignedPrevPageBtn || !unassignedNextPageBtn) {
+                return;
+            }
+
+            if (filteredPedidosSinAsignar.length === 0) {
+                unassignedPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            unassignedPaginationControls.classList.remove('hidden');
+
+            const total = filteredPedidosSinAsignar.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            unassignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} pedidos`;
+            unassignedPaginationInfo.textContent = `Página ${unassignedCurrentPage} de ${totalPages}`;
+
+            unassignedPrevPageBtn.disabled = unassignedCurrentPage <= 1;
+            unassignedNextPageBtn.disabled = unassignedCurrentPage >= totalPages;
+        }
+
+        function setupAssignedControls() {
+            const sortSelect = document.getElementById('ordenarPedidos');
+            if (sortSelect) {
+                assignedSortOrder = sortSelect.value;
+                sortSelect.addEventListener('change', function() {
+                    assignedSortOrder = this.value;
+                    filterPedidos();
+                });
+            }
+
+            const searchInput = document.getElementById('buscarPedidoId');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    assignedSearchTerm = this.value.trim();
+                    filterPedidos();
+                });
+            }
+
+            const estadoSelect = document.getElementById('estadoFilter');
+            if (estadoSelect && !estadoSelect.hasAttribute('data-listener')) {
+                estadoSelect.setAttribute('data-listener', 'true');
+                estadoSelect.addEventListener('change', filterPedidos);
+            }
+        }
+
+        function setupUnassignedControls() {
+            const sortSelect = document.getElementById('ordenarPedidosSinAsignar');
+            if (sortSelect) {
+                unassignedSortOrder = sortSelect.value;
+                sortSelect.addEventListener('change', function() {
+                    unassignedSortOrder = this.value;
+                    filterPedidosSinAsignar();
+                });
+            }
+
+            const searchInput = document.getElementById('buscarPedidoSinAsignarId');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    unassignedSearchTerm = this.value.trim();
+                    filterPedidosSinAsignar();
+                });
+            }
+        }
+
+        //Función para cargar el área del empleado
+        async function cargarAreaEmpleado() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    return;
+                }
+
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.data && data.data.user) {
+                    const areaTrabajo = data.data.user.area_trabajo;
+                    const areaCapitalizada = areaTrabajo.charAt(0).toUpperCase() + areaTrabajo.slice(1);
+                    
+                    // Actualizar el texto del área
+                    document.getElementById('areaTrabajo').textContent = areaCapitalizada;
+                    
+                    // Actualizar el icono según el área
+                    const areaIcon = document.getElementById('areaIcon');
+                    switch(areaTrabajo.toLowerCase()) {
+                        case 'cocina':
+                            areaIcon.className = 'fas fa-utensils text-2xl text-orange-300';
+                            break;
+                        case 'bebidas':
+                            areaIcon.className = 'fas fa-glass-martini text-2xl text-blue-300';
+                            break;
+                        case 'postres':
+                            areaIcon.className = 'fas fa-birthday-cake text-2xl text-pink-300';
+                            break;
+                        case 'almacen':
+                            areaIcon.className = 'fas fa-boxes text-2xl text-green-300';
+                            break;
+                        case 'todas':
+                            areaIcon.className = 'fas fa-globe text-2xl text-purple-300';
+                            break;
+                        default:
+                            areaIcon.className = 'fas fa-briefcase text-2xl text-gray-300';
+                    }
+                }
+            } catch (error) {
+                // Mostrar valores por defecto en caso de error
+                document.getElementById('areaTrabajo').textContent = 'N/A';
+                document.getElementById('areaIcon').className = 'fas fa-briefcase text-2xl text-gray-300';
+            }
+        }
+
         //Función para cargar pedidos asignados
         async function cargarPedidosAsignados() {
             try {
@@ -259,15 +679,40 @@
 
                 if (data.success) {
                     pedidosData = data.data.pedidos || [];
-                    filteredPedidos = [...pedidosData];
-                    renderPedidos();
+                    assignedCurrentPage = 1;
+                    // Aplicar filtro por defecto (ocultar pedidos "listo")
+                    filterPedidos();
                     updateStats();
                 } else {
                     showError('Error al cargar pedidos: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error al cargar pedidos:', error);
                 showError('Error de conexión al cargar pedidos');
+            }
+        }
+
+        //Función para cargar pedidos sin asignar
+        async function cargarPedidosSinAsignar() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/pedidos/unassigned', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    pedidosSinAsignarData = data.data.pedidos || [];
+                    filterPedidosSinAsignar();
+                    updateStats(); // Actualizar estadísticas del header
+                } else {
+                    showError('Error al cargar pedidos sin asignar: ' + (data.message || 'Error desconocido'));
+                }
+            } catch (error) {
+                showError('Error de conexión al cargar pedidos sin asignar');
             }
         }
 
@@ -283,21 +728,95 @@
                         </div>
                         <h3 class="text-xl font-semibold mb-3 text-gray-700">No hay pedidos asignados</h3>
                         <p class="text-gray-500 mb-4">No tienes pedidos asignados en este momento</p>
-                        <div class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Los pedidos se asignan automáticamente según tu área de trabajo
-                        </div>
                     </div>
                 `;
+                if (assignedPaginationControls) {
+                    assignedPaginationControls.classList.add('hidden');
+                }
                 return;
             }
 
+            const totalPages = Math.ceil(filteredPedidos.length / ASSIGNED_ITEMS_PER_PAGE) || 1;
+            if (assignedCurrentPage > totalPages) {
+                assignedCurrentPage = totalPages;
+            }
+            if (assignedCurrentPage < 1) {
+                assignedCurrentPage = 1;
+            }
+
+            const startIndex = (assignedCurrentPage - 1) * ASSIGNED_ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ASSIGNED_ITEMS_PER_PAGE, filteredPedidos.length);
+            const paginatedPedidos = filteredPedidos.slice(startIndex, endIndex);
+
             container.innerHTML = '';
-            filteredPedidos.forEach(pedido => {
+            paginatedPedidos.forEach(pedido => {
                 const pedidoCard = createPedidoCard(pedido);
                 container.appendChild(pedidoCard);
             });
+
+            renderAssignedPagination(totalPages, startIndex, endIndex);
         }
+
+        function filterPedidosSinAsignar() {
+            const normalizedSearch = unassignedSearchTerm.replace(/[^0-9]/g, '');
+
+            filteredPedidosSinAsignar = pedidosSinAsignarData.filter(pedido => {
+                if (!normalizedSearch) {
+                    return true;
+                }
+                return pedido.id_pedido && pedido.id_pedido.toString().includes(normalizedSearch);
+            });
+
+            filteredPedidosSinAsignar.sort((a, b) => {
+                const dateA = new Date(a.fecha_pedido).getTime();
+                const dateB = new Date(b.fecha_pedido).getTime();
+                return unassignedSortOrder === 'fecha_asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            unassignedCurrentPage = 1;
+            renderPedidosSinAsignar();
+        }
+
+        //Función para renderizar pedidos sin asignar
+        function renderPedidosSinAsignar() {
+            const container = document.getElementById('pedidosSinAsignarContainer');
+ 
+            if (filteredPedidosSinAsignar.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-clipboard-list text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">No hay pedidos sin asignar</h3>
+                        <p class="text-gray-500">Todos los pedidos han sido asignados</p>
+                    </div>
+                `;
+                if (unassignedPaginationControls) {
+                    unassignedPaginationControls.classList.add('hidden');
+                }
+                 return;
+             }
+ 
+             const totalPages = Math.ceil(filteredPedidosSinAsignar.length / UNASSIGNED_ITEMS_PER_PAGE) || 1;
+             if (unassignedCurrentPage > totalPages) {
+                 unassignedCurrentPage = totalPages;
+             }
+             if (unassignedCurrentPage < 1) {
+                 unassignedCurrentPage = 1;
+             }
+
+             const startIndex = (unassignedCurrentPage - 1) * UNASSIGNED_ITEMS_PER_PAGE;
+             const endIndex = Math.min(startIndex + UNASSIGNED_ITEMS_PER_PAGE, filteredPedidosSinAsignar.length);
+             const paginatedPedidos = filteredPedidosSinAsignar.slice(startIndex, endIndex);
+
+             container.innerHTML = '';
+             paginatedPedidos.forEach(pedido => {
+                 const pedidoCard = createPedidoSinAsignarCard(pedido);
+                 container.appendChild(pedidoCard);
+             });
+
+             renderUnassignedPagination(totalPages, startIndex, endIndex);
+         }
 
         //Función para crear tarjeta de pedido
         function createPedidoCard(pedido) {
@@ -312,7 +831,7 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-3">
-                            <span class="px-3 py-1 rounded-full text-sm font-medium ${estadoClass}">
+                            <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium ${estadoClass}">
                                 ${estadoText}
                             </span>
                             <span class="text-lg font-semibold text-gray-900">#${pedido.id_pedido.toString().padStart(6, '0')}</span>
@@ -345,13 +864,15 @@
                         ` : ''}
                     </div>
                     
-                    <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-3 items-end w-48">
                         <button onclick="verDetallesPedido(${pedido.id_pedido})" class="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-2">
                             <i class="fas fa-eye"></i>
                             Ver Detalles
                         </button>
                         
-                        ${getActionButtons(pedido.estado_pedido, pedido.id_pedido)}
+                        <div class="w-full flex justify-end">
+                            ${getActionButtons(pedido.estado_pedido, pedido.id_pedido)}
+                        </div>
                     </div>
                 </div>
             `;
@@ -395,6 +916,74 @@
             }
         }
 
+        //Función para crear tarjeta de pedido sin asignar
+        function createPedidoSinAsignarCard(pedido) {
+            const div = document.createElement('div');
+            div.className = 'border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-white';
+            
+            const estadoClass = getEstadoClass(pedido.estado_pedido);
+            const estadoText = getEstadoText(pedido.estado_pedido);
+            const fechaFormateada = new Date(pedido.fecha_pedido).toLocaleString('es-ES');
+            
+            div.innerHTML = `
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium ${estadoClass}">
+                                ${estadoText}
+                            </span>
+                            <span class="text-lg font-semibold text-gray-900">#${pedido.id_pedido.toString().padStart(6, '0')}</span>
+                            <span class="text-sm text-gray-500">${fechaFormateada}</span>
+                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                Sin Asignar
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <p class="text-sm text-gray-600">Cliente</p>
+                                <p class="font-semibold">${pedido.cliente_nombre || 'Cliente invitado'}</p>
+                                ${pedido.cliente_telefono ? `<p class="text-sm text-gray-500">${pedido.cliente_telefono}</p>` : ''}
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Total</p>
+                                <p class="font-semibold text-lg">₡${pedido.total.toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Productos</p>
+                                <p class="font-semibold">${pedido.total_items} items</p>
+                            </div>
+                        </div>
+                        
+                        ${pedido.notas_especiales ? `
+                            <div class="inline-block bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3 max-w-full">
+                                <p class="text-sm text-yellow-800 whitespace-normal">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    <strong>Notas especiales:</strong> ${pedido.notas_especiales}
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="flex flex-col gap-3 items-end w-48">
+                        <button onclick="verDetallesPedido(${pedido.id_pedido})" class="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-2">
+                            <i class="fas fa-eye"></i>
+                            Ver Detalles
+                        </button>
+                        
+                        <div class="w-full flex justify-end">
+                            <button onclick="asignarPedidoAMi(${pedido.id_pedido})" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                Asignar a Mí
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
         //Función para cambiar estado del pedido
         async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
             try {
@@ -424,8 +1013,41 @@
                     showError('Error al actualizar estado: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error al cambiar estado:', error);
                 showError('Error de conexión al actualizar estado');
+            }
+        }
+
+        //Función para asignar pedido a mí
+        async function asignarPedidoAMi(pedidoId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/pedidos/${pedidoId}/assign`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pedido Asignado',
+                        text: `El pedido #${pedidoId.toString().padStart(6, '0')} ha sido asignado a ti`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Recargar ambas listas
+                    cargarPedidosAsignados();
+                    cargarPedidosSinAsignar();
+                } else {
+                    showError('Error al asignar pedido: ' + (data.message || 'Error desconocido'));
+                }
+            } catch (error) {
+                showError('Error de conexión al asignar pedido');
             }
         }
 
@@ -492,7 +1114,7 @@
                     <!-- Header del pedido -->
                     <div class="border-b border-gray-200 pb-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="px-3 py-1 rounded-full text-sm font-medium ${estadoClass}">
+                            <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium ${estadoClass}">
                                 ${estadoText}
                             </span>
                             <span class="text-xl font-bold">#${pedido.id_pedido.toString().padStart(6, '0')}</span>
@@ -605,14 +1227,37 @@
 
         //Función para filtrar pedidos
         function filterPedidos() {
-            const filter = document.getElementById('estadoFilter').value;
-            
-            if (filter === '') {
-                filteredPedidos = [...pedidosData];
-            } else {
-                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido === filter);
-            }
-            
+            const estadoSelect = document.getElementById('estadoFilter');
+            const estadoValue = estadoSelect ? estadoSelect.value : '';
+            const normalizedSearch = assignedSearchTerm.replace(/[^0-9]/g, '');
+            const hasSearch = normalizedSearch.length > 0;
+
+            filteredPedidos = pedidosData.filter(pedido => {
+                let matchesEstado;
+                if (!estadoValue) {
+                    matchesEstado = hasSearch ? true : pedido.estado_pedido !== 'listo';
+                } else {
+                    matchesEstado = pedido.estado_pedido === estadoValue;
+                }
+
+                if (!matchesEstado) {
+                    return false;
+                }
+
+                if (hasSearch) {
+                    return pedido.id_pedido && pedido.id_pedido.toString().includes(normalizedSearch);
+                }
+
+                return true;
+            });
+
+            filteredPedidos.sort((a, b) => {
+                const dateA = a.fecha_pedido ? new Date(a.fecha_pedido).getTime() : 0;
+                const dateB = b.fecha_pedido ? new Date(b.fecha_pedido).getTime() : 0;
+                return assignedSortOrder === 'fecha_asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            assignedCurrentPage = 1;
             renderPedidos();
         }
 
@@ -624,16 +1269,59 @@
                 preparando: pedidosData.filter(p => p.estado_pedido === 'preparando').length,
                 listos: pedidosData.filter(p => p.estado_pedido === 'listo').length
             };
-            
+
             document.getElementById('statsPendientes').textContent = stats.pendientes;
             document.getElementById('statsConfirmados').textContent = stats.confirmados;
             document.getElementById('statsPreparando').textContent = stats.preparando;
             document.getElementById('statsListos').textContent = stats.listos;
+            
+            // Actualizar total de pedidos en el header (suma de asignados + sin asignar)
+            const totalPedidos = pedidosData.length + pedidosSinAsignarData.length;
+            document.getElementById('totalPedidos').textContent = totalPedidos;
         }
 
-        //Función para refrescar pedidos
+        //Función para mostrar secciones
+        function showSection(sectionName) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.orders-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remover clase active de todos los botones
+            document.querySelectorAll('.section-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar la sección seleccionada
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+
+            // Activar el botón correspondiente
+            const targetBtn = document.querySelector(`[data-section="${sectionName}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+
+            // Cargar datos de la sección si es necesario
+            if (sectionName === 'assigned') {
+                cargarPedidosAsignados();
+            } else if (sectionName === 'unassigned') {
+                cargarPedidosSinAsignar();
+            }
+        }
+
+        //Función para refrescar pedidos asignados
         function refreshPedidos() {
-            window.location.reload();
+            cargarPedidosAsignados();
+            cargarPedidosSinAsignar(); // También actualizar pedidos sin asignar para el total
+        }
+
+        //Función para refrescar pedidos sin asignar
+        function refreshPedidosSinAsignar() {
+            cargarPedidosSinAsignar();
+            cargarPedidosAsignados(); // También actualizar pedidos asignados para el total
         }
 
         //Funciones auxiliares
@@ -669,6 +1357,118 @@
                 title: 'Error',
                 text: message
             });
+        }
+
+        //Función para inicializar controles de paginación para pedidos asignados
+        function initializeAssignedPaginationControls() {
+            assignedPaginationControls = document.getElementById('assignedPaginationControls');
+            assignedPaginationSummary = document.getElementById('assignedPaginationSummary');
+            assignedPaginationInfo = document.getElementById('assignedPaginationInfo');
+            assignedPrevPageBtn = document.getElementById('assignedPrevPageBtn');
+            assignedNextPageBtn = document.getElementById('assignedNextPageBtn');
+
+            if (assignedPrevPageBtn) {
+                assignedPrevPageBtn.addEventListener('click', () => changeAssignedPage(-1));
+            }
+
+            if (assignedNextPageBtn) {
+                assignedNextPageBtn.addEventListener('click', () => changeAssignedPage(1));
+            }
+        }
+
+        //Función para inicializar controles de paginación para pedidos sin asignar
+        function initializeUnassignedPaginationControls() {
+            unassignedPaginationControls = document.getElementById('unassignedPaginationControls');
+            unassignedPaginationSummary = document.getElementById('unassignedPaginationSummary');
+            unassignedPaginationInfo = document.getElementById('unassignedPaginationInfo');
+            unassignedPrevPageBtn = document.getElementById('unassignedPrevPageBtn');
+            unassignedNextPageBtn = document.getElementById('unassignedNextPageBtn');
+
+            if (unassignedPrevPageBtn) {
+                unassignedPrevPageBtn.addEventListener('click', () => changeUnassignedPage(-1));
+            }
+
+            if (unassignedNextPageBtn) {
+                unassignedNextPageBtn.addEventListener('click', () => changeUnassignedPage(1));
+            }
+        }
+
+        //Función para calcular el número total de páginas para pedidos asignados
+        function getTotalPagesAssigned() {
+            return Math.ceil(pedidosData.length / ASSIGNED_ITEMS_PER_PAGE);
+        }
+
+        //Función para calcular el número total de páginas para pedidos sin asignar
+        function getTotalPagesUnassigned() {
+            return Math.ceil(pedidosSinAsignarData.length / UNASSIGNED_ITEMS_PER_PAGE);
+        }
+
+        //Función para actualizar la información de paginación
+        function updatePaginationInfo() {
+            const start = (assignedCurrentPage - 1) * ASSIGNED_ITEMS_PER_PAGE + 1;
+            const end = Math.min(start + ASSIGNED_ITEMS_PER_PAGE - 1, pedidosData.length);
+            assignedPaginationSummary.textContent = `Mostrando ${start} - ${end} de ${pedidosData.length} pedidos`;
+            assignedPaginationInfo.textContent = `Página ${assignedCurrentPage} de ${getTotalPagesAssigned()}`;
+
+            assignedPrevPageBtn.disabled = assignedCurrentPage === 1;
+            assignedNextPageBtn.disabled = assignedCurrentPage === getTotalPagesAssigned();
+
+            const unassignedStart = (unassignedCurrentPage - 1) * UNASSIGNED_ITEMS_PER_PAGE + 1;
+            const unassignedEnd = Math.min(unassignedStart + UNASSIGNED_ITEMS_PER_PAGE - 1, pedidosSinAsignarData.length);
+            unassignedPaginationSummary.textContent = `Mostrando ${unassignedStart} - ${unassignedEnd} de ${pedidosSinAsignarData.length} pedidos`;
+            unassignedPaginationInfo.textContent = `Página ${unassignedCurrentPage} de ${getTotalPagesUnassigned()}`;
+
+            unassignedPrevPageBtn.disabled = unassignedCurrentPage === 1;
+            unassignedNextPageBtn.disabled = unassignedCurrentPage === getTotalPagesUnassigned();
+        }
+
+        //Actualizar la información de paginación cuando los datos cambian
+        function updatePaginationOnDataChange() {
+            updatePaginationInfo();
+            renderPedidos(); // Re-renderizar pedidos asignados para reflejar el filtro
+            renderPedidosSinAsignar(); // Re-renderizar pedidos sin asignar
+        }
+
+        //Función para filtrar pedidos asignados
+        function filterPedidosAssigned() {
+            const filter = document.getElementById('estadoFilterAssigned').value;
+            
+            if (filter === '') {
+                // Mostrar todos los pedidos excepto los que están "listo"
+                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido !== 'listo');
+            } else {
+                filteredPedidos = pedidosData.filter(pedido => pedido.estado_pedido === filter);
+            }
+            
+            assignedCurrentPage = 1; // Resetear a la primera página al filtrar
+            updatePaginationOnDataChange();
+        }
+
+        //Función para filtrar pedidos sin asignar
+        function filterPedidosUnassigned() {
+            const filter = document.getElementById('estadoFilterUnassigned').value;
+            
+            if (filter === '') {
+                // Mostrar todos los pedidos sin asignar
+                filteredPedidosSinAsignar = [...pedidosSinAsignarData];
+            } else {
+                filteredPedidosSinAsignar = pedidosSinAsignarData.filter(pedido => pedido.estado_pedido === filter);
+            }
+            
+            unassignedCurrentPage = 1; // Resetear a la primera página al filtrar
+            updatePaginationOnDataChange();
+        }
+
+        //Función para refrescar pedidos asignados
+        function refreshPedidosAssigned() {
+            cargarPedidosAsignados();
+            updatePaginationOnDataChange();
+        }
+
+        //Función para refrescar pedidos sin asignar
+        function refreshPedidosUnassigned() {
+            cargarPedidosSinAsignar();
+            updatePaginationOnDataChange();
         }
     </script>
 </body>

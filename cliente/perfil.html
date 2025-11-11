@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
     <script src="/js/routeProtection.js"></script>
     <style>
         .section-btn {
@@ -136,14 +137,34 @@
             overflow-y: auto;
             max-height: 600px;
         }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmado { background-color: #dbeafe; color: #1e40af; }
+        .status-preparando { background-color: #fed7aa; color: #ea580c; }
+        .status-listo { background-color: #bbf7d0; color: #166534; }
+        .status-en_camino { background-color: #c7d2fe; color: #3730a3; }
+        .status-entregado { background-color: #dcfce7; color: #166534; }
+        .status-cancelado { background-color: #fecaca; color: #dc2626; }
+        .badge-principal { background-color: #dbeafe; color: #1d4ed8; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
 
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8 flex-1">
+    <main class="flex-1 w-full">
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">
@@ -437,8 +458,11 @@
                 </div>
             </form>
         </div>
-    </div>
+        </div>
+    </main>
 
+    <!-- Footer Container -->
+    <div id="footer-container" class="w-full"></div>
 
     <script>
         //Carga los datos del perfil del usuario al cargar la página
@@ -1850,7 +1874,7 @@
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-2">
                                 <h4 class="font-semibold text-gray-800">${address.direccion_completa}</h4>
-                                ${address.direccion_principal ? '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Principal</span>' : ''}
+                                ${address.direccion_principal ? '<span class="status-badge badge-principal">Principal</span>' : ''}
                             </div>
                             <p class="text-sm text-gray-600 mb-1">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
@@ -1860,7 +1884,7 @@
                         </div>
                         <div class="flex space-x-2">
                             <button onclick="editAddress(${address.id_direccion})" 
-                                    class="text-blue-600 hover:text-blue-800 text-sm">
+                                    class="text-orange-600 hover:text-orange-700 text-sm">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button onclick="deleteAddress(${address.id_direccion})" 

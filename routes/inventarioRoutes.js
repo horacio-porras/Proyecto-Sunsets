@@ -7,6 +7,7 @@ const {
     actualizarItemInventario,
     eliminarItemInventario,
     registrarMovimiento,
+    obtenerMovimientosInventario,
     getEstadisticasInventario,
     getProductos,
     actualizarDisponibilidadProducto,
@@ -23,6 +24,7 @@ router.put('/:itemId', authenticateToken, authorizeRoles('Administrador'), actua
 router.delete('/:itemId', authenticateToken, authorizeRoles('Administrador'), eliminarItemInventario);
 
 //Rutas de movimientos
+router.get('/:itemId/movimientos', authenticateToken, authorizeRoles('Administrador', 'Empleado'), obtenerMovimientosInventario);
 router.post('/:itemId/movimientos', authenticateToken, authorizeRoles('Administrador', 'Empleado'), registrarMovimiento);
 
 //Rutas de estadísticas
