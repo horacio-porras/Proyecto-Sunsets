@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const opinionesController = require('../controllers/opinionesController');
+const opinionController = require('../controllers/opinionController');
 
 // GET opiniones de un producto
-router.get('/producto/:id_producto', opinionesController.obtenerOpinionesPorProducto);
+router.get('/producto/:id_producto', opinionController.obtenerOpinionesPorProducto);
 
 // POST nueva opinión
-router.post('/', opinionesController.crearOpinion);
+router.post('/', opinionController.crearOpinion);
 
 module.exports = router;
