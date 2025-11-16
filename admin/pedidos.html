@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Pedidos - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmado { background-color: #dbeafe; color: #1e40af; }
+        .status-preparando { background-color: #fed7aa; color: #ea580c; }
+        .status-listo { background-color: #bbf7d0; color: #166534; }
+        .status-en_camino { background-color: #c7d2fe; color: #3730a3; }
+        .status-entregado { background-color: #dcfce7; color: #166534; }
+        .status-cancelado { background-color: #fecaca; color: #dc2626; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-clipboard-list mr-3"></i>Historial de Pedidos
+                        </h1>
+                        <p class="text-gray-300">Monitorea y gestiona todos los pedidos del restaurante</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+                        <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="preparando">Preparando</option>
+                            <option value="listo">Listo</option>
+                            <option value="en_camino">En Camino</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Fecha desde:</label>
+                        <input type="date" id="fechaDesde" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Fecha hasta:</label>
+                        <input type="date" id="fechaHasta" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <button onclick="aplicarFiltros()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition">
+                        <i class="fas fa-filter mr-2"></i>Filtrar
+                    </button>
+                    <button onclick="limpiarFiltros()" class="text-sm text-gray-600 hover:text-gray-800 underline">
+                        Limpiar filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">ID Pedido</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Fecha</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Cliente</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Responsable Asignado</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Área</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Total</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPedidos" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="8" class="text-center py-10 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                                    <p>Cargando pedidos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pedidosPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="pedidosPaginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 pedidos
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="pedidosPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="pedidosPaginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="pedidosNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script>
+        let pedidos = [];
+        let pedidosFiltrados = [];
+        let pedidosPaginaActual = 1;
+        const PEDIDOS_POR_PAGINA = 10;
+
+        let pedidosPaginationControls;
+        let pedidosPaginationSummary;
+        let pedidosPaginationInfo;
+        let pedidosPrevPageBtn;
+        let pedidosNextPageBtn;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Debug: Verificar autenticación
+            const userData = localStorage.getItem('userData');
+            const authToken = localStorage.getItem('authToken');
+            console.log('=== [Admin Pedidos] Debug de Autenticación ===');
+            console.log('Token presente:', !!authToken);
+            console.log('UserData presente:', !!userData);
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    console.log('Usuario completo:', user);
+                    console.log('tipoUsuario:', user.tipoUsuario);
+                    console.log('id_rol:', user.id_rol);
+                    console.log('Es Administrador?', user.tipoUsuario === 'Administrador');
+                } catch (e) {
+                    console.error('Error al parsear userData:', e);
+                }
+            }
+            console.log('============================================');
+            
+            loadNavbar();
+            inicializarControlesPaginacion();
+            loadPedidos();
+            setupEventListeners();
+        });
+
+        function inicializarControlesPaginacion() {
+            pedidosPaginationControls = document.getElementById('pedidosPaginationControls');
+            pedidosPaginationSummary = document.getElementById('pedidosPaginationSummary');
+            pedidosPaginationInfo = document.getElementById('pedidosPaginationInfo');
+            pedidosPrevPageBtn = document.getElementById('pedidosPrevPageBtn');
+            pedidosNextPageBtn = document.getElementById('pedidosNextPageBtn');
+
+            if (pedidosPrevPageBtn) {
+                pedidosPrevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+            }
+
+            if (pedidosNextPageBtn) {
+                pedidosNextPageBtn.addEventListener('click', () => cambiarPagina(1));
+            }
+        }
+
+        function setupEventListeners() {
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', aplicarFiltros);
+            }
+        }
+
+        async function loadPedidos() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                // Verificar usuario actual
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    console.log('[Admin Pedidos Frontend] Usuario actual:', user);
+                    console.log('[Admin Pedidos Frontend] Tipo de usuario:', user.tipoUsuario);
+                    
+                    if (user.tipoUsuario !== 'Administrador') {
+                        console.error('[Admin Pedidos Frontend] Usuario no es administrador:', user.tipoUsuario);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Acceso Denegado',
+                            text: 'No tienes permisos para acceder a esta página.'
+                        });
+                        return;
+                    }
+                } else {
+                    console.warn('[Admin Pedidos Frontend] No hay datos de usuario en localStorage');
+                }
+
+                const estado = document.getElementById('statusFilter')?.value || '';
+                const fechaDesde = document.getElementById('fechaDesde')?.value || '';
+                const fechaHasta = document.getElementById('fechaHasta')?.value || '';
+
+                let url = '/api/pedidos/admin?';
+                const params = [];
+                
+                if (estado) {
+                    params.push(`estado=${encodeURIComponent(estado)}`);
+                }
+                if (fechaDesde) {
+                    params.push(`fechaDesde=${encodeURIComponent(fechaDesde)}`);
+                }
+                if (fechaHasta) {
+                    params.push(`fechaHasta=${encodeURIComponent(fechaHasta)}`);
+                }
+
+                if (params.length > 0) {
+                    url += params.join('&');
+                } else {
+                    // Remover el ? final si no hay parámetros
+                    url = url.slice(0, -1);
+                }
+
+                console.log('[Admin Pedidos Frontend] Llamando a:', url);
+                console.log('[Admin Pedidos Frontend] Token presente:', !!token);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('[Admin Pedidos Frontend] Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('[Admin Pedidos Frontend] Error response:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'No se pudieron cargar los pedidos');
+                }
+
+                const data = await response.json();
+
+                console.log('[Admin Pedidos Frontend] Response data:', data);
+                console.log('[Admin Pedidos Frontend] Success:', data.success);
+                console.log('[Admin Pedidos Frontend] Data.pedidos:', data.data?.pedidos?.length || 0);
+
+                if (!data.success) {
+                    console.error('[Admin Pedidos Frontend] Error en respuesta:', data);
+                    throw new Error(data.message || 'No se pudieron cargar los pedidos');
+                }
+
+                pedidos = data.data?.pedidos || [];
+                pedidosFiltrados = [...pedidos];
+                pedidosPaginaActual = 1;
+                
+                console.log(`[Admin Pedidos] Pedidos cargados: ${pedidos.length}, Filtrados: ${pedidosFiltrados.length}`);
+                
+                if (pedidos.length > 0) {
+                    console.log('[Admin Pedidos] Primer pedido de ejemplo:', JSON.stringify(pedidos[0], null, 2));
+                }
+                
+                renderPedidos();
+            } catch (error) {
+                console.error('Error al cargar pedidos:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar los pedidos.'
+                });
+                pedidos = [];
+                pedidosFiltrados = [];
+                pedidosPaginaActual = 1;
+                renderPedidos();
+            }
+        }
+
+        function renderPedidos() {
+            const tbody = document.getElementById('tablaPedidos');
+
+            if (!tbody) return;
+
+            if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-10 text-gray-500">
+                            <i class="fas fa-clipboard-list text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-lg font-medium">No hay pedidos registrados</p>
+                            <p class="text-gray-500">No se encontraron pedidos con los filtros seleccionados.</p>
+                        </td>
+                    </tr>
+                `;
+                if (pedidosPaginationControls) {
+                    pedidosPaginationControls.classList.add('hidden');
+                }
+                return;
+            }
+
+            const totalPedidos = pedidosFiltrados.length;
+            const totalPaginas = Math.ceil(totalPedidos / PEDIDOS_POR_PAGINA) || 1;
+
+            if (pedidosPaginaActual > totalPaginas) {
+                pedidosPaginaActual = totalPaginas;
+            }
+            if (pedidosPaginaActual < 1) {
+                pedidosPaginaActual = 1;
+            }
+
+            const inicio = (pedidosPaginaActual - 1) * PEDIDOS_POR_PAGINA;
+            const fin = Math.min(inicio + PEDIDOS_POR_PAGINA, totalPedidos);
+            const pedidosPagina = pedidosFiltrados.slice(inicio, fin);
+
+            tbody.innerHTML = pedidosPagina.map(pedido => {
+                const estadoBadgeClass = getEstadoBadgeClass(pedido.estado_pedido);
+                const fechaPedido = new Date(pedido.fecha_pedido);
+                const fechaFormateada = fechaPedido.toLocaleDateString('es-CR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-800">#${pedido.id_pedido.toString().padStart(6, '0')}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${fechaFormateada}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-800">${pedido.cliente_nombre || 'Cliente invitado'}</div>
+                            ${pedido.cliente_telefono ? `<div class="text-xs text-gray-500">${pedido.cliente_telefono}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="status-badge ${estadoBadgeClass}">
+                                ${formatEstado(pedido.estado_pedido)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${pedido.empleado_asignado_nombre || '<span class="text-gray-400">Sin asignar</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            ${pedido.empleado_area ? formatArea(pedido.empleado_area) : '<span class="text-gray-400">-</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">
+                            ₡${parseFloat(pedido.total || 0).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="verDetallesPedido(${pedido.id_pedido})" class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold">
+                                <i class="fas fa-eye mr-1"></i> Ver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderizarControlesPaginacion(totalPedidos, inicio, fin, totalPaginas);
+        }
+
+        function renderizarControlesPaginacion(totalPedidos, inicio, fin, totalPaginas) {
+            if (!pedidosPaginationControls) return;
+
+            // Ocultar paginación si no hay pedidos o solo hay una página
+            if (totalPedidos === 0 || totalPaginas <= 1) {
+                pedidosPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            // Mostrar paginación si hay más de una página
+            pedidosPaginationControls.classList.remove('hidden');
+
+            if (pedidosPaginationSummary) {
+                pedidosPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalPedidos} pedidos`;
+            }
+
+            if (pedidosPaginationInfo) {
+                pedidosPaginationInfo.textContent = `Página ${pedidosPaginaActual} de ${totalPaginas}`;
+            }
+
+            if (pedidosPrevPageBtn) {
+                pedidosPrevPageBtn.disabled = pedidosPaginaActual === 1;
+                // Agregar estilos visuales cuando está deshabilitado
+                if (pedidosPaginaActual === 1) {
+                    pedidosPrevPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    pedidosPrevPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            if (pedidosNextPageBtn) {
+                pedidosNextPageBtn.disabled = pedidosPaginaActual === totalPaginas;
+                // Agregar estilos visuales cuando está deshabilitado
+                if (pedidosPaginaActual === totalPaginas) {
+                    pedidosNextPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    pedidosNextPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function getEstadoBadgeClass(estado) {
+            const estados = {
+                'pendiente': 'status-pendiente',
+                'confirmado': 'status-confirmado',
+                'preparando': 'status-preparando',
+                'listo': 'status-listo',
+                'en_camino': 'status-en_camino',
+                'entregado': 'status-entregado',
+                'cancelado': 'status-cancelado'
+            };
+            return estados[estado] || 'status-pendiente';
+        }
+
+        function formatEstado(estado) {
+            const estados = {
+                'pendiente': 'Pendiente',
+                'confirmado': 'Confirmado',
+                'preparando': 'Preparando',
+                'listo': 'Listo',
+                'en_camino': 'En Camino',
+                'entregado': 'Entregado',
+                'cancelado': 'Cancelado'
+            };
+            return estados[estado] || estado;
+        }
+
+        function formatArea(area) {
+            const areas = {
+                'cocina': 'Cocina',
+                'bebidas': 'Bebidas',
+                'postres': 'Postres',
+                'despacho': 'Despacho'
+            };
+            return areas[area] || area;
+        }
+
+        function aplicarFiltros() {
+            pedidosPaginaActual = 1; // Resetear a la primera página al filtrar
+            loadPedidos();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            pedidosPaginaActual = 1; // Resetear a la primera página al limpiar
+            loadPedidos();
+        }
+
+        function cambiarPagina(offset) {
+            const totalPaginas = Math.ceil((pedidosFiltrados?.length || 0) / PEDIDOS_POR_PAGINA) || 1;
+            const nuevaPagina = pedidosPaginaActual + offset;
+            
+            if (nuevaPagina < 1 || nuevaPagina > totalPaginas) {
+                return;
+            }
+            
+            pedidosPaginaActual = nuevaPagina;
+            renderPedidos();
+            
+            // Scroll suave hacia arriba de la tabla
+            const tabla = document.getElementById('tablaPedidos');
+            if (tabla) {
+                tabla.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // Exponer función globalmente para los botones
+        window.cambiarPagina = cambiarPagina;
+
+        async function verDetallesPedido(idPedido) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                // Buscar el pedido en la lista local primero para tener información completa
+                // Buscar en pedidosFiltrados primero (que es lo que se muestra), luego en pedidos
+                const pedidoLocal = pedidosFiltrados.find(p => p.id_pedido === idPedido) || pedidos.find(p => p.id_pedido === idPedido);
+                
+                if (pedidoLocal) {
+                    // Usar los datos locales que ya tenemos
+                    mostrarDetallesPedido(pedidoLocal);
+                    return;
+                }
+
+                // Si no está en la lista local, buscar desde el API
+                const response = await fetch(`/api/pedidos/${idPedido}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudieron cargar los detalles del pedido');
+                }
+
+                const pedido = data.data?.pedido;
+                if (!pedido) {
+                    throw new Error('Pedido no encontrado');
+                }
+
+                mostrarDetallesPedido(pedido);
+            } catch (error) {
+                console.error('Error al obtener detalles del pedido:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar los detalles del pedido.'
+                });
+            }
+        }
+
+        function mostrarDetallesPedido(pedido) {
+            try {
+
+                // Mostrar detalles en un modal o alerta
+                const fechaPedido = new Date(pedido.fecha_pedido);
+                const fechaFormateada = fechaPedido.toLocaleDateString('es-CR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                let itemsHTML = '';
+                if (pedido.items && pedido.items.length > 0) {
+                    itemsHTML = pedido.items.map(item => {
+                        return `<div class="flex justify-between py-2 border-b">
+                            <span>${item.producto_nombre || 'Producto'} x${item.cantidad || 0}</span>
+                            <span>₡${parseFloat(item.subtotal_item || 0).toLocaleString()}</span>
+                        </div>`;
+                    }).join('');
+                } else if (pedido.productos && pedido.productos.length > 0) {
+                    itemsHTML = pedido.productos.map(item => {
+                        return `<div class="flex justify-between py-2 border-b">
+                            <span>${item.producto_nombre || 'Producto'} x${item.cantidad || 0}</span>
+                            <span>₡${parseFloat(item.subtotal_item || 0).toLocaleString()}</span>
+                        </div>`;
+                    }).join('');
+                } else {
+                    itemsHTML = '<div class="text-gray-500 py-2">No hay productos registrados para este pedido</div>';
+                }
+
+                Swal.fire({
+                    title: `Pedido #${pedido.id_pedido.toString().padStart(6, '0')}`,
+                    html: `
+                        <div class="text-left space-y-3">
+                            <div>
+                                <strong>Fecha:</strong> ${fechaFormateada}
+                            </div>
+                            <div>
+                                <strong>Cliente:</strong> ${pedido.cliente_nombre || 'Cliente invitado'}
+                            </div>
+                            ${pedido.cliente_telefono ? `<div><strong>Teléfono:</strong> ${pedido.cliente_telefono}</div>` : ''}
+                            ${pedido.cliente_email ? `<div><strong>Email:</strong> ${pedido.cliente_email}</div>` : ''}
+                            ${pedido.direccion_completa ? `<div><strong>Dirección:</strong> ${pedido.direccion_completa}</div>` : ''}
+                            <div>
+                                <strong>Estado:</strong> <span class="status-badge ${getEstadoBadgeClass(pedido.estado_pedido)}">${formatEstado(pedido.estado_pedido)}</span>
+                            </div>
+                            <div><strong>Responsable:</strong> ${pedido.empleado_asignado_nombre && pedido.empleado_asignado_nombre !== 'Sin asignar' ? `${pedido.empleado_asignado_nombre} ${pedido.empleado_area && pedido.empleado_area !== 'Sin asignar' ? `(${formatArea(pedido.empleado_area)})` : ''}` : '<span class="text-gray-400">Sin asignar</span>'}</div>
+                            ${pedido.area_asignacion && pedido.empleado_asignado_nombre === 'Sin asignar' ? `<div><strong>Área:</strong> ${formatArea(pedido.area_asignacion)}</div>` : ''}
+                            <div class="mt-4">
+                                <strong>Productos:</strong>
+                                <div class="mt-2">${itemsHTML}</div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t">
+                                <div class="flex justify-between"><span>Subtotal:</span><span>₡${parseFloat(pedido.subtotal || 0).toLocaleString()}</span></div>
+                                <div class="flex justify-between"><span>Impuestos:</span><span>₡${parseFloat(pedido.impuestos || 0).toLocaleString()}</span></div>
+                                ${parseFloat(pedido.descuentos || 0) > 0 ? `<div class="flex justify-between text-green-600"><span>Descuentos:</span><span>-₡${parseFloat(pedido.descuentos || 0).toLocaleString()}</span></div>` : ''}
+                                <div class="flex justify-between font-bold text-lg mt-2"><span>Total:</span><span>₡${parseFloat(pedido.total || 0).toLocaleString()}</span></div>
+                            </div>
+                            ${pedido.notas_especiales ? `<div class="mt-4 pt-3 border-t"><strong>Notas:</strong> ${pedido.notas_especiales}</div>` : ''}
+                        </div>
+                    `,
+                    width: '600px',
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#f97316'
+                });
+            } catch (error) {
+                console.error('Error al obtener detalles del pedido:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar los detalles del pedido.'
+                });
+            }
+        }
+
+        window.aplicarFiltros = aplicarFiltros;
+        window.limpiarFiltros = limpiarFiltros;
+        window.verDetallesPedido = verDetallesPedido;
+    </script>
+</body>
+</html>
+

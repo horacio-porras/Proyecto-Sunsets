@@ -130,6 +130,56 @@ const mapProductosPorPromocion = (productosRelacionados) => {
 
 const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => {
     try {
+        // Cargar detalles de la promoción para enriquecer el contenido
+        let promoDetalle = null;
+        let productosNombres = [];
+        try {
+            const [promoRows] = await pool.execute(
+                `SELECT 
+                    id_promocion, nombre_promocion, descripcion, valor_descuento, 
+                    fecha_inicio, fecha_fin, alcance
+                 FROM promocion
+                 WHERE id_promocion = ?`,
+                [idPromocion]
+            );
+            if (promoRows.length > 0) {
+                promoDetalle = promoRows[0];
+                if (promoDetalle.alcance === 'producto') {
+                    const [prodRows] = await pool.execute(
+                        `SELECT p.nombre AS nombre_producto
+                         FROM producto_promocion pp
+                         INNER JOIN producto p ON p.id_producto = pp.id_producto
+                         WHERE pp.id_promocion = ?`,
+                        [idPromocion]
+                    );
+                    productosNombres = prodRows.map(r => r.nombre_producto).filter(Boolean);
+                }
+            }
+        } catch (e) {
+            console.warn('No se pudieron cargar detalles de la promoción para la notificación:', e?.message || e);
+        }
+
+        // Construir contenido enriquecido
+        let contenidoDetallado = contenido || '';
+        if (promoDetalle) {
+            const inicio = promoDetalle.fecha_inicio ? new Date(promoDetalle.fecha_inicio) : null;
+            const fin = promoDetalle.fecha_fin ? new Date(promoDetalle.fecha_fin) : null;
+            const vigencia = buildVigenciaLabel(inicio, fin);
+            const porcentaje = Number(promoDetalle.valor_descuento) || 0;
+            const alcance = promoDetalle.alcance === 'producto' ? 'Productos específicos' : 'Aplicable a todo el menú';
+            const productosTexto = productosNombres.length > 0 ? `Productos: ${productosNombres.slice(0, 6).join(', ')}${productosNombres.length > 6 ? '…' : ''}` : '';
+
+            const detalleLineas = [
+                `Descuento: ${porcentaje}%`,
+                `Vigencia: ${vigencia}`,
+                `Alcance: ${alcance}`,
+                productosTexto
+            ].filter(Boolean);
+
+            const resumen = detalleLineas.join(' • ');
+            contenidoDetallado = resumen + (contenidoDetallado ? ` — ${contenidoDetallado}` : '');
+        }
+
         const [clientes] = await pool.execute(`
             SELECT u.id_usuario, u.correo, u.nombre
             FROM cliente c
@@ -161,7 +211,7 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                     id_usuario, titulo, contenido, tipo_notificacion,
                     leida, fecha_envio, canal_envio
                 ) VALUES (?, ?, ?, 'Promoción', FALSE, NOW(), 'Correo')`,
-                [cliente.id_usuario, titulo, contenido]
+                [cliente.id_usuario, titulo, contenidoDetallado]
             );
 
             if (emailQueue && cliente.correo) {
@@ -171,8 +221,8 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                         {
                             to: cliente.correo,
                             subject: `[Sunset's Tarbaca] ${titulo}`,
-                            text: contenido,
-                            html: `<p>${contenido}</p>`,
+                            text: contenidoDetallado,
+                            html: `<p>${contenidoDetallado}</p>`,
                             from: process.env.EMAIL_FROM || 'no-reply@sunsets.local'
                         },
                         { attempts: 3, backoff: 5000 }
@@ -189,8 +239,8 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                         from: process.env.EMAIL_FROM || 'no-reply@sunsets.local',
                         to: cliente.correo,
                         subject: `[Sunset's Tarbaca] ${titulo}`,
-                        text: contenido,
-                        html: `<p>${contenido}</p>`
+                        text: contenidoDetallado,
+                        html: `<p>${contenidoDetallado}</p>`
                     });
                 } catch (mailErr) {
                     console.error(`Error al enviar correo a ${cliente.correo}:`, mailErr.message || mailErr);

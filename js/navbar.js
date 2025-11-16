@@ -95,19 +95,44 @@ function updateAuthState() {
         displayUserInfo();
         configureRoleSpecificMenus();
         
+        // Mostrar notificaciones solo para Clientes
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        if (notificationsContainer) {
+            if (user && user.tipoUsuario === 'Cliente') {
+                notificationsContainer.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    const currentPath = window.location.pathname;
+                    const currentPage = currentPath === '/' ? '/index.html' : currentPath;
+                    highlightCurrentPage(currentPage);
+                    // Cargar panel y badge de notificaciones
+                    loadLatestNotifications();
+                    if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                }, 100);
+
+                // Actualizar badge de notificaciones no leídas y establecer polling
+                if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                // limpiar intervalos previos
+                if (window._notifPollInterval) clearInterval(window._notifPollInterval);
+                window._notifPollInterval = setInterval(() => {
+                    if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                    loadLatestNotifications(true);
+                }, 60000); // cada 60s
+            } else {
+                notificationsContainer.classList.add('hidden');
+                // Limpiar intervalos si no es cliente
+                if (window._notifPollInterval) {
+                    clearInterval(window._notifPollInterval);
+                    window._notifPollInterval = null;
+                }
+            }
+        }
+        
         setTimeout(() => {
             const currentPath = window.location.pathname;
             const currentPage = currentPath === '/' ? '/index.html' : currentPath;
             highlightCurrentPage(currentPage);
         }, 100);
-
-        // Actualizar badge de notificaciones no leídas y establecer polling
-        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
-        // limpiar intervalos previos
-        if (window._notifPollInterval) clearInterval(window._notifPollInterval);
-        window._notifPollInterval = setInterval(() => {
-            if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
-        }, 60000); // cada 60s
     } else {
         //Usuario no logeado
         if (userNotLoggedIn) userNotLoggedIn.classList.remove('hidden');
@@ -120,12 +145,19 @@ function updateAuthState() {
             dropdown.classList.add('hidden');
             dropdown.classList.remove('dropdown-show', 'dropdown-hide');
         }
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.add('hidden');
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        if (notificationsContainer) notificationsContainer.classList.add('hidden');
     }
 }
 
 // Obtener y mostrar contador de notificaciones no leídas
 async function updateNotificationBadge() {
     try {
+        const user = getCurrentUser();
+        if (!user || user.tipoUsuario !== 'Cliente') return;
+        
         const token = localStorage.getItem('authToken');
         if (!token) return;
 
@@ -136,26 +168,149 @@ async function updateNotificationBadge() {
         if (!data.success) return;
 
         const count = data.no_leidas || 0;
-        // Buscar el botón del usuario
-        const userBtn = document.getElementById('userDropdownBtn');
-        if (!userBtn) return;
-
-        // Buscar badge existente
-        let badge = document.getElementById('notifBadge');
+        const badge = document.getElementById('notifBadge');
+        if (!badge) return;
         if (count > 0) {
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.id = 'notifBadge';
-                badge.className = 'ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-600 text-white';
-                // insert after the button's last child
-                userBtn.appendChild(badge);
-            }
+            badge.classList.remove('hidden');
             badge.textContent = count > 99 ? '99+' : count;
         } else {
-            if (badge) badge.remove();
+            badge.classList.add('hidden');
         }
     } catch (err) {
         console.error('Error al obtener contador de notificaciones:', err);
+    }
+}
+
+// Cargar últimas notificaciones en el panel
+async function loadLatestNotifications(silent = false) {
+    try {
+        const user = getCurrentUser();
+        if (!user || user.tipoUsuario !== 'Cliente') return;
+        
+        const token = localStorage.getItem('authToken');
+        const body = document.getElementById('notifPanelBody');
+        if (!token || !body) return;
+        if (!silent) body.innerHTML = '<div class="p-4 text-sm text-gray-500">Cargando notificaciones...</div>';
+
+        const res = await fetch('/api/cliente/notificaciones', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            body.innerHTML = '<div class="p-4 text-sm text-red-600">No se pudieron cargar las notificaciones.</div>';
+            return;
+        }
+        // Solo mostrar no leídas en el panel del navbar
+        const list = (data.notificaciones || []).filter(n => !n.leida).slice(0, 6);
+        if (list.length === 0) {
+            body.innerHTML = '<div class="p-4 text-sm text-gray-600">No tienes notificaciones pendientes.</div>';
+            return;
+        }
+        
+        // Función para extraer descuento, vigencia y alcance del contenido
+        const parseNotificationContent = (contenido) => {
+            if (!contenido) return { descuento: '', vigencia: '', alcance: '' };
+            
+            // Separar el contenido antes del " — " (que es donde empieza la descripción)
+            const contenidoSinDescripcion = contenido.split(' — ')[0];
+            
+            // El formato es "Descuento: X%" donde X puede ser un número entero o decimal
+            const descuentoMatch = contenidoSinDescripcion.match(/Descuento:\s*(\d+(?:\.\d+)?)%/);
+            const vigenciaMatch = contenidoSinDescripcion.match(/Vigencia:\s*([^•]+?)(?:\s*•|$)/);
+            const alcanceMatch = contenidoSinDescripcion.match(/Alcance:\s*([^•]+?)(?:\s*•|$)/);
+            
+            return {
+                descuento: descuentoMatch ? `${descuentoMatch[1]}%` : '',
+                vigencia: vigenciaMatch ? vigenciaMatch[1].trim() : '',
+                alcance: alcanceMatch ? alcanceMatch[1].trim() : ''
+            };
+        };
+        
+        body.innerHTML = list.map(n => {
+            const parsed = parseNotificationContent(n.contenido);
+            return `
+                <div class="p-3 border-b hover:bg-gray-50" data-notif-id="${n.id_notificacion}">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-gray-800">${n.titulo || 'Notificación'}</div>
+                            ${parsed.descuento ? `<div class="text-sm text-orange-600 font-medium mt-1">${parsed.descuento}</div>` : ''}
+                            ${parsed.vigencia ? `<div class="text-xs text-gray-500 mt-1">${parsed.vigencia}</div>` : ''}
+                            ${parsed.alcance ? `<div class="text-xs text-gray-500 mt-1">${parsed.alcance}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${n.leida ? '' : `<button class="notif-mark-read text-xs text-blue-600 hover:underline" data-id="${n.id_notificacion}">Marcar como leída</button>`}
+                            ${n.leida ? '' : '<span class="mt-1 inline-flex h-2 w-2 rounded-full bg-red-500"></span>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Attach mark-as-read handlers
+        body.querySelectorAll('.notif-mark-read').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                await markNotificationAsRead(id, btn);
+            });
+        });
+    } catch (e) {
+        const body = document.getElementById('notifPanelBody');
+        if (body) body.innerHTML = '<div class="p-4 text-sm text-red-600">Error al cargar notificaciones.</div>';
+    }
+}
+
+// Toggle panel
+function toggleNotificationsPanel() {
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+    document.querySelectorAll('#notifPanel').forEach(p => p.classList.add('hidden'));
+    if (isHidden) {
+        panel.classList.remove('hidden');
+        loadLatestNotifications();
+    } else {
+        panel.classList.add('hidden');
+    }
+}
+
+function goToAllNotifications() {
+    window.location.href = '/cliente/notificaciones.html';
+}
+
+// Marcar notificación como leída (y remover del panel)
+async function markNotificationAsRead(id, btnEl) {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token || !id) return;
+        const res = await fetch(`/api/cliente/notificaciones/${id}/leida`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            return;
+        }
+        // Remove item from panel
+        const item = btnEl.closest('[data-notif-id]');
+        if (item && item.parentElement) {
+            item.parentElement.removeChild(item);
+        }
+        // Refresh badge count
+        if (typeof updateNotificationBadge === 'function') {
+            updateNotificationBadge();
+        }
+        // If no items left, show vacío
+        const body = document.getElementById('notifPanelBody');
+        if (body && body.children.length === 0) {
+            body.innerHTML = '<div class="p-4 text-sm text-gray-600">No hay notificaciones.</div>';
+        }
+    } catch (err) {
+        // Silencioso para no interrumpir UX del panel
+        console.error('Error al marcar notificación como leída:', err);
     }
 }
 
@@ -282,6 +437,9 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/recompensas.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-gift mr-2 text-gray-700"></i>Recompensas
                 </a>
+                <a href="/admin/pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-clipboard-list mr-2 text-gray-700"></i>Historial de Pedidos
+                </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
                 </a>
@@ -307,6 +465,9 @@ function configureRoleSpecificMenus() {
                 </a>
                 <a href="/admin/recompensas.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-gift mr-2"></i>Recompensas
+                </a>
+                <a href="/admin/pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-clipboard-list mr-2"></i>Historial de Pedidos
                 </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes
@@ -336,6 +497,8 @@ function addNavbarEventListeners() {
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('userDropdown');
         const dropdownBtn = document.getElementById('userDropdownBtn');
+        const notifPanel = document.getElementById('notifPanel');
+        const notifBtn = document.getElementById('notifBellBtn');
         
         if (dropdown && dropdownBtn) {
             if (!dropdownBtn.contains(event.target) && !dropdown.contains(event.target)) {
@@ -353,6 +516,13 @@ function addNavbarEventListeners() {
                         dropdown.classList.remove('dropdown-hide');
                     }, 200);
                 }
+            }
+        }
+
+        if (notifPanel && notifBtn) {
+            const clickInside = notifPanel.contains(event.target) || notifBtn.contains(event.target);
+            if (!clickInside) {
+                notifPanel.classList.add('hidden');
             }
         }
         
@@ -548,6 +718,11 @@ async function handleLogin() {
             }, 1500);
         } else {
             showLoginMessage(data.message || 'Error al iniciar sesión');
+            const pwd = document.getElementById('loginPassword');
+            if (pwd) {
+                pwd.value = '';
+                pwd.focus();
+            }
         }
     } catch (error) {
         console.error('Error:', error);
@@ -937,6 +1112,8 @@ window.NavbarManager = {
     configureRoleSpecificMenus,
     toggleMobileMenu,
     toggleUserDropdown,
+    toggleNotificationsPanel,
+    goToAllNotifications,
     displayUserInfo,
     openLoginModal,
     closeLoginModal,

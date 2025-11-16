@@ -28,37 +28,59 @@
                     </button>
                 </div>
                 <div id="userLoggedIn" class="hidden">
-                    <!-- User Dropdown -->
-                    <div class="relative">
-                        <button id="userDropdownBtn" onclick="toggleUserDropdown()" class="flex items-center space-x-2 text-sm hover:text-white transition">
-                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
-                                <i class="fas fa-user text-sm"></i>
-                            </div>
-                            <span class="user-name font-semibold"></span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border" style="z-index: 99999;">
-                            <div class="px-4 py-2 border-b border-gray-200">
-                                <p class="text-sm font-medium text-gray-900 user-name">-</p>
-                                <p class="text-xs text-gray-500 user-email">-</p>
-                            </div>
-                            
-                            <!-- Dashboard Links (based on user role) -->
-                            <div id="dashboardLink">
-                                <!-- Will be populated by JavaScript based on user role -->
-                            </div>
-                            
-                            <!-- Role-specific menu items -->
-                            <div id="roleSpecificMenu">
-                                <!-- Will be populated by JavaScript based on user role -->
-                            </div>
-                            
-                            <hr class="my-1">
-                            <button onclick="logout()" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                    <!-- Notifications + User Dropdown -->
+                    <div class="flex items-center gap-3">
+                        <!-- Bell + Panel (contenedor relativo para alineación) - Solo visible para Clientes -->
+                        <div id="notificationsContainer" class="relative hidden">
+                            <button id="notifBellBtn" onclick="toggleNotificationsPanel()" class="text-gray-300 hover:text-white transition" aria-label="Notificaciones">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span id="notifBadge" class="hidden absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white"></span>
                             </button>
+                            <!-- Panel de Notificaciones (anclado al botón de campana) -->
+                            <div id="notifPanel" class="hidden absolute right-0 top-full mt-2 w-80 bg-white rounded-md shadow-lg border z-50">
+                                <div class="px-4 py-3 border-b">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-semibold text-gray-800">Notificaciones</span>
+                                        <button onclick="goToAllNotifications()" class="text-sm text-orange-600 hover:text-orange-500">Ver todas</button>
+                                    </div>
+                                </div>
+                                <div id="notifPanelBody" class="max-h-80 overflow-y-auto">
+                                    <div class="p-4 text-sm text-gray-500">Cargando notificaciones...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Dropdown (contenedor relativo independiente para posicionamiento correcto) -->
+                        <div class="relative">
+                            <button id="userDropdownBtn" onclick="toggleUserDropdown()" class="flex items-center space-x-2 text-sm hover:text-white transition leading-none">
+                                <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                                    <i class="fas fa-user text-sm"></i>
+                                </div>
+                                <span class="user-name font-semibold leading-none"></span>
+                                <i class="fas fa-chevron-down text-xs leading-none"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 border" style="z-index: 99999;">
+                                <div class="px-4 py-2 border-b border-gray-200">
+                                    <p class="text-sm font-medium text-gray-900 user-name">-</p>
+                                    <p class="text-xs text-gray-500 user-email">-</p>
+                                </div>
+                                
+                                <!-- Dashboard Links (based on user role) -->
+                                <div id="dashboardLink">
+                                    <!-- Will be populated by JavaScript based on user role -->
+                                </div>
+                                
+                                <!-- Role-specific menu items -->
+                                <div id="roleSpecificMenu">
+                                    <!-- Will be populated by JavaScript based on user role -->
+                                </div>
+                                
+                                <hr class="my-1">
+                                <button onclick="logout()" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,27 +183,7 @@
                         <i id="loginBtnSpinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
                     </button>
 
-                    <!-- Divider -->
-                    <div class="relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-white text-gray-500">O continúa con</span>
-                        </div>
-                    </div>
-
-                    <!-- Social Login -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" class="w-full inline-flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <i class="fab fa-google text-red-500 mr-2 text-base"></i>
-                            Google
-                        </button>
-                        <button type="button" class="w-full inline-flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <i class="fab fa-facebook text-blue-500 mr-2 text-base"></i>
-                            Facebook
-                        </button>
-                    </div>
+                    
                 </form>
                 
                 <div class="mt-6 text-center">

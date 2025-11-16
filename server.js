@@ -19,6 +19,7 @@ const recompensasRoutes = require('./routes/recompensasRoutes');
 const { sendDailyReminders } = require('./utils/reminderService');
 const reminderRoutes = require('./routes/reminderRoutes');
 const opinionesRoutes = require('./routes/opinionesRoutes');
+const facturaRoutes = require('./routes/facturaRoutes');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
@@ -86,6 +87,7 @@ app.use('/api/promociones', promocionesRoutes);
 app.use('/api/recompensas', recompensasRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/opiniones', opinionesRoutes);
+app.use('/api/facturas', facturaRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
@@ -169,8 +171,8 @@ async function startServer() {
             console.log(`Health check: http://localhost:${PORT}/api/health`);
             console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
             
-            // Inicializar tarea programada de recordatorios
-            // Se ejecuta todos los días a las 10:00 AM
+            //Inicializa la tarea programada de recordatorios
+            //Se ejecuta todos los días a las 10:00 AM
             cron.schedule('0 10 * * *', async () => {
                 console.log('[CRON] Ejecutando tarea de recordatorios diarios...');
                 try {
@@ -180,7 +182,6 @@ async function startServer() {
                 }
             });
             
-            console.log('Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
         });
 
     } catch (error) {

@@ -481,34 +481,34 @@
 
                 return `
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 align-top">
                             <div class="font-semibold text-gray-800">${promocion.nombre_promocion}</div>
                             <div class="text-xs text-gray-500 mt-1">${promocion.descripcion || 'Sin descripción proporcionada.'}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${alcanceBadgeClass}">
+                        <td class="px-6 py-4 align-top">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${alcanceBadgeClass} whitespace-nowrap">
                                 ${promocion.alcance === 'producto' ? 'Productos específicos' : 'General'}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">
+                        <td class="px-6 py-4 text-sm text-gray-700 align-top">
                             ${promocion.porcentaje_descuento != null
                                 ? `${parseFloat(promocion.porcentaje_descuento).toLocaleString()}%`
                                 : '—'}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">
+                        <td class="px-6 py-4 text-sm text-gray-700 align-top">
                             ${vigenciaTexto}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">
-                            ${productosTexto}
+                        <td class="px-6 py-4 text-sm text-gray-700 align-top max-w-xs">
+                            <div class="break-words">${productosTexto}</div>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-6 py-4 text-center align-top">
                             <label class="toggle-checkbox inline-flex items-center">
                                 <input type="checkbox" ${promocion.activa ? 'checked' : ''} onchange="togglePromocionActiva(${promocion.id_promocion}, this.checked)">
                                 <span></span>
                             </label>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
+                        <td class="px-6 py-4 text-center align-top">
+                            <div class="flex items-center justify-center gap-2 whitespace-nowrap">
                                 <button class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold" onclick="editarPromocion(${promocion.id_promocion})">
                                     <i class="fas fa-edit mr-1"></i> Editar
                                 </button>

@@ -383,13 +383,14 @@ async function updateOrderSummary() {
             summaryContainer.appendChild(promoRow);
         });
 
-        const subtotalDiscountedRow = document.createElement('div');
-        subtotalDiscountedRow.className = 'flex justify-between';
-        subtotalDiscountedRow.innerHTML = `
-            <span class="text-gray-600">Subtotal después de promociones</span>
-            <span>₡${Math.round(subtotalAfterPromotions).toLocaleString()}</span>
-        `;
-        summaryContainer.appendChild(subtotalDiscountedRow);
+        // Ocultado: "Subtotal después de promociones" según solicitud del usuario
+        // const subtotalDiscountedRow = document.createElement('div');
+        // subtotalDiscountedRow.className = 'flex justify-between';
+        // subtotalDiscountedRow.innerHTML = `
+        //     <span class="text-gray-600">Subtotal después de promociones</span>
+        //     <span>₡${Math.round(subtotalAfterPromotions).toLocaleString()}</span>
+        // `;
+        // summaryContainer.appendChild(subtotalDiscountedRow);
     }
 
     const deliveryRow = document.createElement('div');
@@ -425,22 +426,9 @@ async function updateOrderSummary() {
         summaryContainer.appendChild(rewardRow);
     }
 
-    const loyaltyCheckbox = document.getElementById('loyalty');
+    // Opción de descuento por puntos de lealtad removida
     let loyaltyDiscount = 0;
     const totalBeforeLoyaltyValue = total;
-    if (loyaltyCheckbox && loyaltyCheckbox.checked) {
-        loyaltyDiscount = Math.min(2500, total);
-        if (loyaltyDiscount > 0) {
-            total = Math.max(0, total - loyaltyDiscount);
-            const loyaltyRow = document.createElement('div');
-            loyaltyRow.className = 'flex justify-between text-green-600 font-semibold';
-            loyaltyRow.innerHTML = `
-                <span>Descuento por puntos de lealtad</span>
-                <span>-₡${Math.round(loyaltyDiscount).toLocaleString()}</span>
-            `;
-            summaryContainer.appendChild(loyaltyRow);
-        }
-    }
 
     const totalRow = document.createElement('div');
     totalRow.className = 'flex justify-between font-semibold text-lg';

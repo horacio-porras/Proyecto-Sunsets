@@ -153,82 +153,82 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Dashboard Content -->
-        <div class="container mx-auto px-4 py-8">
-            <!-- Welcome Section -->
-            <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+    <!-- Dashboard Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+                        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
                 <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
                 <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
-            </div>
-            
+                </div>
 
-            <!-- Main Content -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Column -->
-                <div class="lg:col-span-2 space-y-8">
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
                     <!-- Active Reservations -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6">
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Reservaciones Activas</h2>
                             <hr class="mb-4">
-                        </div>
+                                    </div>
                         <div class="p-6 pt-0">
                             <div id="reservationsLoading" class="text-center py-8">
                                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                                 <p class="mt-2 text-gray-600">Cargando reservaciones activas...</p>
-                            </div>
+                                    </div>
 
                             <div id="reservationsContainer" class="space-y-4 hidden">
                                 <!-- Reservaciones activas se cargan dinámicamente -->
                             </div>
-
+                            
                             <div id="reservationsEmpty" class="text-center py-8 hidden">
                                 <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                                     <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
-                                </div>
+                                    </div>
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes reservaciones próximas</h3>
                                 <p class="text-gray-600">Agenda una nueva reservación y aparecerá aquí.</p>
                             </div>
-
+                            
                             <div id="reservationsError" class="text-center py-8 hidden">
                                 <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                                     <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
-                                </div>
+                                    </div>
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar reservaciones</h3>
                                 <p class="text-gray-600 mb-4" data-error-message>No se pudieron cargar tus reservaciones activas.</p>
                                 <button onclick="loadActiveReservations()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
                                     <i class="fas fa-redo"></i>
                                     Reintentar
                                 </button>
-                            </div>
+                                    </div>
 
-                            <div class="mt-6 text-center">
+                        <div class="mt-6 text-center">
                                 <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
                                     <i class="fas fa-calendar-alt"></i>
                                     Nueva Reservación
                                 </a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
                     <!-- Recent Orders -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6">
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Recientes</h2>
                             <hr class="mb-4">
-                        </div>
+                                </div>
                         <div class="p-6 pt-0">
                             <!-- Loading State -->
                             <div id="recentOrdersLoading" class="text-center py-8">
                                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                                 <p class="mt-2 text-gray-600">Cargando pedidos recientes...</p>
-                            </div>
+                                    </div>
 
                             <!-- Orders Container -->
                             <div id="recentOrdersContainer" class="space-y-4 hidden">
                                 <!-- Orders will be loaded here dynamically -->
                             </div>
-
+                            
                             <!-- Empty State -->
                             <div id="recentOrdersEmpty" class="text-center py-8 hidden">
                                 <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -240,108 +240,91 @@
                                     <i class="fas fa-plus"></i>
                                     Hacer Pedido
                                 </a>
-                            </div>
+                                    </div>
                             <div class="mt-6">
                                 <a href="/cliente/mis-pedidos.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
                                     Ver todos los pedidos
                                 </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Notifications and promotions -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Promociones y Beneficios</h2>
-                            <hr class="mb-4">
-                        </div>
-                        <div class="p-6 pt-0">
-                            <div id="notificacionesContainer" class="space-y-4">
-                                <!-- Aquí se cargarán dinámicamente las notificaciones -->
-                            </div>
-                            <div class="mt-6 text-center">
-                                <a href="/cliente/notificaciones.html"
-                                    class="text-orange-600 hover:text-orange-700 font-semibold">
-                                    Ver todas las notificaciones
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    
+            </div>
 
-                <!-- Right Column -->
-                <div class="space-y-8">
-                    <!-- Profile Card -->
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <div class="text-center mb-6">
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="text-center mb-6">
                             <div
                                 class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                                 <i class="fas fa-user text-white text-3xl"></i>
                             </div>
                             <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
                             <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-3">
-                                <i class="fas fa-envelope text-gray-400"></i>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-gray-400"></i>
                                 <span class="text-sm user-email">-</span>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <i class="fas fa-phone text-gray-400"></i>
-                                <span class="text-sm" id="telefonoUsuario">-</span>
-                            </div>
-                            <div class="flex items-center space-x-3" id="direccionPrincipal" style="display: none;">
-                                <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                <span class="text-sm" id="direccionTexto">-</span>
-                            </div>
                         </div>
-
-                        <div class="mt-6">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-gray-400"></i>
+                                <span class="text-sm" id="telefonoUsuario">-</span>
+                        </div>
+                            <div class="flex items-center space-x-3" id="direccionPrincipal" style="display: none;">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                <span class="text-sm" id="direccionTexto">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
                             <a href="/cliente/perfil.html"
                                 class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
-                                Editar Perfil
-                            </a>
+                            Editar Perfil
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Loyalty Points -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
+                        <hr class="mb-4">
+                    
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
+                        <div class="text-center">
+                                <div class="text-3xl font-bold" id="puntosDisplay">-</div>
+                            <div class="text-orange-100">Puntos Acumulados</div>
                         </div>
                     </div>
 
-                    <!-- Loyalty Points -->
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
-                        <hr class="mb-4">
-
-                        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
-                            <div class="text-center">
-                                <div class="text-3xl font-bold" id="puntosDisplay">-</div>
-                                <div class="text-orange-100">Puntos Acumulados</div>
-                            </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Próximo nivel:</span>
+                            <span class="text-sm font-semibold">Plata (2,000 pts)</span>
                         </div>
-
-
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Próximo nivel:</span>
-                                <span class="text-sm font-semibold">Plata (2,000 pts)</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-orange-600 h-2 rounded-full" id="progresoBar" style="width: 0%"></div>
-                            </div>
+                        </div>
                             <div class="text-xs text-gray-500 text-center" id="progresoText">Calculando progreso...
                             </div>
-                        </div>
-
-                        <div class="mt-6">
-                            <a href="#rewards"
+                    </div>
+                    
+                    <div class="mt-6">
+                            <button type="button" onclick="openRewardsModal()"
                                 class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center block flex items-center justify-center gap-2">
-                                <i class="fas fa-trophy"></i>
-                                Canjear Puntos
-                            </a>
+                                <i class="fas fa-gift"></i>
+                            Canjear Puntos
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+                    </div>
+                </div>
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
@@ -429,17 +412,17 @@
                             <span>Cualquiera</span>
                         </label>
                     </div>
-                </div>
-
+                        </div>
+                        
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="submit" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center gap-2">
                         <i class="fas fa-edit"></i>
                         Actualizar
                     </button>
-                </div>
+                        </div>
             </form>
-        </div>
-    </div>
+                    </div>
+                </div>
 
     <!-- Rewards Modal -->
     <div id="rewardsModal" class="modal">
@@ -448,21 +431,21 @@
                 <div>
                     <h3 class="text-2xl font-semibold text-gray-800">Catálogo de Recompensas</h3>
                     <p class="text-sm text-gray-500 mt-1">Canjea tus puntos por descuentos y experiencias exclusivas.</p>
-                </div>
+            </div>
                 <button type="button" class="modal-close" onclick="closeRewardsModal()">
                     <i class="fas fa-times"></i>
                 </button>
-            </div>
+        </div>
 
             <div id="rewardsLoading" class="text-center py-10 hidden">
                 <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                 <p class="mt-3 text-gray-600">Cargando opciones de canje...</p>
-            </div>
+    </div>
 
             <div id="rewardsError" class="text-center py-10 hidden">
                 <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                     <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-                </div>
+        </div>
                 <h4 class="text-lg font-semibold text-gray-800 mb-2">No se pudieron cargar las recompensas</h4>
                 <p class="text-gray-600 mb-4">Inténtalo de nuevo en unos segundos.</p>
                 <button onclick="fetchRewardsCatalog()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
@@ -526,13 +509,7 @@
                     const userData = data.data.user;
 
                     const puntos = userData.puntos_acumulados || 0;
-                    const puntosDisplayElement = document.getElementById('puntosDisplay');
-
-                    if (puntosDisplayElement) {
-                        puntosDisplayElement.textContent = puntos;
-                    }
-
-                    updateLoyaltyProgress(puntos);
+                    updateRewardPointsDisplay(puntos);
 
                     //Actualiza información del usuario
                     const nameElements = document.querySelectorAll('.user-name');
@@ -572,6 +549,16 @@
             } catch (error) {
                 console.error('Error al cargar perfil del usuario:', error);
             }
+        }
+
+        // Actualiza puntos actuales en UI y estado
+        function updateRewardPointsDisplay(puntos) {
+            currentUserPoints = Number(puntos) || 0;
+            const puntosDisplayElement = document.getElementById('puntosDisplay');
+            if (puntosDisplayElement) {
+                puntosDisplayElement.textContent = currentUserPoints.toLocaleString();
+            }
+            updateLoyaltyProgress(currentUserPoints);
         }
 
         //Carga la dirección principal del usuario
@@ -1185,7 +1172,7 @@
                             ${valorRecompensa != null
                                 ? `<div class="flex items-center gap-2">
                                         <i class="fas fa-tag text-orange-500"></i>
-                                        <span>${tipo === 'descuento' ? `Descuento de ${formatRewardValue(valorRecompensa)}` : `Valor estimado: ₡${valorRecompensa.toLocaleString()}`}</span>
+                                        <span>${(tipo === 'descuento' || tipo === 'descuento_colones' || tipo === 'descuento_porcentaje') ? `Descuento de ${formatRewardValue(tipo, valorRecompensa)}` : `Valor estimado: ₡${valorRecompensa.toLocaleString()}`}</span>
                                    </div>`
                                 : ''
                             }
@@ -1218,7 +1205,12 @@
 
     function formatRewardType(type) {
         switch (type) {
+            case 'descuento_colones':
+                return 'Descuento (₡)';
+            case 'descuento_porcentaje':
+                return 'Descuento (%)';
             case 'descuento':
+                // Compatibilidad con tipos antiguos
                 return 'Descuento Especial';
             case 'producto':
                 return 'Producto Exclusivo';
@@ -1229,7 +1221,7 @@
         }
     }
 
-    function formatRewardValue(valor) {
+    function formatRewardValue(tipo, valor) {
         if (valor === null || valor === undefined) {
             return '';
         }
@@ -1239,10 +1231,25 @@
             return valor;
         }
 
-        if (numeric <= 100) {
+        // Si es descuento en porcentaje, mostrar con %
+        if (tipo === 'descuento_porcentaje') {
             return `${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)}%`;
         }
 
+        // Si es descuento en colones, mostrar con ₡
+        if (tipo === 'descuento_colones') {
+            return `₡${numeric.toLocaleString()}`;
+        }
+
+        // Para el tipo antiguo 'descuento', determinar automáticamente
+        if (tipo === 'descuento') {
+            if (numeric <= 100) {
+                return `${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)}%`;
+            }
+            return `₡${numeric.toLocaleString()}`;
+        }
+
+        // Por defecto, mostrar en colones
         return `₡${numeric.toLocaleString()}`;
     }
 
@@ -1257,7 +1264,7 @@
             const faltan = puntosRequeridos - currentUserPoints;
             return `Te faltan ${faltan.toLocaleString()} puntos para canjear esta recompensa.`;
         }
-        if (reward.tipo_recompensa === 'descuento') {
+        if (reward.tipo_recompensa === 'descuento' || reward.tipo_recompensa === 'descuento_colones' || reward.tipo_recompensa === 'descuento_porcentaje') {
             return 'Se aplicará el descuento automáticamente en tu próxima compra.';
         }
         return 'Recibirás confirmación de tu canje por correo.';
@@ -1265,7 +1272,10 @@
 
     function getRewardTypeBadgeClass(type) {
         switch (type) {
+            case 'descuento_colones':
+            case 'descuento_porcentaje':
             case 'descuento':
+                // Compatibilidad con tipos antiguos
                 return 'badge-discount';
             case 'producto':
                 return 'badge-product';
@@ -1309,7 +1319,8 @@
             updateRewardPointsDisplay(puntosRestantes);
 
             if (result.data?.canje && result.data?.recompensa) {
-                if (result.data.recompensa.tipo_recompensa === 'descuento' && result.data.canje.estado_canje === 'pendiente') {
+                const tipoRecompensa = result.data.recompensa.tipo_recompensa;
+                if ((tipoRecompensa === 'descuento' || tipoRecompensa === 'descuento_colones' || tipoRecompensa === 'descuento_porcentaje') && result.data.canje.estado_canje === 'pendiente') {
                     storePendingReward(result.data);
                 }
             }
@@ -1937,4 +1948,4 @@
 
 </body>
 
-</html>
+</html> 

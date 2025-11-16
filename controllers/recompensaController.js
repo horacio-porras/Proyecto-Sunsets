@@ -40,8 +40,10 @@ const parseRecompensaPayload = (payload = {}) => {
     }
 
     const tipo = (payload.tipoRecompensa || payload.tipo || '').toLowerCase();
-    if (!['descuento', 'producto', 'experiencia'].includes(tipo)) {
-        throw new Error('Tipo de recompensa no válido');
+    // Aceptar los nuevos tipos y mantener compatibilidad con tipos antiguos
+    const tiposValidos = ['descuento_colones', 'descuento_porcentaje', 'descuento', 'producto', 'experiencia'];
+    if (!tiposValidos.includes(tipo)) {
+        throw new Error('Tipo de recompensa no válido. Debe ser "descuento_colones" o "descuento_porcentaje"');
     }
 
     const valorRaw = payload.valorRecompensa ?? payload.valor ?? '';
@@ -525,7 +527,7 @@ const canjearRecompensa = async (req, res) => {
                 recompensa.puntos_requeridos,
                 recompensa.nombre_recompensa,
                 recompensa.valor_recompensa || 0,
-                recompensa.tipo_recompensa === 'descuento' ? 'pendiente' : 'completado',
+                (recompensa.tipo_recompensa === 'descuento' || recompensa.tipo_recompensa === 'descuento_colones' || recompensa.tipo_recompensa === 'descuento_porcentaje') ? 'pendiente' : 'completado',
                 recompensa.id_recompensa
             ]
         );
@@ -534,7 +536,7 @@ const canjearRecompensa = async (req, res) => {
 
         res.json({
             success: true,
-            message: recompensa.tipo_recompensa === 'descuento'
+            message: (recompensa.tipo_recompensa === 'descuento' || recompensa.tipo_recompensa === 'descuento_colones' || recompensa.tipo_recompensa === 'descuento_porcentaje')
                 ? '¡Descuento canjeado! Se aplicará automáticamente en tu próxima compra.'
                 : 'Canje realizado con éxito. Pronto recibirás más detalles en tu correo.',
             data: {

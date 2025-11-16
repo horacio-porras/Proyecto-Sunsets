@@ -16,7 +16,8 @@ const PROTECTED_ROUTES = {
     '/admin/perfil.html': 'Administrador',
     '/admin/productos.html': 'Administrador',
     '/admin/inventario.html': 'Administrador',
-    '/admin/personal.html': 'Administrador'
+    '/admin/personal.html': 'Administrador',
+    '/admin/pedidos.html': 'Administrador'
 };
 
 //Rutas que son públicas (no requieren autenticación)
