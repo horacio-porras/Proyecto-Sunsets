@@ -27,7 +27,8 @@ const reportesRoutes = require('./routes/reportesRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Railway asigna el puerto automáticamente, si no está definido usa 3000
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 //Configuración de seguridad
 app.use(helmet({

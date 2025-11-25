@@ -141,7 +141,39 @@ Para que el servicio web pueda acceder a las variables de MySQL:
 
 ## 📦 Paso 5: Importar Base de Datos
 
-### 5.1 Opción A: Usando Railway CLI (Recomendado)
+### 5.1 Opción A: Usando Cliente MySQL Gráfico (Recomendado - No requiere instalación de MySQL)
+
+Esta es la opción más fácil si no tienes MySQL instalado localmente.
+
+**Clientes recomendados:**
+- **DBeaver** (Gratis, multiplataforma): https://dbeaver.io/download/
+- **MySQL Workbench** (Gratis, oficial): https://dev.mysql.com/downloads/workbench/
+- **TablePlus** (Gratis con limitaciones): https://tableplus.com/
+
+**Pasos:**
+
+1. **Obtén las credenciales de MySQL en Railway:**
+   - Ve a tu servicio MySQL en Railway
+   - Abre la pestaña **"Variables"** o **"Connect"**
+   - Anota estos valores:
+     - `MYSQLHOST` (Host)
+     - `MYSQLPORT` (Puerto, generalmente 3306)
+     - `MYSQLDATABASE` (Nombre de la base de datos)
+     - `MYSQLUSER` (Usuario)
+     - `MYSQLPASSWORD` (Contraseña)
+
+2. **Conéctate desde el cliente:**
+   - Abre tu cliente MySQL (DBeaver, Workbench, etc.)
+   - Crea una nueva conexión con los datos anteriores
+   - Prueba la conexión
+
+3. **Importa la base de datos:**
+   - En DBeaver: Click derecho en la base de datos → "SQL Editor" → Abre `SunsetsDB.sql` → Ejecuta
+   - En MySQL Workbench: "Server" → "Data Import" → Selecciona `SunsetsDB.sql` → "Start Import"
+
+### 5.2 Opción B: Usando Railway CLI (Requiere MySQL instalado localmente)
+
+**⚠️ Nota:** Esta opción requiere tener MySQL instalado en tu computadora.
 
 1. Instala Railway CLI:
    ```bash
@@ -168,16 +200,26 @@ Para que el servicio web pueda acceder a las variables de MySQL:
    mysql -h $MYSQLHOST -u $MYSQLUSER -p$MYSQLPASSWORD $MYSQLDATABASE < SunsetsDB.sql
    ```
 
-### 5.2 Opción B: Usando MySQL Workbench o DBeaver
+### 5.3 Opción C: Usando Railway Web Terminal (si está disponible)
 
-1. Obtén la URL de conexión desde Railway (pestaña "Connect" del servicio MySQL)
-2. Conéctate usando un cliente MySQL (Workbench, DBeaver, etc.)
-3. Importa el archivo `SunsetsDB.sql`
+1. Ve a tu servicio MySQL en Railway
+2. Busca la opción **"Connect"** o **"Query"**
+3. Si hay una terminal web disponible, úsala para ejecutar comandos SQL
+4. Copia y pega el contenido de `SunsetsDB.sql` y ejecútalo
 
-### 5.3 Opción C: Usando phpMyAdmin (si Railway lo ofrece)
+### 5.4 Opción D: Instalar solo el Cliente MySQL (sin servidor completo)
 
-1. Accede al panel de MySQL en Railway
-2. Usa la interfaz web para importar el archivo SQL
+Si prefieres usar la línea de comandos pero no quieres instalar MySQL completo:
+
+**Windows (con Chocolatey):**
+```powershell
+choco install mysql.utilities
+```
+
+**O descarga MySQL Shell:**
+- https://dev.mysql.com/downloads/shell/
+
+Luego sigue los pasos de la Opción B.
 
 ## 🚀 Paso 6: Deploy
 
