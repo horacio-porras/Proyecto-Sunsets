@@ -18,6 +18,25 @@ router.get('/products', async (req, res) => {
                 p.sin_gluten,
                 p.disponible,
                 p.tiempo_preparacion,
+                p.descuento_activo,
+                p.porcentaje_descuento,
+                p.fecha_inicio_descuento,
+                p.fecha_fin_descuento,
+                CASE 
+                    WHEN p.descuento_activo = 1 
+                        AND p.porcentaje_descuento IS NOT NULL 
+                        AND (p.fecha_inicio_descuento IS NULL OR p.fecha_inicio_descuento <= NOW())
+                        AND (p.fecha_fin_descuento IS NULL OR p.fecha_fin_descuento >= NOW())
+                    THEN ROUND(p.precio * (1 - (p.porcentaje_descuento / 100)), 2)
+                    ELSE p.precio
+                END AS precio_final,
+                CASE 
+                    WHEN p.descuento_activo = 1 
+                        AND p.porcentaje_descuento IS NOT NULL 
+                        AND (p.fecha_inicio_descuento IS NULL OR p.fecha_inicio_descuento <= NOW())
+                        AND (p.fecha_fin_descuento IS NULL OR p.fecha_fin_descuento >= NOW())
+                    THEN 1 ELSE 0
+                END AS descuento_vigente,
                 c.nombre_categoria as categoria
             FROM producto p
             JOIN categoria c ON p.id_categoria = c.id_categoria
@@ -32,6 +51,9 @@ router.get('/products', async (req, res) => {
             description: product.descripcion,
             ingredients: product.ingredientes,
             price: product.precio,
+            finalPrice: product.precio_final,
+            hasDiscount: product.descuento_vigente === 1,
+            discountPercentage: product.porcentaje_descuento,
             image: product.imagen_url,
             category: product.categoria,
             dietary: {

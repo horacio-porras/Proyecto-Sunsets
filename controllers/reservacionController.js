@@ -351,6 +351,105 @@ const getActiveReservations = async (req, res) => {
     }
 };
 
+const getAllReservations = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const [rows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        // Actualizar automáticamente las reservaciones que ya pasaron su fecha/hora a "completada"
+        const now = new Date();
+        const reservacionesToUpdate = [];
+
+        for (const reserva of rows) {
+            // Solo actualizar si no está cancelada, rechazada o ya completada
+            if (reserva.estado_reserva && 
+                !['cancelada', 'rechazada', 'completada'].includes(reserva.estado_reserva.toLowerCase())) {
+                
+                const reservaDateTime = new Date(`${reserva.fecha_reserva}T${reserva.hora_reserva}`);
+                
+                // Si la fecha/hora de la reserva ya pasó, actualizar a "completada"
+                if (reservaDateTime < now) {
+                    reservacionesToUpdate.push(reserva.id_reservacion);
+                }
+            }
+        }
+
+        // Actualizar en lote todas las reservaciones que deben cambiar a "completada"
+        if (reservacionesToUpdate.length > 0) {
+            try {
+                const placeholders = reservacionesToUpdate.map(() => '?').join(',');
+                await pool.execute(
+                    `UPDATE reservacion 
+                     SET estado_reserva = 'completada' 
+                     WHERE id_reservacion IN (${placeholders})`,
+                    reservacionesToUpdate
+                );
+                console.log(`[Reservaciones] Actualizadas ${reservacionesToUpdate.length} reservaciones a estado "completada"`);
+            } catch (updateError) {
+                console.error('Error al actualizar estados de reservaciones:', updateError);
+                // Continuar aunque falle la actualización
+            }
+        }
+
+        // Volver a consultar para obtener los estados actualizados
+        const [updatedRows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        const reservaciones = updatedRows.map(reserva => {
+            const { notas, preferenciaMesa } = parseNotas(reserva.notas_especiales);
+            return {
+                id_reservacion: reserva.id_reservacion,
+                fecha_reserva: reserva.fecha_reserva,
+                hora_reserva: reserva.hora_reserva,
+                cantidad_personas: reserva.cantidad_personas,
+                estado_reserva: reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                notas_especiales: notas,
+                preferencia_mesa: preferenciaMesa,
+                fecha_creacion: reserva.fecha_creacion
+            };
+        });
+
+        return res.json({
+            success: true,
+            reservaciones
+        });
+    } catch (error) {
+        console.error('Error al obtener todas las reservaciones:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
 const updateReservation = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -528,6 +627,7 @@ module.exports = {
     createReservation,
     createPublicReservation,
     getActiveReservations,
+    getAllReservations,
     updateReservation,
     cancelReservation,
     MAX_PERSONAS_RESERVA

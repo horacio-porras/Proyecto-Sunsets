@@ -1,14 +1,27 @@
 //Variables globales para el sistema de pedidos
 let orderCart = [];
 let deliveryFee = 1500;
-let taxRate = 0.05;
+let taxRate = 0.13;
+
+// Función helper para formatear precios con 2 decimales
+function formatPrice(price) {
+    return parseFloat(price || 0).toLocaleString('es-CR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
 
 function getActiveReward() {
     const stored = localStorage.getItem('sunsets-active-reward');
     if (!stored) return null;
     try {
         const reward = JSON.parse(stored);
-        if (!reward || reward.tipo_promocion !== 'descuento' || reward.estado_canje === 'aplicado') {
+        const isValidType = reward && (
+            reward.tipo_promocion === 'descuento' || 
+            reward.tipo_promocion === 'descuento_colones' || 
+            reward.tipo_promocion === 'descuento_porcentaje'
+        );
+        if (!isValidType || reward.estado_canje === 'aplicado') {
             return null;
         }
         return reward;
@@ -94,17 +107,34 @@ function calculatePromotionsDiscount(subtotal, cartItems, promotions) {
         return { discount: 0, breakdown: [] };
     }
 
+    // Crear un mapa de productos con descuento individual
+    const productosConDescuentoIndividual = new Set();
+    cartItems.forEach((item) => {
+        if (item && item.hasDiscount && item.originalPrice && item.finalPrice) {
+            const originalPrice = Number(item.originalPrice) || 0;
+            const finalPrice = Number(item.finalPrice) || 0;
+            if (originalPrice > finalPrice) {
+                const productId = Number(item.id);
+                if (!Number.isNaN(productId)) {
+                    productosConDescuentoIndividual.add(productId);
+                }
+            }
+        }
+    });
+
+    // Mapa de subtotales por producto usando precio ORIGINAL (sin descuento individual)
     const subtotalByProduct = new Map();
 
     cartItems.forEach((item) => {
         if (!item) return;
         const quantity = Number(item.quantity);
-        const price = Number(item.price);
-        if (Number.isNaN(quantity) || Number.isNaN(price) || quantity <= 0 || price < 0) {
+        // Usar precio original para calcular promociones
+        const originalPrice = Number(item.originalPrice || item.price);
+        if (Number.isNaN(quantity) || Number.isNaN(originalPrice) || quantity <= 0 || originalPrice < 0) {
             return;
         }
 
-        const lineSubtotal = price * quantity;
+        const lineSubtotal = originalPrice * quantity;
         const productId = Number(item.id);
 
         if (!Number.isNaN(productId)) {
@@ -128,14 +158,37 @@ function calculatePromotionsDiscount(subtotal, cartItems, promotions) {
                 return;
             }
 
-            promo.productos.forEach((productId) => {
+            // Filtrar productos que ya tienen descuento individual
+            // Si todos los productos de la promoción tienen descuento individual, no aplicar la promoción
+            const productosAplicables = promo.productos.filter((productId) => {
+                return !productosConDescuentoIndividual.has(Number(productId));
+            });
+
+            if (productosAplicables.length === 0) {
+                // Todos los productos ya tienen descuento individual, saltar esta promoción
+                return;
+            }
+
+            productosAplicables.forEach((productId) => {
                 const subtotalProducto = subtotalByProduct.get(Number(productId));
                 if (subtotalProducto) {
                     applicableSubtotal += subtotalProducto;
                 }
             });
         } else {
-            applicableSubtotal = subtotal;
+            // Para promociones generales, calcular sobre productos sin descuento individual
+            cartItems.forEach((item) => {
+                if (!item) return;
+                const productId = Number(item.id);
+                // Solo incluir productos sin descuento individual
+                if (!Number.isNaN(productId) && !productosConDescuentoIndividual.has(productId)) {
+                    const originalPrice = Number(item.originalPrice || item.price);
+                    const quantity = Number(item.quantity);
+                    if (!Number.isNaN(originalPrice) && !Number.isNaN(quantity) && originalPrice > 0 && quantity > 0) {
+                        applicableSubtotal += originalPrice * quantity;
+                    }
+                }
+            });
         }
 
         if (applicableSubtotal <= 0) {
@@ -238,6 +291,32 @@ function renderOrderCart() {
                  <i class="fas fa-image text-gray-500 text-xl"></i>
                </div>`;
         
+        // Obtener precios original y con descuento
+        const originalPrice = item.originalPrice || item.price;
+        const finalPrice = item.finalPrice || item.price;
+        const hasDiscount = item.hasDiscount && originalPrice > finalPrice;
+        
+        let priceHtml = '';
+        if (hasDiscount) {
+            const totalOriginal = originalPrice * item.quantity;
+            const totalFinal = finalPrice * item.quantity;
+            priceHtml = `
+                <div class="text-right w-32">
+                    <div class="text-xs text-gray-400 line-through">₡${formatPrice(totalOriginal)}</div>
+                    <div class="text-black-600 font-semibold">₡${formatPrice(totalFinal)}</div>
+                    <div class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-semibold mt-1 inline-block">
+                        -${item.discountPercentage || Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
+                    </div>
+                </div>
+            `;
+        } else {
+            priceHtml = `
+                <div class="text-right w-24">
+                    <p class="font-semibold">₡${formatPrice(finalPrice * item.quantity)}</p>
+                </div>
+            `;
+        }
+        
         cartItem.innerHTML = `
             ${imageHtml}
             <div class="flex-1 min-w-0">
@@ -260,9 +339,7 @@ function renderOrderCart() {
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <div class="text-right w-24">
-                    <p class="font-semibold">₡${(item.price * item.quantity).toLocaleString()}</p>
-                </div>
+                ${priceHtml}
             </div>
         `;
         
@@ -336,27 +413,74 @@ async function updateOrderSummary() {
 
     await loadActivePromotions();
 
-    const subtotal = orderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const { discount: promotionsDiscountRaw, breakdown: promotionsBreakdown } = calculatePromotionsDiscount(subtotal, orderCart, activePromotions);
-    const promotionsDiscount = Math.min(subtotal, promotionsDiscountRaw || 0);
-    const subtotalAfterPromotions = Math.max(0, subtotal - promotionsDiscount);
-
-    const taxes = subtotalAfterPromotions * taxRate;
-    let totalBeforeRewards = subtotalAfterPromotions + deliveryFee + taxes;
-    let total = totalBeforeRewards;
+    // Calcular subtotal con precio original (sin descuentos de producto)
+    const subtotalOriginal = orderCart.reduce((sum, item) => {
+        const originalPrice = item.originalPrice || item.price;
+        return sum + (originalPrice * item.quantity);
+    }, 0);
+    
+    // Calcular subtotal con precio final (con descuentos de producto aplicados)
+    const subtotalConDescuentos = orderCart.reduce((sum, item) => {
+        const finalPrice = item.finalPrice || item.price;
+        return sum + (finalPrice * item.quantity);
+    }, 0);
+    
+    // Descuento por descuentos de productos
+    const descuentoProductos = subtotalOriginal - subtotalConDescuentos;
+    
+    // Calcular descuentos de promociones (esta función ahora excluye productos con descuento individual)
+    // Usar subtotal original para calcular, pero la función ya filtra productos con descuento individual
+    const { discount: promotionsDiscountRaw, breakdown: promotionsBreakdown } = calculatePromotionsDiscount(subtotalOriginal, orderCart, activePromotions);
+    
+    // El descuento de promociones se aplica sobre el subtotal con descuentos de productos
+    // pero solo sobre productos que NO tienen descuento individual
+    const promotionsDiscount = Math.min(subtotalConDescuentos, promotionsDiscountRaw || 0);
+    const subtotalAfterPromotions = Math.max(0, subtotalConDescuentos - promotionsDiscount);
 
     const activeReward = getActiveReward();
     let rewardDiscount = 0;
+    
+    // Calcular descuento de recompensa si existe
+    if (activeReward && activeReward.valor_canje) {
+        // Calcular descuento según el tipo de recompensa
+        // Verificar tanto tipo_promocion (de localStorage) como tipo (de order.rewardCanje)
+        const rewardType = activeReward.tipo_promocion || activeReward.tipo;
+        if (rewardType === 'descuento_porcentaje') {
+            // Para porcentajes, calcular sobre el subtotal después de promociones
+            const porcentaje = Number(activeReward.valor_canje) / 100;
+            rewardDiscount = subtotalAfterPromotions * porcentaje;
+        } else {
+            // Para descuentos fijos, usar el valor directamente pero limitado al subtotal
+            rewardDiscount = Math.min(Number(activeReward.valor_canje), subtotalAfterPromotions);
+        }
+    }
 
     summaryContainer.innerHTML = '';
 
     orderCart.forEach((item) => {
+        const originalPrice = item.originalPrice || item.price;
+        const finalPrice = item.finalPrice || item.price;
+        const hasDiscount = item.hasDiscount && originalPrice > finalPrice;
+        const itemTotalOriginal = originalPrice * item.quantity;
+        const itemTotalFinal = finalPrice * item.quantity;
+        
         const itemRow = document.createElement('div');
         itemRow.className = 'flex justify-between';
-        itemRow.innerHTML = `
-            <span class="text-gray-600">${item.name} x${item.quantity}</span>
-            <span>₡${(item.price * item.quantity).toLocaleString()}</span>
-        `;
+        
+        if (hasDiscount) {
+            itemRow.innerHTML = `
+                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                <div class="text-right">
+                    <span class="text-xs text-gray-400 line-through">₡${formatPrice(itemTotalOriginal)}</span>
+                    <span class="text-black-600 ml-2">₡${formatPrice(itemTotalFinal)}</span>
+                </div>
+            `;
+        } else {
+            itemRow.innerHTML = `
+                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                <span>₡${formatPrice(itemTotalFinal)}</span>
+            `;
+        }
         summaryContainer.appendChild(itemRow);
     });
 
@@ -364,13 +488,18 @@ async function updateOrderSummary() {
     separator1.className = 'my-3';
     summaryContainer.appendChild(separator1);
 
+    // Mostrar subtotal con descuentos de productos aplicados
     const subtotalRow = document.createElement('div');
-    subtotalRow.className = 'flex justify-between';
+    subtotalRow.className = 'flex justify-between font-semibold text-lg';
     subtotalRow.innerHTML = `
-        <span class="text-gray-600">Subtotal</span>
-        <span>₡${subtotal.toLocaleString()}</span>
+        <span>Subtotal</span>
+        <span>₡${formatPrice(subtotalConDescuentos)}</span>
     `;
     summaryContainer.appendChild(subtotalRow);
+
+    const separatorSubtotal = document.createElement('hr');
+    separatorSubtotal.className = 'my-3';
+    summaryContainer.appendChild(separatorSubtotal);
 
     if (promotionsBreakdown.length > 0) {
         promotionsBreakdown.forEach((promo) => {
@@ -378,53 +507,57 @@ async function updateOrderSummary() {
             promoRow.className = 'flex justify-between text-green-600 font-semibold';
             promoRow.innerHTML = `
                 <span>${promo.label}</span>
-                <span>-₡${Math.round(promo.amount).toLocaleString()}</span>
+                <span>-₡${formatPrice(promo.amount)}</span>
             `;
             summaryContainer.appendChild(promoRow);
         });
-
-        // Ocultado: "Subtotal después de promociones" según solicitud del usuario
-        // const subtotalDiscountedRow = document.createElement('div');
-        // subtotalDiscountedRow.className = 'flex justify-between';
-        // subtotalDiscountedRow.innerHTML = `
-        //     <span class="text-gray-600">Subtotal después de promociones</span>
-        //     <span>₡${Math.round(subtotalAfterPromotions).toLocaleString()}</span>
-        // `;
-        // summaryContainer.appendChild(subtotalDiscountedRow);
     }
+
+    // Mostrar descuento de recompensa antes de costo de entrega e impuestos
+    if (rewardDiscount > 0 && activeReward) {
+        const rewardRow = document.createElement('div');
+        rewardRow.className = 'flex justify-between text-green-600 font-semibold';
+        rewardRow.innerHTML = `
+            <span>Descuento ${activeReward.nombre || 'por puntos'}</span>
+            <span>-₡${formatPrice(rewardDiscount)}</span>
+        `;
+        summaryContainer.appendChild(rewardRow);
+    }
+
+    // Calcular subtotal después de aplicar el descuento de recompensa
+    const subtotalAfterReward = Math.max(0, subtotalAfterPromotions - rewardDiscount);
 
     const deliveryRow = document.createElement('div');
     deliveryRow.className = 'flex justify-between';
     deliveryRow.innerHTML = `
         <span class="text-gray-600">Costo de entrega</span>
-        <span>₡${deliveryFee.toLocaleString()}</span>
+        <span>₡${formatPrice(deliveryFee)}</span>
     `;
     summaryContainer.appendChild(deliveryRow);
 
+    // Calcular impuestos sobre el subtotal DESPUÉS de aplicar el descuento de recompensa
+    const taxes = subtotalAfterReward * taxRate;
     const taxRow = document.createElement('div');
     taxRow.className = 'flex justify-between';
     taxRow.innerHTML = `
         <span class="text-gray-600">Impuestos</span>
-        <span>₡${Math.round(taxes).toLocaleString()}</span>
+        <span>₡${formatPrice(taxes)}</span>
     `;
     summaryContainer.appendChild(taxRow);
 
-    const separator2 = document.createElement('hr');
-    separator2.className = 'my-3';
-    summaryContainer.appendChild(separator2);
+    const separator3 = document.createElement('hr');
+    separator3.className = 'my-3';
+    summaryContainer.appendChild(separator3);
 
-    if (activeReward && activeReward.valor_canje) {
-        rewardDiscount = Math.min(activeReward.valor_canje, total);
-        total = Math.max(0, total - rewardDiscount);
+    // Calcular el total: subtotal después de recompensa + deliveryFee + taxes
+    let total = Math.max(0, subtotalAfterReward + deliveryFee + taxes);
 
-        const rewardRow = document.createElement('div');
-        rewardRow.className = 'flex justify-between text-green-600 font-semibold';
-        rewardRow.innerHTML = `
-            <span>Descuento ${activeReward.nombre || 'por puntos'}</span>
-            <span>-₡${Math.round(rewardDiscount).toLocaleString()}</span>
-        `;
-        summaryContainer.appendChild(rewardRow);
-    }
+    // Calcular el total original (sin descuentos) para mostrarlo tachado si hay descuentos
+    const taxesOriginal = subtotalOriginal * taxRate;
+    const totalOriginal = subtotalOriginal + deliveryFee + taxesOriginal;
+
+    // Verificar si hay algún descuento aplicado
+    const hasAnyDiscount = descuentoProductos > 0 || promotionsDiscount > 0 || rewardDiscount > 0;
 
     // Opción de descuento por puntos de lealtad removida
     let loyaltyDiscount = 0;
@@ -432,15 +565,29 @@ async function updateOrderSummary() {
 
     const totalRow = document.createElement('div');
     totalRow.className = 'flex justify-between font-semibold text-lg';
-    totalRow.innerHTML = `
-        <span>Total</span>
-        <span id="orderTotal">₡${Math.round(total).toLocaleString()}</span>
-    `;
+    
+    if (hasAnyDiscount && totalOriginal > total) {
+        totalRow.innerHTML = `
+            <span>Total</span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 line-through">₡${formatPrice(totalOriginal)}</span>
+                <span id="orderTotal" class="text-gray-900">₡${formatPrice(total)}</span>
+            </div>
+        `;
+    } else {
+        totalRow.innerHTML = `
+            <span>Total</span>
+            <span id="orderTotal">₡${formatPrice(total)}</span>
+        `;
+    }
     summaryContainer.appendChild(totalRow);
 
     window.currentOrderTotals = {
-        subtotal,
+        subtotal: subtotalConDescuentos,
+        subtotalOriginal: subtotalOriginal,
+        descuentoProductos: descuentoProductos,
         subtotalAfterPromotions,
+        subtotalAfterReward,
         taxes,
         deliveryFee,
         promotionDiscount: promotionsDiscount,
@@ -451,12 +598,237 @@ async function updateOrderSummary() {
         })),
         rewardDiscount,
         loyaltyDiscount,
-        totalBeforeRewards,
         totalBeforeLoyalty: totalBeforeLoyaltyValue,
         total
     };
 
-    await updateLoyaltyInfo(subtotalAfterPromotions);
+    // Calcular puntos basándose en el total final (después de todos los descuentos)
+    // Los puntos se calculan sobre el total pagado, no sobre el subtotal
+    await updateLoyaltyInfo(total);
+}
+
+// Función reutilizable para calcular y renderizar el resumen del pedido
+// Puede ser usada desde pago.html y confirmacion.html
+async function renderOrderSummaryHTML(cartItems, containerId, options = {}) {
+    const summaryContainer = document.getElementById(containerId);
+    if (!summaryContainer) {
+        console.error(`Container with id "${containerId}" not found`);
+        return null;
+    }
+
+    await loadActivePromotions();
+
+    // Calcular subtotal con precio original (sin descuentos de producto)
+    const subtotalOriginal = cartItems.reduce((sum, item) => {
+        const originalPrice = item.originalPrice || item.price;
+        return sum + (originalPrice * item.quantity);
+    }, 0);
+    
+    // Calcular subtotal con precio final (con descuentos de producto aplicados)
+    const subtotalConDescuentos = cartItems.reduce((sum, item) => {
+        const finalPrice = item.finalPrice || item.price;
+        return sum + (finalPrice * item.quantity);
+    }, 0);
+    
+    // Descuento por descuentos de productos
+    const descuentoProductos = subtotalOriginal - subtotalConDescuentos;
+    
+    // Calcular descuentos de promociones
+    const { discount: promotionsDiscountRaw, breakdown: promotionsBreakdown } = calculatePromotionsDiscount(subtotalOriginal, cartItems, activePromotions);
+    
+    // El descuento de promociones se aplica sobre el subtotal con descuentos de productos
+    const promotionsDiscount = Math.min(subtotalConDescuentos, promotionsDiscountRaw || 0);
+    const subtotalAfterPromotions = Math.max(0, subtotalConDescuentos - promotionsDiscount);
+
+    // Usar deliveryFee del archivo o el proporcionado en options
+    const deliveryFeeToUse = options.deliveryFee !== undefined ? options.deliveryFee : deliveryFee;
+    
+    // Manejar recompensas si están en options (ANTES de calcular impuestos)
+    let rewardDiscount = 0;
+    const activeReward = options.activeReward || getActiveReward();
+    
+    // PRIORIDAD: Si rewardDiscount ya viene calculado en options, usarlo directamente
+    // Esto evita cualquier recálculo incorrecto, especialmente para recompensas en porcentaje
+    if (options.rewardDiscount !== undefined && options.rewardDiscount !== null) {
+        // Si ya viene calculado en options, usarlo directamente (ya está en colones)
+        rewardDiscount = Number(options.rewardDiscount);
+    } else if (activeReward && activeReward.valor_canje) {
+        // Solo calcular si no se proporcionó rewardDiscount en options
+        // Calcular descuento según el tipo de recompensa
+        // Verificar tanto tipo_promocion (de localStorage) como tipo (de order.rewardCanje)
+        const rewardType = activeReward.tipo_promocion || activeReward.tipo;
+        if (rewardType === 'descuento_porcentaje') {
+            // Para porcentajes, calcular sobre el subtotal después de promociones
+            const porcentaje = Number(activeReward.valor_canje) / 100;
+            rewardDiscount = subtotalAfterPromotions * porcentaje;
+        } else {
+            // Para descuentos fijos, usar el valor directamente pero limitado al subtotal
+            rewardDiscount = Math.min(Number(activeReward.valor_canje), subtotalAfterPromotions);
+        }
+    }
+    
+    // Calcular subtotal después de aplicar el descuento de recompensa
+    const subtotalAfterReward = Math.max(0, subtotalAfterPromotions - rewardDiscount);
+    
+    // Usar taxRate del archivo o el proporcionado en options
+    const taxRateToUse = options.taxRate !== undefined ? options.taxRate : taxRate;
+    // Calcular impuestos sobre el subtotal DESPUÉS de aplicar el descuento de recompensa
+    const taxes = subtotalAfterReward * taxRateToUse;
+    
+    // Calcular el total: subtotal después de recompensa + deliveryFee + taxes
+    let total = Math.max(0, subtotalAfterReward + deliveryFeeToUse + taxes);
+
+    summaryContainer.innerHTML = '';
+
+    // Renderizar items
+    cartItems.forEach((item) => {
+        const originalPrice = item.originalPrice || item.price;
+        const finalPrice = item.finalPrice || item.price;
+        const hasDiscount = item.hasDiscount && originalPrice > finalPrice;
+        const itemTotalOriginal = originalPrice * item.quantity;
+        const itemTotalFinal = finalPrice * item.quantity;
+        
+        const itemRow = document.createElement('div');
+        itemRow.className = 'flex justify-between';
+        
+        if (hasDiscount) {
+            itemRow.innerHTML = `
+                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                <div class="text-right">
+                    <span class="text-xs text-gray-400 line-through">₡${formatPrice(itemTotalOriginal)}</span>
+                    <span class="text-black-600 ml-2">₡${formatPrice(itemTotalFinal)}</span>
+                </div>
+            `;
+        } else {
+            itemRow.innerHTML = `
+                <span class="text-gray-600">${item.name} x${item.quantity}</span>
+                <span>₡${formatPrice(itemTotalFinal)}</span>
+            `;
+        }
+        summaryContainer.appendChild(itemRow);
+    });
+
+    const separator1 = document.createElement('hr');
+    separator1.className = 'my-3';
+    summaryContainer.appendChild(separator1);
+
+    // Mostrar subtotal con descuentos de productos aplicados
+    const subtotalRow = document.createElement('div');
+    subtotalRow.className = 'flex justify-between font-semibold text-lg';
+    subtotalRow.innerHTML = `
+        <span>Subtotal</span>
+        <span>₡${formatPrice(subtotalConDescuentos)}</span>
+    `;
+    summaryContainer.appendChild(subtotalRow);
+
+    const separatorSubtotal = document.createElement('hr');
+    separatorSubtotal.className = 'my-3';
+    summaryContainer.appendChild(separatorSubtotal);
+
+    if (promotionsBreakdown.length > 0) {
+        promotionsBreakdown.forEach((promo) => {
+            const promoRow = document.createElement('div');
+            promoRow.className = 'flex justify-between text-green-600 font-semibold';
+            promoRow.innerHTML = `
+                <span>${promo.label}</span>
+                <span>-₡${formatPrice(promo.amount)}</span>
+            `;
+            summaryContainer.appendChild(promoRow);
+        });
+    }
+
+    // Mostrar descuento de recompensa antes de costo de entrega e impuestos
+    if (rewardDiscount > 0) {
+        const rewardRow = document.createElement('div');
+        rewardRow.className = 'flex justify-between text-green-600 font-semibold';
+        rewardRow.innerHTML = `
+            <span>Descuento ${options.rewardName || 'por puntos'}</span>
+            <span>-₡${formatPrice(rewardDiscount)}</span>
+        `;
+        summaryContainer.appendChild(rewardRow);
+    }
+
+    const deliveryRow = document.createElement('div');
+    deliveryRow.className = 'flex justify-between';
+    deliveryRow.innerHTML = `
+        <span class="text-gray-600">Costo de entrega</span>
+        <span>₡${formatPrice(deliveryFeeToUse)}</span>
+    `;
+    summaryContainer.appendChild(deliveryRow);
+
+    const taxRow = document.createElement('div');
+    taxRow.className = 'flex justify-between';
+    taxRow.innerHTML = `
+        <span class="text-gray-600">Impuestos</span>
+        <span>₡${formatPrice(taxes)}</span>
+    `;
+    summaryContainer.appendChild(taxRow);
+
+    const separator3 = document.createElement('hr');
+    separator3.className = 'my-3';
+    summaryContainer.appendChild(separator3);
+
+    // Calcular el total original (sin descuentos) para mostrarlo tachado si hay descuentos
+    const taxesOriginal = subtotalOriginal * taxRateToUse;
+    const totalOriginal = subtotalOriginal + deliveryFeeToUse + taxesOriginal;
+
+    // Verificar si hay algún descuento aplicado
+    const hasAnyDiscount = descuentoProductos > 0 || promotionsDiscount > 0 || rewardDiscount > 0;
+
+    const totalRow = document.createElement('div');
+    totalRow.className = 'flex justify-between font-semibold text-lg';
+    
+    if (hasAnyDiscount && totalOriginal > total) {
+        totalRow.innerHTML = `
+            <span>Total</span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 line-through">₡${formatPrice(totalOriginal)}</span>
+                <span class="text-gray-900">₡${formatPrice(total)}</span>
+            </div>
+        `;
+    } else {
+        totalRow.innerHTML = `
+            <span>Total</span>
+            <span>₡${formatPrice(total)}</span>
+        `;
+    }
+    summaryContainer.appendChild(totalRow);
+
+    return {
+        subtotal: subtotalConDescuentos,
+        subtotalOriginal: subtotalOriginal,
+        descuentoProductos: descuentoProductos,
+        subtotalAfterPromotions,
+        taxes,
+        deliveryFee: deliveryFeeToUse,
+        promotionDiscount: promotionsDiscount,
+        promotionsApplied: promotionsBreakdown.map((promo) => ({
+            label: promo.label,
+            amount: promo.amount,
+            alcance: promo.alcance
+        })),
+        rewardDiscount,
+        total,
+        html: summaryContainer.innerHTML
+    };
+}
+
+// Función para generar HTML del resumen como string (para confirmacion.html)
+async function generateOrderSummaryHTML(cartItems, options = {}) {
+    // Crear un contenedor temporal
+    const tempContainer = document.createElement('div');
+    tempContainer.id = 'temp-summary-container';
+    document.body.appendChild(tempContainer);
+    
+    try {
+        const result = await renderOrderSummaryHTML(cartItems, 'temp-summary-container', options);
+        const html = tempContainer.innerHTML;
+        document.body.removeChild(tempContainer);
+        return html;
+    } catch (error) {
+        document.body.removeChild(tempContainer);
+        throw error;
+    }
 }
 
 //Función para obtener puntos del usuario logueado
@@ -536,7 +908,7 @@ function updateLoyaltyCheckbox(userPoints) {
         
         if (userPoints >= pointsNeeded) {
             loyaltyCheckbox.disabled = false;
-            loyaltyLabel.textContent = `Usar ${pointsNeeded} puntos de lealtad (-₡${discountAmount.toLocaleString()})`;
+            loyaltyLabel.textContent = `Usar ${pointsNeeded} puntos de lealtad (-₡${formatPrice(discountAmount)})`;
             loyaltyLabel.style.color = '#374151';
             
             const pointsInfo = loyaltyLabel.parentElement.querySelector('.points-info');
@@ -698,9 +1070,9 @@ function setupLoyaltyToggle() {
             if (this.checked) {
                 const discount = 2500;
                 const discountedTotal = Math.max(0, total - discount);
-                totalElement.textContent = `₡${Math.round(discountedTotal).toLocaleString()}`;
+                totalElement.textContent = `₡${formatPrice(discountedTotal)}`;
             } else {
-                totalElement.textContent = `₡${Math.round(total).toLocaleString()}`;
+                totalElement.textContent = `₡${formatPrice(total)}`;
             }
         });
     }
@@ -710,6 +1082,11 @@ function setupLoyaltyToggle() {
 window.updateOrderQuantity = updateOrderQuantity;
 window.removeOrderItem = removeOrderItem;
 window.placeOrder = placeOrder;
+window.renderOrderSummaryHTML = renderOrderSummaryHTML;
+window.generateOrderSummaryHTML = generateOrderSummaryHTML;
+window.formatPrice = formatPrice; // Hacer formatPrice disponible globalmente
+window.loadActivePromotions = loadActivePromotions; // Hacer loadActivePromotions disponible globalmente
+window.calculatePromotionsDiscount = calculatePromotionsDiscount; // Hacer calculatePromotionsDiscount disponible globalmente
 
 //Función para inicializar puntos de lealtad
 async function initializeLoyaltyPoints() {

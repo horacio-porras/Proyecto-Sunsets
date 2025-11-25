@@ -523,12 +523,16 @@
                             </label>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold" onclick="editarRecompensa(${recompensa.id_recompensa})">
-                                    <i class="fas fa-edit mr-1"></i> Editar
+                            <div class="flex justify-center space-x-3 text-lg">
+                                <button onclick="editarRecompensa(${recompensa.id_recompensa})" 
+                                        class="text-orange-600 hover:text-orange-700 transition"
+                                        title="Editar Recompensa">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition font-semibold" onclick="eliminarRecompensa(${recompensa.id_recompensa})">
-                                    <i class="fas fa-trash mr-1"></i> Eliminar
+                                <button onclick="eliminarRecompensa(${recompensa.id_recompensa})" 
+                                        class="text-red-600 hover:text-red-700 transition"
+                                        title="Eliminar Recompensa">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -571,7 +575,7 @@
             resetFormularioRecompensa();
 
             if (recompensa) {
-                document.getElementById('modalRecompensaTitulo').textContent = 'Editar recompensa';
+                document.getElementById('modalRecompensaTitulo').textContent = 'Editar Recompensa';
                 document.getElementById('recompensaId').value = recompensa.id_recompensa;
                 document.getElementById('nombreRecompensa').value = recompensa.nombre_recompensa || '';
                 document.getElementById('descripcionRecompensa').value = recompensa.descripcion || '';
@@ -590,7 +594,7 @@
                 actualizarEtiquetaValorRecompensa();
                 actualizarBotonGuardarRecompensa(true);
             } else {
-                document.getElementById('modalRecompensaTitulo').textContent = 'Nueva recompensa';
+                document.getElementById('modalRecompensaTitulo').textContent = 'Nueva Recompensa';
                 document.getElementById('recompensaActiva').checked = true;
                 actualizarEtiquetaValorRecompensa();
                 actualizarBotonGuardarRecompensa(false);
@@ -804,7 +808,7 @@
             }
 
             const confirmacion = await Swal.fire({
-                title: '¿Eliminar recompensa?',
+                title: '¿Eliminar Recompensa?',
                 text: `Se eliminará "${recompensa.nombre_recompensa}" y no podrás deshacerlo.`,
                 icon: 'warning',
                 showCancelButton: true,

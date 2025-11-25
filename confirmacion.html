@@ -63,7 +63,7 @@
                         <i class="fas fa-utensils"></i>
                         Hacer Otro Pedido
                     </a>
-                    <a href="/index.html" class="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition font-semibold flex items-center justify-center gap-2">
+                    <a href="/index.html" class="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition font-semibold flex items-center justify-center gap-2">
                         <i class="fas fa-home"></i>
                         Ir al Inicio
                     </a>
@@ -78,6 +78,15 @@
 
     <script>
         let orderData = null;
+
+        // Función helper para formatear precios con dos decimales
+        function formatPrice(value) {
+            const num = Number(value) || 0;
+            return num.toLocaleString('es-CR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             loadOrderData();
@@ -415,7 +424,7 @@
                 const itemsHTML = items.map(item => `
                     <div class="flex justify-between">
                         <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
-                        <span>₡${(item.price * item.quantity).toLocaleString()}</span>
+                        <span>₡${formatPrice(item.price * item.quantity)}</span>
                     </div>
                 `).join('');
 
@@ -428,22 +437,22 @@
                         <hr class="my-2">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Subtotal</span>
-                            <span>₡${subtotal.toLocaleString()}</span>
+                            <span>₡${formatPrice(subtotal)}</span>
                         </div>
                         ${promotionsHTML}
                         <div class="flex justify-between">
                             <span class="text-gray-600">Costo de entrega</span>
-                            <span>₡${deliveryFee.toLocaleString()}</span>
+                            <span>₡${formatPrice(deliveryFee)}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Impuestos</span>
-                            <span>₡${Math.round(taxes).toLocaleString()}</span>
+                            <span>₡${formatPrice(taxes)}</span>
                         </div>
                         ${rewardsLoyaltyHTML}
                         <hr class="my-2">
                         <div class="flex justify-between font-semibold text-lg">
                             <span>Total</span>
-                            <span>₡${Math.round(total).toLocaleString()}</span>
+                            <span>₡${formatPrice(total)}</span>
                         </div>
                     </div>
                 `;
@@ -469,21 +478,21 @@
             const itemsHTML = items.map(item => `
                 <div class="flex justify-between">
                     <span class="text-gray-600">${item.name || `Producto #${item.id}`} x${item.quantity}</span>
-                    <span>₡${(item.price * item.quantity).toLocaleString()}</span>
+                    <span>₡${formatPrice(item.price * item.quantity)}</span>
                 </div>
             `).join('');
 
             const rewardRow = rewardDiscount > 0 ? `
                 <div class="flex justify-between text-green-600 font-semibold">
                     <span>Descuento por recompensa</span>
-                    <span>-₡${Math.round(rewardDiscount).toLocaleString()}</span>
+                    <span>-₡${formatPrice(rewardDiscount)}</span>
                 </div>
             ` : '';
 
             const loyaltyRow = loyaltyDiscount > 0 ? `
                 <div class="flex justify-between text-green-600 font-semibold">
                     <span>Descuento por puntos de lealtad</span>
-                    <span>-₡${Math.round(loyaltyDiscount).toLocaleString()}</span>
+                    <span>-₡${formatPrice(loyaltyDiscount)}</span>
                 </div>
             ` : '';
 
@@ -493,22 +502,22 @@
                     <hr class="my-2">
                     <div class="flex justify-between">
                         <span class="text-gray-600">Subtotal</span>
-                        <span>₡${subtotal.toLocaleString()}</span>
+                        <span>₡${formatPrice(subtotal)}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Costo de entrega</span>
-                        <span>₡${deliveryFee.toLocaleString()}</span>
+                        <span>₡${formatPrice(deliveryFee)}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Impuestos</span>
-                        <span>₡${Math.round(taxes).toLocaleString()}</span>
+                        <span>₡${formatPrice(taxes)}</span>
                     </div>
                     ${rewardRow}
                     ${loyaltyRow}
                     <hr class="my-2">
                     <div class="flex justify-between font-semibold text-lg">
                         <span>Total</span>
-                        <span>₡${Math.round(total).toLocaleString()}</span>
+                        <span>₡${formatPrice(total)}</span>
                     </div>
                 </div>
             `;
@@ -533,7 +542,7 @@
                     lines.push(`
                         <div class="flex justify-between text-green-600 font-semibold">
                             <span>${label}</span>
-                            <span>-₡${Math.round(amount).toLocaleString()}</span>
+                            <span>-₡${formatPrice(amount)}</span>
                         </div>
                     `);
                 });
@@ -541,7 +550,7 @@
                 lines.push(`
                     <div class="flex justify-between text-green-600 font-semibold">
                         <span>Descuento promocional</span>
-                        <span>-₡${Math.round(promotionDiscount).toLocaleString()}</span>
+                        <span>-₡${formatPrice(promotionDiscount)}</span>
                     </div>
                 `);
             }
@@ -558,7 +567,7 @@
                 lines.push(`
                     <div class="flex justify-between text-green-600 font-semibold">
                         <span>Descuento por recompensa</span>
-                        <span>-₡${Math.round(rewardDiscount).toLocaleString()}</span>
+                        <span>-₡${formatPrice(rewardDiscount)}</span>
                     </div>
                 `);
             }
@@ -567,7 +576,7 @@
                 lines.push(`
                     <div class="flex justify-between text-green-600 font-semibold">
                         <span>Descuento por puntos de lealtad</span>
-                        <span>-₡${Math.round(loyaltyDiscount).toLocaleString()}</span>
+                        <span>-₡${formatPrice(loyaltyDiscount)}</span>
                     </div>
                 `);
             }

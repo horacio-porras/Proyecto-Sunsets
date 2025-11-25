@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderación de Reseñas - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-shield-alt mr-3"></i>Moderación de Reseñas
+                        </h1>
+                        <p class="text-gray-300">Revisa y aprueba las opiniones de los clientes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Fecha</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Cliente</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Tipo</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Calificación</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Comentario</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaOpiniones" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="text-center py-10 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                                    <p>Cargando opiniones pendientes...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="opinionesPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="opinionesPaginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 opiniones
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="opinionesPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="opinionesPaginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="opinionesNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+    <script>
+        let opinionesPendientes = [];
+        let opinionesPaginaActual = 1;
+        const OPINIONES_POR_PAGINA = 10;
+        let totalOpiniones = 0;
+
+        let opinionesPaginationControls;
+        let opinionesPaginationSummary;
+        let opinionesPaginationInfo;
+        let opinionesPrevPageBtn;
+        let opinionesNextPageBtn;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarControlesPaginacionOpiniones();
+            loadOpinionesPendientes();
+        });
+
+        function inicializarControlesPaginacionOpiniones() {
+            opinionesPaginationControls = document.getElementById('opinionesPaginationControls');
+            opinionesPaginationSummary = document.getElementById('opinionesPaginationSummary');
+            opinionesPaginationInfo = document.getElementById('opinionesPaginationInfo');
+            opinionesPrevPageBtn = document.getElementById('opinionesPrevPageBtn');
+            opinionesNextPageBtn = document.getElementById('opinionesNextPageBtn');
+
+            if (opinionesPrevPageBtn) {
+                opinionesPrevPageBtn.addEventListener('click', () => cambiarPaginaOpiniones(-1));
+            }
+
+            if (opinionesNextPageBtn) {
+                opinionesNextPageBtn.addEventListener('click', () => cambiarPaginaOpiniones(1));
+            }
+        }
+
+        async function loadOpinionesPendientes() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const limit = OPINIONES_POR_PAGINA;
+                const offset = (opinionesPaginaActual - 1) * limit;
+
+                const response = await fetch(`/api/opiniones/pendientes?limit=${limit}&offset=${offset}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.mensaje || 'Error al cargar opiniones');
+                }
+
+                opinionesPendientes = data.opiniones || [];
+                totalOpiniones = data.total || 0;
+                renderizarOpiniones();
+            } catch (error) {
+                console.error('Error al cargar opiniones pendientes:', error);
+                const tbody = document.getElementById('tablaOpiniones');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-red-500">
+                                <i class="fas fa-exclamation-triangle text-2xl mb-3"></i>
+                                <p>Error al cargar opiniones: ${error.message}</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        function renderizarOpiniones() {
+            const tbody = document.getElementById('tablaOpiniones');
+            if (!tbody) return;
+
+            const totalPaginas = Math.ceil(totalOpiniones / OPINIONES_POR_PAGINA) || 1;
+            const inicio = (opinionesPaginaActual - 1) * OPINIONES_POR_PAGINA;
+            const fin = Math.min(inicio + OPINIONES_POR_PAGINA, totalOpiniones);
+
+            if (opinionesPendientes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-10 text-gray-500">
+                            <i class="fas fa-check-circle text-2xl mb-3"></i>
+                            <p>No hay opiniones pendientes de moderación</p>
+                        </td>
+                    </tr>
+                `;
+                renderizarControlesPaginacionOpiniones(totalOpiniones, inicio, fin, totalPaginas);
+                return;
+            }
+
+            tbody.innerHTML = opinionesPendientes.map(opinion => {
+                const fecha = new Date(opinion.fecha_opinion).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const estrellas = '★'.repeat(opinion.calificacion) + '☆'.repeat(5 - opinion.calificacion);
+                const tipoTexto = opinion.tipo_opinion === 'restaurante' 
+                    ? 'Restaurante' 
+                    : (opinion.nombre_producto || 'Producto');
+                const comentarioPreview = opinion.comentario 
+                    ? (opinion.comentario.length > 100 
+                        ? opinion.comentario.substring(0, 100) + '...' 
+                        : opinion.comentario)
+                    : 'Sin comentario';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${fecha}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">${opinion.nombre_cliente || 'Cliente'}</div>
+                            <div class="text-xs text-gray-500">${opinion.correo_cliente || ''}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${tipoTexto}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center text-yellow-400 text-lg">
+                                ${estrellas}
+                                <span class="text-gray-600 text-sm ml-2">${opinion.calificacion}/5</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-700 max-w-md">${comentarioPreview}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-3 text-lg">
+                                <button onclick="aprobarOpinion(${opinion.id_opinion})" 
+                                        class="text-green-600 hover:text-green-700 transition"
+                                        title="Aprobar opinión">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="rechazarOpinion(${opinion.id_opinion})" 
+                                        class="text-red-600 hover:text-red-700 transition"
+                                        title="Rechazar opinión">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderizarControlesPaginacionOpiniones(totalOpiniones, inicio, fin, totalPaginas);
+        }
+
+        function cambiarPaginaOpiniones(offset) {
+            const totalPaginas = Math.ceil(totalOpiniones / OPINIONES_POR_PAGINA) || 1;
+            const nuevaPagina = opinionesPaginaActual + offset;
+            
+            if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+                opinionesPaginaActual = nuevaPagina;
+                loadOpinionesPendientes();
+            }
+        }
+
+        function renderizarControlesPaginacionOpiniones(total, inicio, fin, totalPaginas) {
+            if (!opinionesPaginationControls || !opinionesPaginationSummary || !opinionesPaginationInfo || !opinionesPrevPageBtn || !opinionesNextPageBtn) {
+                return;
+            }
+
+            if (total === 0) {
+                opinionesPaginationControls.classList.add('hidden');
+                return;
+            }
+
+            opinionesPaginationControls.classList.remove('hidden');
+
+            opinionesPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${total} opiniones`;
+            opinionesPaginationInfo.textContent = `Página ${opinionesPaginaActual} de ${totalPaginas}`;
+
+            opinionesPrevPageBtn.disabled = opinionesPaginaActual <= 1;
+            opinionesNextPageBtn.disabled = opinionesPaginaActual >= totalPaginas;
+        }
+
+        async function aprobarOpinion(idOpinion) {
+            const result = await Swal.fire({
+                title: '¿Aprobar esta opinión?',
+                text: 'La opinión será visible para todos los usuarios',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, aprobar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/opiniones/${idOpinion}/aprobar`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Opinión aprobada!',
+                        text: 'La opinión ahora es visible para todos los usuarios',
+                        confirmButtonColor: '#f97316'
+                    });
+                    loadOpinionesPendientes();
+                } else {
+                    throw new Error(data.mensaje || 'Error al aprobar opinión');
+                }
+            } catch (error) {
+                console.error('Error al aprobar opinión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo aprobar la opinión',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+
+        async function rechazarOpinion(idOpinion) {
+            const result = await Swal.fire({
+                title: '¿Rechazar esta opinión?',
+                text: 'Esta acción eliminará permanentemente la opinión y no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, rechazar',
+                cancelButtonText: 'Cancelar',
+                input: 'textarea',
+                inputPlaceholder: 'Motivo del rechazo (opcional)',
+                inputAttributes: {
+                    'aria-label': 'Motivo del rechazo'
+                }
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/opiniones/${idOpinion}/rechazar`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Opinión rechazada!',
+                        text: 'La opinión ha sido eliminada del sistema',
+                        confirmButtonColor: '#f97316'
+                    });
+                    loadOpinionesPendientes();
+                } else {
+                    throw new Error(data.mensaje || 'Error al rechazar opinión');
+                }
+            } catch (error) {
+                console.error('Error al rechazar opinión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo rechazar la opinión',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

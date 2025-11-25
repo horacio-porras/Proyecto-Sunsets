@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Reportes - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-file-export mr-3"></i>Generar Reportes
+                        </h1>
+                        <p class="text-gray-300">Exporta reportes de ventas, clientes, pedidos y actividad en PDF o Excel</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selección de Reporte -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">
+                    <i class="fas fa-chart-line mr-2"></i>Seleccionar Tipo de Reporte
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <button onclick="seleccionarReporte('ventas')" id="btnVentas" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fas fa-dollar-sign text-3xl text-green-600"></i>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Ventas</h3>
+                        <p class="text-gray-600 text-sm">Ingresos totales, pedidos realizados y promedios</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('clientes')" id="btnClientes" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fas fa-users text-3xl text-blue-600"></i>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Clientes</h3>
+                        <p class="text-gray-600 text-sm">Listado completo de clientes y su actividad</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('pedidos')" id="btnPedidos" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fas fa-shopping-cart text-3xl text-purple-600"></i>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Pedidos</h3>
+                        <p class="text-gray-600 text-sm">Detalle completo de todos los pedidos</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('actividad')" id="btnActividad" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fas fa-history text-3xl text-orange-600"></i>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Actividad</h3>
+                        <p class="text-gray-600 text-sm">Registro de cambios en el sistema</p>
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div id="filtrosSection" class="hidden border-t pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Desde</label>
+                            <input type="date" id="fechaDesde" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Hasta</label>
+                            <input type="date" id="fechaHasta" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div id="estadoFilterContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                            <select id="estadoFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Todos los estados</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="preparando">Preparando</option>
+                                <option value="listo">Listo</option>
+                                <option value="en_camino">En Camino</option>
+                                <option value="entregado">Entregado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div id="tablaFilterContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tabla</label>
+                            <select id="tablaFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Todas las tablas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formato y Generar -->
+                <div id="formatoSection" class="hidden border-t pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Formato de Exportación</h3>
+                    
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="formato" value="pdf" checked class="mr-2 text-orange-500 focus:ring-orange-500">
+                            <span class="text-gray-700">
+                                <i class="fas fa-file-pdf mr-2 text-red-600"></i>PDF
+                            </span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="formato" value="excel" class="mr-2 text-orange-500 focus:ring-orange-500">
+                            <span class="text-gray-700">
+                                <i class="fas fa-file-excel mr-2 text-green-600"></i>Excel
+                            </span>
+                        </label>
+                    </div>
+
+                    <button onclick="generarReporte()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
+                        <i class="fas fa-download mr-2"></i>Generar y Descargar Reporte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script>
+        let tipoReporteSeleccionado = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+        });
+
+        function seleccionarReporte(tipo) {
+            tipoReporteSeleccionado = tipo;
+
+            // Remover selección de todos los botones
+            document.querySelectorAll('.reporte-card').forEach(card => {
+                card.classList.remove('border-orange-500', 'bg-orange-50');
+                card.classList.add('border-gray-200');
+                card.querySelector('.reporte-badge').classList.add('hidden');
+            });
+
+            // Marcar el seleccionado
+            const btn = document.getElementById(`btn${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            btn.classList.remove('border-gray-200');
+            btn.classList.add('border-orange-500', 'bg-orange-50');
+            btn.querySelector('.reporte-badge').classList.remove('hidden');
+
+            // Mostrar filtros y formato
+            document.getElementById('filtrosSection').classList.remove('hidden');
+            document.getElementById('formatoSection').classList.remove('hidden');
+
+            // Configurar filtros específicos por tipo
+            document.getElementById('estadoFilterContainer').classList.add('hidden');
+            document.getElementById('tablaFilterContainer').classList.add('hidden');
+
+            if (tipo === 'pedidos') {
+                document.getElementById('estadoFilterContainer').classList.remove('hidden');
+            }
+
+            if (tipo === 'actividad') {
+                document.getElementById('tablaFilterContainer').classList.remove('hidden');
+                cargarTablas();
+            }
+
+            // Limpiar filtros
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            document.getElementById('estadoFilter').value = '';
+            document.getElementById('tablaFilter').value = '';
+        }
+
+        async function cargarTablas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                const response = await fetch('/api/auditoria/tablas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.tablas) {
+                        const select = document.getElementById('tablaFilter');
+                        select.innerHTML = '<option value="">Todas las tablas</option>';
+                        data.data.tablas.forEach(tabla => {
+                            const option = document.createElement('option');
+                            option.value = tabla;
+                            option.textContent = tabla;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar tablas:', error);
+            }
+        }
+
+        async function generarReporte() {
+            if (!tipoReporteSeleccionado) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selecciona un reporte',
+                    text: 'Por favor selecciona un tipo de reporte antes de continuar'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                // Obtener formato seleccionado
+                const formato = document.querySelector('input[name="formato"]:checked').value;
+
+                // Construir URL con parámetros
+                let url = `/api/reportes/${tipoReporteSeleccionado}?formato=${formato}`;
+                const fechaDesde = document.getElementById('fechaDesde').value;
+                const fechaHasta = document.getElementById('fechaHasta').value;
+
+                if (fechaDesde) {
+                    url += `&fechaDesde=${encodeURIComponent(fechaDesde)}`;
+                }
+                if (fechaHasta) {
+                    url += `&fechaHasta=${encodeURIComponent(fechaHasta)}`;
+                }
+
+                if (tipoReporteSeleccionado === 'pedidos') {
+                    const estado = document.getElementById('estadoFilter').value;
+                    if (estado) {
+                        url += `&estado=${encodeURIComponent(estado)}`;
+                    }
+                }
+
+                if (tipoReporteSeleccionado === 'actividad') {
+                    const tabla = document.getElementById('tablaFilter').value;
+                    if (tabla) {
+                        url += `&tabla=${encodeURIComponent(tabla)}`;
+                    }
+                }
+
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Generando reporte...',
+                    html: 'Por favor espera mientras se genera el archivo',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Descargar archivo
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'Error al generar el reporte');
+                }
+
+                // Obtener el blob del archivo
+                const blob = await response.blob();
+                
+                // Crear URL temporal y descargar
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                // Obtener nombre del archivo del header Content-Disposition o generar uno
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `reporte_${tipoReporteSeleccionado}_${new Date().toISOString().split('T')[0]}.${formato}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reporte generado!',
+                    text: 'El archivo se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error al generar reporte:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo generar el reporte'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

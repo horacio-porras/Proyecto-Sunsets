@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { registrarCambio } = require('../utils/auditoria');
 
 //Función para obtener todos los empleados (solo administradores)
 const getEmpleados = async (req, res) => {
@@ -198,6 +199,22 @@ const crearEmpleado = async (req, res) => {
             );
         }
 
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'usuario',
+            id_registro_afectado: newUserId,
+            accion_realizada: 'CREATE',
+            datos_nuevos: {
+                nombre,
+                correo,
+                telefono,
+                tipoUsuario,
+                area_trabajo: tipoUsuario === 'Empleado' ? area_trabajo : null
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
+
         res.status(201).json({
             success: true,
             message: 'Empleado creado exitosamente',
@@ -252,14 +269,16 @@ const actualizarEmpleado = async (req, res) => {
             });
         }
 
-        const empleadoQuery = `
-            SELECT u.id_usuario, u.nombre, u.correo 
+        // Obtener datos anteriores para auditoría
+        const empleadoAnteriorQuery = `
+            SELECT u.*, r.nombre_rol, e.area_trabajo
             FROM usuario u 
             INNER JOIN rol r ON u.id_rol = r.id_rol
+            LEFT JOIN empleado e ON u.id_usuario = e.id_usuario
             WHERE u.id_usuario = ? AND r.nombre_rol IN ('Empleado', 'Administrador')
         `;
         
-        const [empleadoRows] = await pool.execute(empleadoQuery, [empleadoId]);
+        const [empleadoRows] = await pool.execute(empleadoAnteriorQuery, [empleadoId]);
         
         if (empleadoRows.length === 0) {
             return res.status(404).json({
@@ -269,6 +288,7 @@ const actualizarEmpleado = async (req, res) => {
         }
 
         const empleado = empleadoRows[0];
+        const datosAnteriores = empleadoRows[0];
 
         if (correo && correo !== empleado.correo) {
             const correoQuery = `
@@ -374,6 +394,24 @@ const actualizarEmpleado = async (req, res) => {
             }
         }
 
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'usuario',
+            id_registro_afectado: empleadoId,
+            accion_realizada: 'UPDATE',
+            datos_anteriores: datosAnteriores,
+            datos_nuevos: {
+                nombre: nombre || empleado.nombre,
+                correo: correo || empleado.correo,
+                telefono: telefono || empleado.telefono,
+                tipoUsuario: tipoUsuario || datosAnteriores.nombre_rol,
+                estado: estado || (empleado.activo ? 'activo' : 'inactivo'),
+                area_trabajo: area_trabajo || datosAnteriores.area_trabajo
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
+
         res.json({
             success: true,
             message: 'Empleado actualizado exitosamente',
@@ -425,9 +463,10 @@ const eliminarEmpleado = async (req, res) => {
         }
 
         const empleadoQuery = `
-            SELECT u.id_usuario, u.nombre, r.nombre_rol 
+            SELECT u.*, r.nombre_rol, e.area_trabajo
             FROM usuario u 
             INNER JOIN rol r ON u.id_rol = r.id_rol
+            LEFT JOIN empleado e ON u.id_usuario = e.id_usuario
             WHERE u.id_usuario = ? AND r.nombre_rol IN ('Empleado', 'Administrador')
         `;
         
@@ -441,6 +480,7 @@ const eliminarEmpleado = async (req, res) => {
         }
 
         const empleado = empleadoRows[0];
+        const datosAnteriores = empleadoRows[0];
 
         if (parseInt(empleadoId) === parseInt(userId)) {
             return res.status(400).json({
@@ -456,6 +496,16 @@ const eliminarEmpleado = async (req, res) => {
         `;
 
         await pool.execute(updateQuery, [empleadoId]);
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'usuario',
+            id_registro_afectado: empleadoId,
+            accion_realizada: 'DELETE',
+            datos_anteriores: datosAnteriores,
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
 
         res.json({
             success: true,

@@ -211,8 +211,8 @@
                                 <th class="px-6 py-3 text-left text-sm font-semibold">Producto</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold">Precio</th>
-                                <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Estado</th>
                                 <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
                             </tr>
                         </thead>
@@ -297,48 +297,12 @@
                               placeholder="Descripción del producto..."></textarea>
                 </div>
 
-                <!-- Sección de Descuento -->
-                <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <!-- Sección de Descuento - Ocultada, los descuentos se gestionan desde Promociones -->
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 hidden">
                     <div class="flex items-center justify-between">
                         <div>
                             <h4 class="text-base font-semibold text-gray-800">Descuento Promocional</h4>
-                            <p class="text-sm text-gray-500">Configura descuentos temporales para este producto.</p>
-                        </div>
-                        <label class="inline-flex items-center cursor-pointer descuento-toggle">
-                            <input type="checkbox" id="descuentoActivo" class="sr-only">
-                            <span class="relative inline-block w-12 h-6 bg-gray-300 rounded-full transition-colors">
-                                <span class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></span>
-                            </span>
-                            <span class="ml-3 text-sm font-medium text-gray-700">Activar descuento</span>
-                        </label>
-                    </div>
-
-                    <div id="discountFields" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de descuento (%)</label>
-                            <input type="number" id="porcentajeDescuento" min="1" max="99" step="0.1"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                   placeholder="Ej: 15">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de inicio</label>
-                            <input type="datetime-local" id="fechaInicioDescuento"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
-                            <input type="datetime-local" id="fechaFinDescuento"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                        </div>
-                        <div class="md:col-span-2">
-                            <div class="text-xs text-gray-500 bg-white border border-gray-200 rounded-md p-3">
-                                <p class="mb-1"><strong>Notas:</strong></p>
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>El porcentaje se aplica al precio actual del producto.</li>
-                                    <li>Si no seleccionas fechas, el descuento estará activo desde ahora hasta que lo desactives.</li>
-                                    <li>Desactivar el descuento conserva los valores para futuras campañas.</li>
-                                </ul>
-                            </div>
+                            <p class="text-sm text-gray-500">Los descuentos se gestionan desde la sección de Promociones.</p>
                         </div>
                     </div>
                 </div>
@@ -418,29 +382,15 @@
         let productosNextPageBtn;
  
         function resetDiscountFields() {
-            const toggle = document.getElementById('descuentoActivo');
-            const porcentajeInput = document.getElementById('porcentajeDescuento');
-            const fechaInicioInput = document.getElementById('fechaInicioDescuento');
-            const fechaFinInput = document.getElementById('fechaFinDescuento');
-
-            if (toggle) toggle.checked = false;
-            if (porcentajeInput) porcentajeInput.value = '';
-            if (fechaInicioInput) fechaInicioInput.value = '';
-            if (fechaFinInput) fechaFinInput.value = '';
-
-            updateDiscountFieldsState();
+            // Los descuentos se gestionan desde Promociones, esta función ya no es necesaria
+            // pero se mantiene para evitar errores
+            return;
         }
 
         function updateDiscountFieldsState() {
-            const toggle = document.getElementById('descuentoActivo');
-            const fieldsContainer = document.getElementById('discountFields');
-            if (!toggle || !fieldsContainer) return;
-
-            const isActive = toggle.checked;
-            fieldsContainer.classList.toggle('opacity-60', !isActive);
-            fieldsContainer.querySelectorAll('input').forEach(input => {
-                input.disabled = !isActive;
-            });
+            // Los descuentos se gestionan desde Promociones, esta función ya no es necesaria
+            // pero se mantiene para evitar errores
+            return;
         }
 
         function formatDateTimeLocal(dateString) {
@@ -499,12 +449,7 @@
                 formProducto.addEventListener('submit', handleSubmitProducto);
             }
 
-            const descuentoToggle = document.getElementById('descuentoActivo');
-            if (descuentoToggle) {
-                descuentoToggle.addEventListener('change', updateDiscountFieldsState);
-            }
-
-            updateDiscountFieldsState();
+            // Los descuentos se gestionan desde Promociones, ya no es necesario configurar listeners
 
             //Filtros
             const filtroCategoria = document.getElementById('filtroCategoria');
@@ -736,20 +681,17 @@
                             ${descuentoInfoHtml}
                         </td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
-                                ${estadoText}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 max-w-xs truncate">${producto.descripcion || 'Sin descripción'}</div>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex justify-center items-center space-x-3">
-                                <label class="toggle-checkbox" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
-                                    <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
-                                           onchange="toggleDisponibilidad(${producto.id}, this.checked)">
-                                    <span></span>
-                                </label>
+                            <label class="toggle-checkbox inline-block" title="${producto.disponible ? 'Desactivar' : 'Activar'} producto">
+                                <input type="checkbox" ${producto.disponible ? 'checked' : ''} 
+                                       onchange="toggleDisponibilidad(${producto.id}, this.checked)">
+                                <span></span>
+                            </label>
+                        </td>
+                        <td class="px-6 py-4 text-center align-top">
+                            <div class="flex justify-center space-x-3 text-lg">
                                 <button onclick="editarProducto(${producto.id})" 
                                         class="text-orange-600 hover:text-orange-700 transition"
                                         title="Editar producto">
@@ -802,25 +744,8 @@
             document.getElementById('disponible').value = producto.disponible ? '1' : '0';
             document.getElementById('descripcion').value = producto.descripcion || '';
 
-            const descuentoToggle = document.getElementById('descuentoActivo');
-            const porcentajeInput = document.getElementById('porcentajeDescuento');
-            const fechaInicioInput = document.getElementById('fechaInicioDescuento');
-            const fechaFinInput = document.getElementById('fechaFinDescuento');
-
-            if (descuentoToggle) {
-                descuentoToggle.checked = !!producto.descuento_activo;
-            }
-            if (porcentajeInput) {
-                porcentajeInput.value = producto.porcentaje_descuento != null ? producto.porcentaje_descuento : '';
-            }
-            if (fechaInicioInput) {
-                fechaInicioInput.value = formatDateTimeLocal(producto.fecha_inicio_descuento);
-            }
-            if (fechaFinInput) {
-                fechaFinInput.value = formatDateTimeLocal(producto.fecha_fin_descuento);
-            }
-
-            //Debug
+            // Los campos de descuento ya no se usan, se gestionan desde Promociones
+            // Debug
             console.log('Producto encontrado:', producto);
             console.log('Categoría del producto:', producto.categoria);
             console.log('Valor del select categoría:', document.getElementById('categoria').value);
@@ -829,8 +754,6 @@
             document.getElementById('imagenUrl').value = '';
 
             cargarImagenProducto(id);
-
-            updateDiscountFieldsState();
 
             document.getElementById('btnGuardarText').textContent = 'Actualizar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-edit';
@@ -873,10 +796,11 @@
                     precio: parseFloat(document.getElementById('precio').value),
                     disponible: document.getElementById('disponible').value === '1',
                     descripcion: document.getElementById('descripcion').value,
-                    descuentoActivo: document.getElementById('descuentoActivo').checked,
-                    porcentajeDescuento: document.getElementById('porcentajeDescuento').value,
-                    fechaInicioDescuento: document.getElementById('fechaInicioDescuento').value,
-                    fechaFinDescuento: document.getElementById('fechaFinDescuento').value
+                    // Los descuentos se gestionan desde Promociones, siempre false/null
+                    descuentoActivo: false,
+                    porcentajeDescuento: null,
+                    fechaInicioDescuento: null,
+                    fechaFinDescuento: null
                 };
 
                 console.log('Datos del formulario:', formData);

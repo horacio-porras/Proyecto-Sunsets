@@ -541,14 +541,16 @@
                                 ${empleado.estado === 'activo' ? 'Activo' : 'Inactivo'}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center space-x-2">
+                        <td class="px-6 py-4 text-center align-top">
+                            <div class="flex justify-center space-x-3 text-lg">
                                 <button onclick="editarEmpleado(${empleado.id})" 
-                                        class="text-orange-600 hover:text-orange-700 transition">
+                                        class="text-orange-600 hover:text-orange-700 transition"
+                                        title="Editar empleado">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="eliminarEmpleado(${empleado.id}, '${empleado.nombre}')" 
-                                        class="text-red-600 hover:text-red-700 transition">
+                                        class="text-red-600 hover:text-red-700 transition"
+                                        title="Eliminar empleado">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>

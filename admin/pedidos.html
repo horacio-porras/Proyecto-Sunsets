@@ -129,20 +129,32 @@
             </div>
 
             <!-- Pagination -->
-            <div id="pedidosPaginationControls" class="hidden mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div id="pedidosPaginationSummary" class="text-sm text-gray-600">
-                    Mostrando 0 - 0 de 0 pedidos
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="pedidosPrevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-chevron-left mr-1"></i> Anterior
-                    </button>
-                    <div id="pedidosPaginationInfo" class="text-sm font-semibold text-gray-700">
-                        Página 1 de 1
+            <div id="pedidosPaginationControls" class="hidden mt-6 bg-white rounded-lg shadow-md p-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div id="pedidosPaginationSummary" class="text-sm text-gray-700"></div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Mostrar:</label>
+                            <select id="pedidosPorPagina" class="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">por página</span>
+                        </div>
                     </div>
-                    <button id="pedidosNextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
-                    </button>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div id="pedidosPaginationInfo" class="text-sm text-gray-700"></div>
+                        <div class="flex gap-2">
+                            <button id="pedidosPrevPageBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-left mr-1"></i>Anterior
+                            </button>
+                            <button id="pedidosNextPageBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Siguiente<i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -154,34 +166,16 @@
         let pedidos = [];
         let pedidosFiltrados = [];
         let pedidosPaginaActual = 1;
-        const PEDIDOS_POR_PAGINA = 10;
+        let PEDIDOS_POR_PAGINA = 10;
 
         let pedidosPaginationControls;
         let pedidosPaginationSummary;
         let pedidosPaginationInfo;
         let pedidosPrevPageBtn;
         let pedidosNextPageBtn;
+        let pedidosPorPaginaSelect;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Debug: Verificar autenticación
-            const userData = localStorage.getItem('userData');
-            const authToken = localStorage.getItem('authToken');
-            console.log('=== [Admin Pedidos] Debug de Autenticación ===');
-            console.log('Token presente:', !!authToken);
-            console.log('UserData presente:', !!userData);
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    console.log('Usuario completo:', user);
-                    console.log('tipoUsuario:', user.tipoUsuario);
-                    console.log('id_rol:', user.id_rol);
-                    console.log('Es Administrador?', user.tipoUsuario === 'Administrador');
-                } catch (e) {
-                    console.error('Error al parsear userData:', e);
-                }
-            }
-            console.log('============================================');
-            
             loadNavbar();
             inicializarControlesPaginacion();
             loadPedidos();
@@ -194,6 +188,7 @@
             pedidosPaginationInfo = document.getElementById('pedidosPaginationInfo');
             pedidosPrevPageBtn = document.getElementById('pedidosPrevPageBtn');
             pedidosNextPageBtn = document.getElementById('pedidosNextPageBtn');
+            pedidosPorPaginaSelect = document.getElementById('pedidosPorPagina');
 
             if (pedidosPrevPageBtn) {
                 pedidosPrevPageBtn.addEventListener('click', () => cambiarPagina(-1));
@@ -201,6 +196,14 @@
 
             if (pedidosNextPageBtn) {
                 pedidosNextPageBtn.addEventListener('click', () => cambiarPagina(1));
+            }
+
+            if (pedidosPorPaginaSelect) {
+                pedidosPorPaginaSelect.addEventListener('change', function() {
+                    PEDIDOS_POR_PAGINA = parseInt(this.value) || 10;
+                    pedidosPaginaActual = 1;
+                    renderPedidos();
+                });
             }
         }
 
@@ -222,11 +225,7 @@
                 const userData = localStorage.getItem('userData');
                 if (userData) {
                     const user = JSON.parse(userData);
-                    console.log('[Admin Pedidos Frontend] Usuario actual:', user);
-                    console.log('[Admin Pedidos Frontend] Tipo de usuario:', user.tipoUsuario);
-                    
                     if (user.tipoUsuario !== 'Administrador') {
-                        console.error('[Admin Pedidos Frontend] Usuario no es administrador:', user.tipoUsuario);
                         Swal.fire({
                             icon: 'error',
                             title: 'Acceso Denegado',
@@ -234,8 +233,6 @@
                         });
                         return;
                     }
-                } else {
-                    console.warn('[Admin Pedidos Frontend] No hay datos de usuario en localStorage');
                 }
 
                 const estado = document.getElementById('statusFilter')?.value || '';
@@ -262,20 +259,14 @@
                     url = url.slice(0, -1);
                 }
 
-                console.log('[Admin Pedidos Frontend] Llamando a:', url);
-                console.log('[Admin Pedidos Frontend] Token presente:', !!token);
-
                 const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                console.log('[Admin Pedidos Frontend] Response status:', response.status);
-
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('[Admin Pedidos Frontend] Error response:', errorText);
                     let errorData;
                     try {
                         errorData = JSON.parse(errorText);
@@ -287,25 +278,13 @@
 
                 const data = await response.json();
 
-                console.log('[Admin Pedidos Frontend] Response data:', data);
-                console.log('[Admin Pedidos Frontend] Success:', data.success);
-                console.log('[Admin Pedidos Frontend] Data.pedidos:', data.data?.pedidos?.length || 0);
-
                 if (!data.success) {
-                    console.error('[Admin Pedidos Frontend] Error en respuesta:', data);
                     throw new Error(data.message || 'No se pudieron cargar los pedidos');
                 }
 
                 pedidos = data.data?.pedidos || [];
                 pedidosFiltrados = [...pedidos];
                 pedidosPaginaActual = 1;
-                
-                console.log(`[Admin Pedidos] Pedidos cargados: ${pedidos.length}, Filtrados: ${pedidosFiltrados.length}`);
-                
-                if (pedidos.length > 0) {
-                    console.log('[Admin Pedidos] Primer pedido de ejemplo:', JSON.stringify(pedidos[0], null, 2));
-                }
-                
                 renderPedidos();
             } catch (error) {
                 console.error('Error al cargar pedidos:', error);
@@ -394,8 +373,8 @@
                             ₡${parseFloat(pedido.total || 0).toLocaleString()}
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <button onclick="verDetallesPedido(${pedido.id_pedido})" class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold">
-                                <i class="fas fa-eye mr-1"></i> Ver
+                            <button onclick="verDetallesPedido(${pedido.id_pedido})" class="text-orange-600 hover:text-orange-700 font-semibold">
+                                <i class="fas fa-eye mr-1"></i>
                             </button>
                         </td>
                     </tr>
@@ -408,17 +387,18 @@
         function renderizarControlesPaginacion(totalPedidos, inicio, fin, totalPaginas) {
             if (!pedidosPaginationControls) return;
 
-            // Ocultar paginación si no hay pedidos o solo hay una página
-            if (totalPedidos === 0 || totalPaginas <= 1) {
+            // Ocultar paginación si no hay pedidos
+            if (totalPedidos === 0) {
                 pedidosPaginationControls.classList.add('hidden');
                 return;
             }
 
-            // Mostrar paginación si hay más de una página
+            // Mostrar paginación
             pedidosPaginationControls.classList.remove('hidden');
 
             if (pedidosPaginationSummary) {
-                pedidosPaginationSummary.textContent = `Mostrando ${inicio + 1} - ${fin} de ${totalPedidos} pedidos`;
+                const inicioMostrar = totalPedidos > 0 ? inicio + 1 : 0;
+                pedidosPaginationSummary.textContent = `Mostrando ${inicioMostrar}-${fin} de ${totalPedidos} pedidos`;
             }
 
             if (pedidosPaginationInfo) {
@@ -426,23 +406,16 @@
             }
 
             if (pedidosPrevPageBtn) {
-                pedidosPrevPageBtn.disabled = pedidosPaginaActual === 1;
-                // Agregar estilos visuales cuando está deshabilitado
-                if (pedidosPaginaActual === 1) {
-                    pedidosPrevPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    pedidosPrevPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
+                pedidosPrevPageBtn.disabled = pedidosPaginaActual <= 1;
             }
 
             if (pedidosNextPageBtn) {
-                pedidosNextPageBtn.disabled = pedidosPaginaActual === totalPaginas;
-                // Agregar estilos visuales cuando está deshabilitado
-                if (pedidosPaginaActual === totalPaginas) {
-                    pedidosNextPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    pedidosNextPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
+                pedidosNextPageBtn.disabled = pedidosPaginaActual >= totalPaginas;
+            }
+
+            // Sincronizar el selector de pedidos por página
+            if (pedidosPorPaginaSelect) {
+                pedidosPorPaginaSelect.value = PEDIDOS_POR_PAGINA;
             }
         }
 

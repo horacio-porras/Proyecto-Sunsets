@@ -212,7 +212,7 @@ router.post('/', authenticateToken, async (req, res) => {
                 totalCalculado,
                 payment.method,
                 delivery.instructions || null,
-                Math.floor(subtotalAmount / 100)
+                Math.floor(totalCalculado / 100)
             ]
         );
 
@@ -237,18 +237,15 @@ router.post('/', authenticateToken, async (req, res) => {
             );
         }
 
-        const puntosGanados = Math.floor(subtotalAmount / 100);
+        // Los puntos se calculan sobre el total final pagado (después de todos los descuentos)
+        const puntosGanados = Math.floor(totalCalculado / 100);
         
         //Solo aplica puntos de lealtad si es un cliente registrado
+        // Los puntos_acumulados solo aumentan (nunca disminuyen) para mantener el nivel del cliente
         if (clienteId && userRole === 'Cliente') {
-            if (loyaltyPointsUsed && loyaltyPointsUsed > 0) {
-                await connection.execute(
-                    `UPDATE cliente 
-                     SET puntos_acumulados = puntos_acumulados - ? + ? 
-                     WHERE id_cliente = ?`,
-                    [loyaltyPointsUsed, puntosGanados, clienteId]
-                );
-            } else {
+            // Solo sumamos los puntos ganados, sin restar los usados
+            // Los puntos acumulados nunca deben disminuir porque afectan el nivel del cliente
+            if (puntosGanados > 0) {
                 await connection.execute(
                     `UPDATE cliente 
                      SET puntos_acumulados = puntos_acumulados + ? 
@@ -698,11 +695,8 @@ router.get('/admin', authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const userRole = req.user.tipoUsuario;
         
-        console.log('[Admin Pedidos] Iniciando - UserRole:', userRole, 'UserId:', userId);
-        
         //Verificar que el usuario es administrador
         if (userRole !== 'Administrador') {
-            console.error('[Admin Pedidos] Acceso denegado - UserRole:', userRole);
             return res.status(403).json({ 
                 success: false, 
                 message: 'No tienes permisos para acceder a esta información' 
@@ -762,31 +756,9 @@ router.get('/admin', authenticateToken, async (req, res) => {
             baseQuery += ` LIMIT ${limit}`;
         }
 
-        console.log('[Admin Pedidos] Ejecutando query base...');
-        console.log('[Admin Pedidos] Query:', baseQuery);
-        console.log('[Admin Pedidos] Params:', params);
-        console.log('[Admin Pedidos] Limit:', limit);
-        console.log('[Admin Pedidos] Estado:', estado);
-        console.log('[Admin Pedidos] FechaDesde:', fechaDesde);
-        console.log('[Admin Pedidos] FechaHasta:', fechaHasta);
-
-        // Primero, verificar si hay pedidos en la tabla
-        const [countRows] = await pool.execute('SELECT COUNT(*) as total FROM pedido');
-        console.log('[Admin Pedidos] Total de pedidos en BD:', countRows[0]?.total || 0);
-
         const [pedidosBase] = await pool.execute(baseQuery, params);
-
-        console.log(`[Admin Pedidos] Pedidos obtenidos de BD: ${pedidosBase.length}`);
-        if (pedidosBase.length > 0) {
-            console.log('[Admin Pedidos] Primer pedido:', JSON.stringify(pedidosBase[0], null, 2));
-        }
         
         if (pedidosBase.length === 0) {
-            console.log('[Admin Pedidos] No se encontraron pedidos con los filtros aplicados');
-            console.log('[Admin Pedidos] Esto puede ser porque:');
-            console.log('  - No hay pedidos en la tabla');
-            console.log('  - Los filtros están excluyendo todos los pedidos');
-            console.log('  - Hay un problema con la consulta SQL');
             return res.json({
                 success: true,
                 data: {
@@ -798,8 +770,6 @@ router.get('/admin', authenticateToken, async (req, res) => {
         //Ahora enriquecer cada pedido con información adicional
         const pedidos = [];
 
-        //Enriquecer cada pedido con información adicional
-        console.log('[Admin Pedidos] Enriqueciendo pedidos con información adicional...');
         for (let i = 0; i < pedidosBase.length; i++) {
             const pedidoBase = pedidosBase[i];
             const pedido = { ...pedidoBase };
@@ -920,8 +890,6 @@ router.get('/admin', authenticateToken, async (req, res) => {
             }
         }
 
-        console.log(`[Admin Pedidos] Pedidos procesados exitosamente: ${pedidos.length}`);
-
         res.json({
             success: true,
             data: {
@@ -1034,6 +1002,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const [productosRows] = await pool.execute(`
             SELECT 
                 dp.id_detalle,
+                dp.id_producto,
                 dp.cantidad,
                 dp.precio_unitario,
                 dp.subtotal_item,
@@ -1047,6 +1016,36 @@ router.get('/:id', authenticateToken, async (req, res) => {
         `, [pedidoId]);
 
         pedido.productos = productosRows;
+
+        // Obtener información del canje de puntos asociado si existe
+        if (pedido.id_cliente) {
+            const [canjeRows] = await pool.execute(`
+                SELECT 
+                    cp.id_canje,
+                    cp.valor_canje,
+                    cp.estado_canje,
+                    r.tipo_promocion,
+                    r.nombre as recompensa_nombre
+                FROM canje_puntos cp
+                LEFT JOIN recompensa r ON cp.id_recompensa = r.id_recompensa
+                WHERE cp.id_cliente = ? 
+                AND cp.estado_canje = 'aplicado'
+                AND DATE(cp.fecha_canje) = DATE(?)
+                ORDER BY cp.fecha_canje DESC
+                LIMIT 1
+            `, [pedido.id_cliente, pedido.fecha_pedido]);
+
+            if (canjeRows.length > 0) {
+                const canje = canjeRows[0];
+                pedido.rewardCanje = {
+                    id_canje: canje.id_canje,
+                    valor_canje: canje.valor_canje,
+                    tipo: canje.tipo_promocion,
+                    tipo_promocion: canje.tipo_promocion,
+                    nombre: canje.recompensa_nombre || 'Descuento por puntos'
+                };
+            }
+        }
 
         res.json({
             success: true,
@@ -1277,6 +1276,35 @@ router.post('/guest', async (req, res) => {
 
         //Genera el número de pedido
         const numeroPedido = `PED-${pedidoId.toString().padStart(6, '0')}`;
+
+        // Generar factura automáticamente si el método de pago es efectivo o SINPE (pago confirmado)
+        // Normalizar el método de pago para comparación
+        const metodoPagoNormalizado = (payment.method || '').toLowerCase().trim();
+        const esPagoInmediato = metodoPagoNormalizado === 'efectivo' || 
+                                metodoPagoNormalizado === 'sinpe' || 
+                                metodoPagoNormalizado === 'sinpe móvil' ||
+                                metodoPagoNormalizado === 'pago en efectivo';
+        
+        if (esPagoInmediato) {
+            try {
+                const { generarFacturaAutomatica } = require('../controllers/facturaController');
+                // Usar setTimeout para generar la factura de forma asíncrona sin bloquear la respuesta
+                setTimeout(async () => {
+                    try {
+                        const connectionFactura = await pool.getConnection();
+                        console.log(`Generando factura automática para pedido de invitado ${pedidoId}...`);
+                        await generarFacturaAutomatica(pedidoId, connectionFactura);
+                        connectionFactura.release();
+                        console.log(`Factura generada exitosamente para pedido de invitado ${pedidoId}`);
+                    } catch (facturaError) {
+                        console.error('Error al generar factura automática para pedido de invitado:', facturaError);
+                    }
+                }, 1000);
+            } catch (facturaError) {
+                console.error('Error al inicializar generación de factura para pedido de invitado:', facturaError);
+                // No fallar el pedido si hay error en la factura
+            }
+        }
 
         res.json({
             success: true,

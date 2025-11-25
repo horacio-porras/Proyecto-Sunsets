@@ -5,6 +5,7 @@ const {
     createReservation,
     createPublicReservation,
     getActiveReservations,
+    getAllReservations,
     updateReservation,
     cancelReservation
 } = require('../controllers/reservacionController');
@@ -26,6 +27,13 @@ router.get(
     authenticateToken,
     authorizeRoles('Cliente'),
     getActiveReservations
+);
+
+router.get(
+    '/todas',
+    authenticateToken,
+    authorizeRoles('Cliente'),
+    getAllReservations
 );
 
 router.put(

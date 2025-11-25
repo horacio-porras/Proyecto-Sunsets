@@ -242,10 +242,30 @@
 
                 <div id="productosAlcanceWrapper" class="hidden">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona los productos *</label>
-                    <select id="productosPromocion" multiple size="6"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples productos.</p>
+                    
+                    <!-- Buscador de productos -->
+                    <div class="mb-3">
+                        <div class="relative">
+                            <input type="text" id="productosSearchInput" 
+                                   placeholder="Buscar productos..."
+                                   class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de productos -->
+                    <div id="productosListContainer" class="border border-gray-300 rounded-md max-h-64 overflow-y-auto p-2">
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Cargando productos...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Productos seleccionados -->
+                    <div id="productosSeleccionados" class="mt-3 flex flex-wrap gap-2"></div>
+                    
+                    <!-- Mensaje de advertencia -->
+                    <div id="productosWarning" class="mt-2 text-xs text-yellow-600 hidden"></div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -292,6 +312,10 @@
         let promociones = [];
         let promocionEditando = null;
         let productosCatalogo = [];
+        let productosFiltrados = [];
+        let productosSeleccionados = new Set();
+        let productosConPromocionActiva = new Set();
+        let productosConDescuentoActivo = new Set();
         let promocionesFiltradas = [];
         let promocionesPaginaActual = 1;
         const PROMOCIONES_POR_PAGINA = 8;
@@ -363,6 +387,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) throw new Error('No hay token de autenticación');
 
+                // Cargar productos
                 const response = await fetch('/api/inventario/productos', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -374,16 +399,36 @@
 
                 productosCatalogo = data.data?.productos || [];
 
-                const selectProductos = document.getElementById('productosPromocion');
-                if (selectProductos) {
-                    selectProductos.innerHTML = productosCatalogo.map(producto => `
-                        <option value="${producto.id}">
-                            ${producto.nombre} (₡${parseFloat(producto.precio).toLocaleString()})
-                        </option>
-                    `).join('');
+                // Cargar promociones activas para identificar productos con promociones
+                await identificarProductosConPromocionesActivas();
+
+                // Renderizar lista de productos
+                productosFiltrados = [...productosCatalogo];
+                renderProductosList();
+                
+                // Setup buscador
+                const searchInput = document.getElementById('productosSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase().trim();
+                        productosFiltrados = productosCatalogo.filter(producto => {
+                            return producto.nombre.toLowerCase().includes(searchTerm) ||
+                                   (producto.categoria && producto.categoria.toLowerCase().includes(searchTerm));
+                        });
+                        renderProductosList();
+                    });
                 }
             } catch (error) {
                 console.error('Error al cargar catálogo de productos:', error);
+                const container = document.getElementById('productosListContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p>Error al cargar productos: ${error.message}</p>
+                        </div>
+                    `;
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -391,6 +436,224 @@
                 });
             }
         }
+
+        async function identificarProductosConPromocionesActivas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                // Obtener promociones activas
+                const response = await fetch('/api/promociones', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    return;
+                }
+
+                // Obtener ID de la promoción que se está editando (si existe)
+                const promocionEditandoId = promocionEditando ? promocionEditando.id_promocion : null;
+
+                const promocionesActivas = (data.data?.promociones || []).filter(promo => {
+                    // Excluir la promoción que se está editando
+                    if (promocionEditandoId && promo.id_promocion === promocionEditandoId) {
+                        return false;
+                    }
+                    
+                    if (!promo.activa) return false;
+                    
+                    const ahora = new Date();
+                    const fechaInicio = promo.fecha_inicio ? new Date(promo.fecha_inicio) : null;
+                    const fechaFin = promo.fecha_fin ? new Date(promo.fecha_fin) : null;
+                    
+                    if (fechaInicio && fechaInicio > ahora) return false;
+                    if (fechaFin && fechaFin < ahora) return false;
+                    
+                    return promo.alcance === 'producto' && Array.isArray(promo.productos) && promo.productos.length > 0;
+                });
+
+                productosConPromocionActiva.clear();
+                promocionesActivas.forEach(promo => {
+                    promo.productos.forEach(producto => {
+                        productosConPromocionActiva.add(producto.id_producto || producto.id);
+                    });
+                });
+
+                // Identificar productos con descuento individual activo
+                productosConDescuentoActivo.clear();
+                productosCatalogo.forEach(producto => {
+                    if (producto.descuento_activo && producto.descuento_vigente) {
+                        productosConDescuentoActivo.add(producto.id);
+                    }
+                });
+            } catch (error) {
+                console.error('Error al identificar productos con promociones activas:', error);
+            }
+        }
+
+        function renderProductosList() {
+            const container = document.getElementById('productosListContainer');
+            if (!container) return;
+
+            if (productosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <p>No se encontraron productos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Obtener IDs de productos que ya están en la promoción que se está editando
+            const productosEnPromocionEditando = new Set();
+            if (promocionEditando && promocionEditando.productos && Array.isArray(promocionEditando.productos)) {
+                promocionEditando.productos.forEach(p => {
+                    const id = p.id_producto || p.id;
+                    if (id) productosEnPromocionEditando.add(id);
+                });
+            }
+
+            container.innerHTML = productosFiltrados.map(producto => {
+                // Si el producto está en la promoción que se está editando, no marcarlo como "en otra promoción"
+                const tienePromocion = productosConPromocionActiva.has(producto.id) && !productosEnPromocionEditando.has(producto.id);
+                const tieneDescuento = productosConDescuentoActivo.has(producto.id);
+                const estaSeleccionado = productosSeleccionados.has(producto.id);
+                const noDisponible = tienePromocion || tieneDescuento;
+                const razonNoDisponible = tieneDescuento 
+                    ? 'Ya tiene descuento individual activo'
+                    : tienePromocion 
+                        ? 'Ya está en otra promoción activa'
+                        : '';
+
+                return `
+                    <div class="flex items-center p-2 rounded hover:bg-gray-50 ${noDisponible ? 'opacity-60' : ''}">
+                        <input type="checkbox" 
+                               id="producto_${producto.id}"
+                               value="${producto.id}"
+                               ${estaSeleccionado ? 'checked' : ''}
+                               ${noDisponible ? 'disabled' : ''}
+                               onchange="toggleProductoSeleccionado(${producto.id}, this.checked)"
+                               class="mr-3 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded">
+                        <label for="producto_${producto.id}" class="flex-1 cursor-pointer ${noDisponible ? 'cursor-not-allowed' : ''}">
+                            <div class="flex justify-between items-center">
+                                <div class="flex-1">
+                                    <span class="font-medium text-sm ${noDisponible ? 'text-gray-400' : 'text-gray-800'}">${producto.nombre}</span>
+                                    ${producto.categoria ? `<span class="text-xs text-gray-500 ml-2">(${producto.categoria})</span>` : ''}
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-semibold ${noDisponible ? 'text-gray-400' : 'text-orange-600'}">₡${parseFloat(producto.precio).toLocaleString()}</span>
+                                    ${tieneDescuento ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Descuento Individual</span>' : ''}
+                                    ${tienePromocion ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">En Promoción</span>' : ''}
+                                </div>
+                            </div>
+                            ${razonNoDisponible ? `<p class="text-xs text-yellow-600 mt-1">${razonNoDisponible}</p>` : ''}
+                        </label>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleProductoSeleccionado(productId, seleccionado) {
+            // Obtener IDs de productos que ya están en la promoción que se está editando
+            const productosEnPromocionEditando = new Set();
+            if (promocionEditando && promocionEditando.productos && Array.isArray(promocionEditando.productos)) {
+                promocionEditando.productos.forEach(p => {
+                    const id = p.id_producto || p.id;
+                    if (id) productosEnPromocionEditando.add(id);
+                });
+            }
+
+            // Si el producto está en la promoción que se está editando, permitir seleccionarlo
+            const tienePromocion = productosConPromocionActiva.has(productId) && !productosEnPromocionEditando.has(productId);
+            const tieneDescuento = productosConDescuentoActivo.has(productId);
+            
+            if ((tienePromocion || tieneDescuento) && seleccionado) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Producto no disponible',
+                    text: tieneDescuento 
+                        ? 'Este producto ya tiene un descuento individual activo y no puede estar en una promoción al mismo tiempo.'
+                        : 'Este producto ya está incluido en otra promoción activa.',
+                    confirmButtonColor: '#f97316'
+                });
+                // Desmarcar el checkbox
+                const checkbox = document.getElementById(`producto_${productId}`);
+                if (checkbox) checkbox.checked = false;
+                return;
+            }
+
+            if (seleccionado) {
+                productosSeleccionados.add(productId);
+            } else {
+                productosSeleccionados.delete(productId);
+            }
+
+            // Actualizar el checkbox en la lista
+            const checkbox = document.getElementById(`producto_${productId}`);
+            if (checkbox) {
+                checkbox.checked = seleccionado;
+            }
+
+            actualizarProductosSeleccionados();
+            renderProductosList();
+        }
+
+        function actualizarProductosSeleccionados() {
+            const container = document.getElementById('productosSeleccionados');
+            const warning = document.getElementById('productosWarning');
+            
+            if (!container) return;
+
+            if (productosSeleccionados.size === 0) {
+                container.innerHTML = '';
+                if (warning) warning.classList.add('hidden');
+                return;
+            }
+
+            container.innerHTML = Array.from(productosSeleccionados).map(productId => {
+                const producto = productosCatalogo.find(p => p.id === productId);
+                if (!producto) return '';
+                
+                return `
+                    <span class="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                        ${producto.nombre}
+                        <button onclick="toggleProductoSeleccionado(${productId}, false)" 
+                                class="text-orange-600 hover:text-orange-800">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </span>
+                `;
+            }).join('');
+
+            // Validar si hay productos con doble descuento
+            // Obtener IDs de productos que ya están en la promoción que se está editando
+            const productosEnPromocionEditando = new Set();
+            if (promocionEditando && promocionEditando.productos && Array.isArray(promocionEditando.productos)) {
+                promocionEditando.productos.forEach(p => {
+                    const id = p.id_producto || p.id;
+                    if (id) productosEnPromocionEditando.add(id);
+                });
+            }
+
+            const productosConProblema = Array.from(productosSeleccionados).filter(id => {
+                // Si el producto está en la promoción que se está editando, no marcarlo como problema
+                const tienePromocion = productosConPromocionActiva.has(id) && !productosEnPromocionEditando.has(id);
+                const tieneDescuento = productosConDescuentoActivo.has(id);
+                return tienePromocion || tieneDescuento;
+            });
+
+            if (productosConProblema.length > 0 && warning) {
+                warning.textContent = `Advertencia: ${productosConProblema.length} producto(s) ya tienen descuento o promoción activa.`;
+                warning.classList.remove('hidden');
+            } else if (warning) {
+                warning.classList.add('hidden');
+            }
+        }
+
+        // Hacer la función accesible globalmente
+        window.toggleProductoSeleccionado = toggleProductoSeleccionado;
 
         async function loadPromociones() {
             try {
@@ -508,12 +771,16 @@
                             </label>
                         </td>
                         <td class="px-6 py-4 text-center align-top">
-                            <div class="flex items-center justify-center gap-2 whitespace-nowrap">
-                                <button class="px-3 py-1.5 text-sm text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition font-semibold" onclick="editarPromocion(${promocion.id_promocion})">
-                                    <i class="fas fa-edit mr-1"></i> Editar
+                            <div class="flex justify-center space-x-3 text-lg">
+                                <button onclick="editarPromocion(${promocion.id_promocion})" 
+                                        class="text-orange-600 hover:text-orange-700 transition"
+                                        title="Editar Promoción">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition font-semibold" onclick="eliminarPromocion(${promocion.id_promocion})">
-                                    <i class="fas fa-trash mr-1"></i> Eliminar
+                                <button onclick="eliminarPromocion(${promocion.id_promocion})" 
+                                        class="text-red-600 hover:text-red-700 transition"
+                                        title="Eliminar Promoción">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -550,16 +817,19 @@
             return localDate.toISOString().slice(0, 16);
         }
 
-        function abrirModalPromocion(promocion = null) {
+        async function abrirModalPromocion(promocion = null) {
             promocionEditando = promocion;
             const modal = document.getElementById('promocionModal');
 
             if (!modal) return;
 
+            // Actualizar lista de productos con promociones activas antes de abrir
+            await identificarProductosConPromocionesActivas();
+            
             resetFormularioPromocion();
 
             if (promocion) {
-                document.getElementById('modalPromocionTitulo').textContent = 'Editar promoción';
+                document.getElementById('modalPromocionTitulo').textContent = 'Editar Promoción';
                 document.getElementById('promocionId').value = promocion.id_promocion;
                 document.getElementById('nombrePromocion').value = promocion.nombre_promocion || '';
                 document.getElementById('descripcionPromocion').value = promocion.descripcion || '';
@@ -575,16 +845,22 @@
                 actualizarBotonPromocion(true);
 
                 if (alcance === 'producto' && Array.isArray(promocion.productos)) {
-                    const select = document.getElementById('productosPromocion');
-                    const idsSeleccionados = promocion.productos.map(p => p.id_producto);
-                    if (select) {
-                        Array.from(select.options).forEach(option => {
-                            option.selected = idsSeleccionados.includes(parseInt(option.value, 10));
-                        });
-                    }
+                    const idsSeleccionados = promocion.productos.map(p => p.id_producto || p.id);
+                    productosSeleccionados.clear();
+                    idsSeleccionados.forEach(id => {
+                        productosSeleccionados.add(id);
+                    });
+                    actualizarProductosSeleccionados();
+                    renderProductosList();
                 }
             } else {
-                document.getElementById('modalPromocionTitulo').textContent = 'Nueva promoción';
+                document.getElementById('modalPromocionTitulo').textContent = 'Nueva Promoción';
+                productosSeleccionados.clear();
+                actualizarProductosSeleccionados();
+                const searchInput = document.getElementById('productosSearchInput');
+                if (searchInput) searchInput.value = '';
+                productosFiltrados = [...productosCatalogo];
+                renderProductosList();
                 actualizarCamposAlcance();
                 actualizarBotonPromocion(false);
             }
@@ -597,6 +873,10 @@
             if (!modal) return;
             modal.classList.remove('show');
             promocionEditando = null;
+            productosSeleccionados.clear();
+            actualizarProductosSeleccionados();
+            const searchInput = document.getElementById('productosSearchInput');
+            if (searchInput) searchInput.value = '';
             actualizarBotonPromocion(false);
         }
 
@@ -604,6 +884,12 @@
             document.getElementById('formPromocion').reset();
             document.getElementById('promocionId').value = '';
             document.getElementById('promocionActiva').checked = true;
+            productosSeleccionados.clear();
+            actualizarProductosSeleccionados();
+            const searchInput = document.getElementById('productosSearchInput');
+            if (searchInput) searchInput.value = '';
+            productosFiltrados = [...productosCatalogo];
+            renderProductosList();
             document.querySelectorAll('input[name="alcancePromocion"]').forEach(radio => {
                 radio.checked = radio.value === 'general';
             });
@@ -633,12 +919,14 @@
 
             if (alcanceSeleccionado.value === 'producto') {
                 wrapper.classList.remove('hidden');
+                // Actualizar lista de productos disponibles al mostrar
+                identificarProductosConPromocionesActivas().then(() => {
+                    renderProductosList();
+                });
             } else {
                 wrapper.classList.add('hidden');
-                const select = document.getElementById('productosPromocion');
-                if (select) {
-                    Array.from(select.options).forEach(option => option.selected = false);
-                }
+                productosSeleccionados.clear();
+                actualizarProductosSeleccionados();
             }
         }
 
@@ -670,8 +958,40 @@
                     fechaFin: document.getElementById('fechaFinPromocion').value,
                     activa: document.getElementById('promocionActiva').checked,
                     alcance: document.querySelector('input[name="alcancePromocion"]:checked').value,
-                    productos: Array.from(document.getElementById('productosPromocion').selectedOptions).map(option => option.value)
+                    productos: Array.from(productosSeleccionados)
                 };
+
+                // Validar que no haya productos con doble descuento
+                if (payload.alcance === 'producto') {
+                    // Obtener IDs de productos que ya están en la promoción que se está editando
+                    const productosEnPromocionEditando = new Set();
+                    if (promocionEditando && promocionEditando.productos && Array.isArray(promocionEditando.productos)) {
+                        promocionEditando.productos.forEach(p => {
+                            const id = p.id_producto || p.id;
+                            if (id) productosEnPromocionEditando.add(id);
+                        });
+                    }
+
+                    const productosInvalidos = Array.from(productosSeleccionados).filter(id => {
+                        // Si el producto está en la promoción que se está editando, no marcarlo como inválido
+                        const tienePromocion = productosConPromocionActiva.has(id) && !productosEnPromocionEditando.has(id);
+                        const tieneDescuento = productosConDescuentoActivo.has(id);
+                        return tienePromocion || tieneDescuento;
+                    });
+
+                    if (productosInvalidos.length > 0) {
+                        const nombresInvalidos = productosInvalidos.map(id => {
+                            const producto = productosCatalogo.find(p => p.id === id);
+                            return producto ? producto.nombre : `ID ${id}`;
+                        }).join(', ');
+
+                        throw new Error(`Los siguientes productos no pueden estar en esta promoción porque ya tienen descuento o promoción activa: ${nombresInvalidos}`);
+                    }
+
+                    if (productosSeleccionados.size === 0) {
+                        throw new Error('Debes seleccionar al menos un producto para la promoción');
+                    }
+                }
 
                 const options = {
                     method: promocionEditando ? 'PUT' : 'POST',
@@ -769,7 +1089,7 @@
             }
 
             const confirmacion = await Swal.fire({
-                title: '¿Eliminar promoción?',
+                title: '¿Eliminar Promoción?',
                 text: `Esta acción eliminará "${promocion.nombre_promocion}" y no se puede deshacer.`,
                 icon: 'warning',
                 showCancelButton: true,

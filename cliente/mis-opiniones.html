@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Opiniones - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <style>
+        .opinion-card {
+            transition: all 0.3s ease;
+        }
+        .opinion-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .estrella-edit {
+            transition: all 0.2s;
+        }
+        .estrella-edit.seleccionada {
+            color: #fbbf24;
+        }
+        .estrella-edit:hover {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Mis Opiniones</h1>
+                    <p class="text-gray-600">Revisa todas las opiniones que has dejado sobre nuestros productos y servicios</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opiniones Container -->
+        <div id="opiniones-container">
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-16">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                <p class="mt-4 text-gray-600">Cargando tus opiniones...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-16 hidden">
+                <div class="bg-white rounded-lg shadow-md p-12">
+                    <i class="fas fa-star text-6xl text-gray-300 mb-6"></i>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Aún no has dejado opiniones</h2>
+                    <p class="text-gray-600 mb-8">¡Califica tus pedidos entregados y comparte tu experiencia!</p>
+                    <a href="/cliente/mis-pedidos.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center justify-center gap-2">
+                        <i class="fas fa-shopping-bag"></i>
+                        Ver Mis Pedidos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Opiniones List -->
+            <div id="opiniones-list" class="space-y-6 hidden">
+                <!-- Las opiniones se cargarán dinámicamente aquí -->
+            </div>
+
+            <div id="paginationControls" class="hidden mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="paginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 opiniones
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="paginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="nextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Opinión -->
+    <div id="modalEditarOpinion" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Editar Opinión</h3>
+                <button onclick="cerrarModalEditar()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="formEditarOpinion" onsubmit="guardarEdicion(event)">
+                <input type="hidden" id="editOpinionId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Calificación</label>
+                    <div id="editEstrellas" class="flex gap-2 text-4xl justify-center mb-2">
+                        <span class="estrella-edit cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                              onclick="seleccionarEstrellaEdit(1)" 
+                              onmouseover="pintarEstrellasEdit(1)" 
+                              onmouseout="pintarEstrellasEdit(calificacionEdit)">★</span>
+                        <span class="estrella-edit cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                              onclick="seleccionarEstrellaEdit(2)" 
+                              onmouseover="pintarEstrellasEdit(2)" 
+                              onmouseout="pintarEstrellasEdit(calificacionEdit)">★</span>
+                        <span class="estrella-edit cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                              onclick="seleccionarEstrellaEdit(3)" 
+                              onmouseover="pintarEstrellasEdit(3)" 
+                              onmouseout="pintarEstrellasEdit(calificacionEdit)">★</span>
+                        <span class="estrella-edit cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                              onclick="seleccionarEstrellaEdit(4)" 
+                              onmouseover="pintarEstrellasEdit(4)" 
+                              onmouseout="pintarEstrellasEdit(calificacionEdit)">★</span>
+                        <span class="estrella-edit cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                              onclick="seleccionarEstrellaEdit(5)" 
+                              onmouseover="pintarEstrellasEdit(5)" 
+                              onmouseout="pintarEstrellasEdit(calificacionEdit)">★</span>
+                    </div>
+                    <input type="hidden" id="editCalificacion" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Comentario</label>
+                    <textarea id="editComentario" rows="4"
+                              class="w-full p-4 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                              placeholder="Escribe tu comentario..."></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="cerrarModalEditar()" 
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-lg font-semibold transition hover:scale-[1.02]">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+    <script>
+        let allOpiniones = [];
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 5;
+
+        let paginationControls;
+        let paginationSummary;
+        let paginationInfo;
+        let prevPageBtn;
+        let nextPageBtn;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPaginationControls();
+            loadMisOpiniones();
+        });
+
+        function setupPaginationControls() {
+            paginationControls = document.getElementById('paginationControls');
+            paginationSummary = document.getElementById('paginationSummary');
+            paginationInfo = document.getElementById('paginationInfo');
+            prevPageBtn = document.getElementById('prevPageBtn');
+            nextPageBtn = document.getElementById('nextPageBtn');
+
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', () => changePage(-1));
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', () => changePage(1));
+            }
+        }
+
+        async function loadMisOpiniones() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const opinionesList = document.getElementById('opiniones-list');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    loadingState.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                const response = await fetch('/api/opiniones/mis-opiniones', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                loadingState.classList.add('hidden');
+
+                if (!data.success || !data.opiniones || data.opiniones.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    opinionesList.classList.add('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                opinionesList.classList.remove('hidden');
+
+                allOpiniones = data.opiniones || [];
+                currentPage = 1;
+                displayOpiniones();
+            } catch (error) {
+                console.error('Error al cargar opiniones:', error);
+                loadingState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        function displayOpiniones() {
+            const opinionesList = document.getElementById('opiniones-list');
+            if (!opinionesList) return;
+
+            const totalPages = Math.ceil(allOpiniones.length / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allOpiniones.length);
+            const paginatedOpiniones = allOpiniones.slice(startIndex, endIndex);
+
+            opinionesList.innerHTML = paginatedOpiniones.map(opinion => {
+                    const estrellas = '★'.repeat(opinion.calificacion) + '☆'.repeat(5 - opinion.calificacion);
+                    const fecha = new Date(opinion.fecha_opinion).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const estado = opinion.aprobada ? 'Aprobada' : 'Pendiente de aprobación';
+                    const estadoClass = opinion.aprobada ? 'text-green-600 bg-green-50' : 'text-yellow-600 bg-yellow-50';
+                    const estadoIcon = opinion.aprobada ? 'fa-check-circle' : 'fa-clock';
+                    const tipoTexto = opinion.tipo_opinion === 'restaurante' 
+                        ? 'Restaurante' 
+                        : (opinion.nombre_producto || 'Producto');
+                    // Escapar el comentario para HTML
+                    const comentarioEscapado = (opinion.comentario || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+                    return `
+                        <div class="opinion-card bg-white rounded-lg shadow-md p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-semibold text-gray-800 mb-1">${tipoTexto}</h3>
+                                    <p class="text-sm text-gray-500">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        ${fecha}
+                                    </p>
+                                </div>
+                                <span class="text-xs ${estadoClass} font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                    <i class="fas ${estadoIcon}"></i>
+                                    ${estado}
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center mb-4 text-yellow-400 text-2xl">
+                                ${estrellas}
+                                <span class="text-gray-600 text-sm ml-2">${opinion.calificacion}/5</span>
+                            </div>
+                            
+                            ${opinion.comentario ? `
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <p class="text-gray-700 leading-relaxed">${opinion.comentario}</p>
+                                </div>
+                            ` : `
+                                <p class="text-gray-500 italic">Sin comentario</p>
+                            `}
+                            
+                            <div class="mt-4 flex justify-end">
+                                <button class="btn-editar-opinion text-orange-600 hover:text-orange-700 transition font-semibold flex items-center gap-2"
+                                        data-id="${opinion.id_opinion}"
+                                        data-calificacion="${opinion.calificacion}"
+                                        data-comentario="${comentarioEscapado}">
+                                    <i class="fas fa-edit"></i>
+                                    Editar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+
+            // Agregar event listeners a los botones de editar
+            document.querySelectorAll('.btn-editar-opinion').forEach(button => {
+                button.addEventListener('click', function() {
+                    const idOpinion = parseInt(this.getAttribute('data-id'));
+                    const calificacion = parseInt(this.getAttribute('data-calificacion'));
+                    const comentario = this.getAttribute('data-comentario') || '';
+                    abrirModalEditar(idOpinion, calificacion, comentario);
+                });
+            });
+
+            renderPagination(totalPages, startIndex, endIndex);
+        }
+
+        function renderPagination(totalPages, startIndex, endIndex) {
+            if (!paginationControls || !paginationSummary || !paginationInfo || !prevPageBtn || !nextPageBtn) {
+                return;
+            }
+
+            if (allOpiniones.length === 0) {
+                paginationControls.classList.add('hidden');
+                return;
+            }
+
+            paginationControls.classList.remove('hidden');
+
+            const total = allOpiniones.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            paginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} opiniones`;
+            paginationInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+
+            const isFirstPage = currentPage <= 1;
+            const isLastPage = currentPage >= totalPages;
+
+            prevPageBtn.disabled = isFirstPage;
+            nextPageBtn.disabled = isLastPage;
+        }
+
+        function changePage(offset) {
+            goToPage(currentPage + offset);
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(allOpiniones.length / ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            currentPage = page;
+            displayOpiniones();
+        }
+
+        // Funciones para editar opinión
+        let calificacionEdit = 0;
+
+        function abrirModalEditar(idOpinion, calificacion, comentario) {
+            calificacionEdit = calificacion;
+            document.getElementById('editOpinionId').value = idOpinion;
+            document.getElementById('editCalificacion').value = calificacion;
+            document.getElementById('editComentario').value = comentario || '';
+            
+            pintarEstrellasEdit(calificacion);
+            
+            const modal = document.getElementById('modalEditarOpinion');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModalEditar() {
+            const modal = document.getElementById('modalEditarOpinion');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            calificacionEdit = 0;
+        }
+
+        function seleccionarEstrellaEdit(numero) {
+            calificacionEdit = numero;
+            document.getElementById('editCalificacion').value = numero;
+            pintarEstrellasEdit(numero);
+        }
+
+        function pintarEstrellasEdit(numero) {
+            const estrellas = document.querySelectorAll('.estrella-edit');
+            estrellas.forEach((estrella, index) => {
+                if (index < numero) {
+                    estrella.classList.add('seleccionada');
+                    estrella.style.color = '#fbbf24';
+                } else {
+                    estrella.classList.remove('seleccionada');
+                    estrella.style.color = '#d1d5db';
+                }
+            });
+        }
+
+        async function guardarEdicion(event) {
+            event.preventDefault();
+            
+            const idOpinion = document.getElementById('editOpinionId').value;
+            const calificacion = parseInt(document.getElementById('editCalificacion').value);
+            const comentario = document.getElementById('editComentario').value.trim();
+
+            if (!calificacion || calificacion < 1 || calificacion > 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Calificación requerida',
+                    text: 'Por favor selecciona una calificación de 1 a 5 estrellas'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/opiniones/${idOpinion}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        calificacion: calificacion,
+                        comentario: comentario || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.mensaje || 'Error al actualizar opinión');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Opinión actualizada!',
+                    text: data.mensaje || 'Tu opinión ha sido actualizada y será revisada nuevamente.',
+                    confirmButtonColor: '#f97316'
+                });
+
+                cerrarModalEditar();
+                loadMisOpiniones();
+            } catch (error) {
+                console.error('Error al actualizar opinión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo actualizar la opinión',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

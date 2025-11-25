@@ -377,6 +377,12 @@ function configureRoleSpecificMenus() {
                 <a href="/cliente/mis-pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-shopping-bag mr-2 text-gray-700"></i>Mis Pedidos
                 </a>
+                <a href="/cliente/mis-reservas.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Mis Reservaciones
+                </a>
+                <a href="/cliente/mis-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-star mr-2 text-gray-700"></i>Mis Opiniones
+                </a>
             `;
             mobileRoleMenuItems = `
                 <a href="/cliente/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
@@ -384,6 +390,12 @@ function configureRoleSpecificMenus() {
                 </a>
                 <a href="/cliente/mis-pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
+                </a>
+                <a href="/cliente/mis-reservas.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Mis Reservaciones
+                </a>
+                <a href="/cliente/mis-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-star mr-2"></i>Mis Opiniones
                 </a>
             `;
             break;
@@ -440,8 +452,14 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-clipboard-list mr-2 text-gray-700"></i>Historial de Pedidos
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
+                <a href="/admin/auditoria.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-history mr-2 text-gray-700"></i>Historial de Cambios
+                </a>
+                <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-file-export mr-2 text-gray-700"></i>Generar Reportes
+                </a>
+                <a href="/admin/moderacion-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-shield-alt mr-2 text-gray-700"></i>Moderación de Reseñas
                 </a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-cog mr-2 text-gray-700"></i>Configuración
@@ -469,8 +487,14 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-clipboard-list mr-2"></i>Historial de Pedidos
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-chart-bar mr-2"></i>Reportes
+                <a href="/admin/auditoria.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-history mr-2"></i>Historial de Cambios
+                </a>
+                <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-file-export mr-2"></i>Generar Reportes
+                </a>
+                <a href="/admin/moderacion-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-shield-alt mr-2"></i>Moderación de Reseñas
                 </a>
                 <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-cog mr-2"></i>Configuración
@@ -526,28 +550,8 @@ function addNavbarEventListeners() {
             }
         }
         
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
-        
-        if (loginModal && !loginModal.classList.contains('hidden')) {
-            const isClickOnModalBackground = event.target === loginModal || 
-                (event.target.closest('#loginModal') === loginModal && 
-                 !event.target.closest('.bg-white'));
-            
-            if (isClickOnModalBackground) {
-                closeLoginModal();
-            }
-        }
-        
-        if (registerModal && !registerModal.classList.contains('hidden')) {
-            const isClickOnModalBackground = event.target === registerModal || 
-                (event.target.closest('#registerModal') === registerModal && 
-                 !event.target.closest('.bg-white'));
-            
-            if (isClickOnModalBackground) {
-                closeRegisterModal();
-            }
-        }
+        // Los modales de login y registro NO se cierran al hacer clic fuera
+        // Solo se pueden cerrar con el botón de cerrar (X) o después de completar la acción
     });
     
     const loginForm = document.getElementById('loginForm');

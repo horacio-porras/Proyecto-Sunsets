@@ -19,10 +19,20 @@
         color: #ffc107;
     }
 
-    .estrella.seleccionada {
-        color: #ffc107;
-        transform: scale(1.15);
-    }
+        .estrella.seleccionada {
+            color: #ffc107;
+            transform: scale(1.15);
+        }
+        
+        .estrella-restaurante {
+            transition: all 0.2s;
+        }
+        .estrella-restaurante.seleccionada {
+            color: #fbbf24;
+        }
+        .estrella-restaurante:hover {
+            color: #fbbf24;
+        }
 </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -71,74 +81,18 @@
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
             <h3 class="text-3xl font-bold text-center mb-12">Productos Destacados</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Producto 1 -->
-                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400" alt="Pizza Margherita"
-                        class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">Pizza Margherita</h4>
-                            <span class="text-orange-600 font-bold text-base">₡8,500</span>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">Salsa de tomate, mozzarella, albahaca fresca</p>
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-star"></i>
-                            <span class="text-gray-600 ml-1">4.8</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Producto 2 -->
-                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400" alt="Pizza Pepperoni"
-                        class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">Pizza Pepperoni</h4>
-                            <span class="text-orange-600 font-bold text-base">₡9,200</span>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">Pepperoni, mozzarella, salsa de tomate</p>
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-star"></i>
-                            <span class="text-gray-600 ml-1">4.9</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Producto 3 -->
-                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" alt="Pizza Hawaiana"
-                        class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">Pizza Hawaiana</h4>
-                            <span class="text-orange-600 font-bold text-base">₡9,800</span>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">Jamón, piña, mozzarella, salsa de tomate</p>
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-star"></i>
-                            <span class="text-gray-600 ml-1">4.7</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Producto 4 -->
-                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400"
-                        alt="Pizza Vegetariana" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">Pizza Vegetariana</h4>
-                            <span class="text-orange-600 font-bold text-base">₡8,900</span>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">Champiñones, pimientos, cebolla, aceitunas</p>
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-star"></i>
-                            <span class="text-gray-600 ml-1">4.6</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Loading State -->
+            <div id="featured-products-loading" class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                <p class="mt-4 text-gray-600">Cargando productos destacados...</p>
+            </div>
+            <!-- Products Grid -->
+            <div id="featured-products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 hidden">
+                <!-- Los productos se cargarán dinámicamente aquí -->
+            </div>
+            <!-- Empty State -->
+            <div id="featured-products-empty" class="text-center py-8 hidden">
+                <p class="text-gray-600">No hay productos disponibles en este momento.</p>
             </div>
         </div>
     </section>
@@ -197,52 +151,68 @@
             </div>
         </div>
     </section>
- <section class="py-20 bg-gray-50">
-    <div class="container mx-auto px-6 lg:px-16 max-w-4xl">
+    <!-- Sección de Opiniones -->
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h3 class="text-4xl font-bold text-center mb-12 tracking-tight">
+                Opiniones de Nuestros Clientes
+            </h3>
 
-        <h3 class="text-4xl font-bold text-center mb-12 tracking-tight">
-            Opiniones de Nuestros Clientes
-        </h3>
-
-        <!-- Card de formulario -->
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 mb-14 transform transition hover:scale-[1.01]">
-            <form id="opinionForm" class="space-y-6">
-
-                <input type="hidden" id="id_producto" value="1">
-                <input type="hidden" id="id_cliente">
-
-                <label class="font-semibold block text-gray-700">Calificación</label>
-
-                <!-- Estrellas -->
-                <div class="flex gap-2 text-4xl estrellas" id="estrellas">
-                    <span data-value="1" class="estrella">★</span>
-                    <span data-value="2" class="estrella">★</span>
-                    <span data-value="3" class="estrella">★</span>
-                    <span data-value="4" class="estrella">★</span>
-                    <span data-value="5" class="estrella">★</span>
+            <!-- Carrusel de Opiniones -->
+            <div class="mb-16">
+                <div id="opinionesCarrusel" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Las opiniones se cargarán dinámicamente aquí -->
                 </div>
+            </div>
 
-                <textarea id="comentario" placeholder="Escribe tu comentario"
-                    class="w-full p-4 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"></textarea>
+            <!-- Formulario de Opinión del Restaurante -->
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-2xl mx-auto">
+                <h4 class="text-2xl font-semibold mb-6 text-center">¿Qué opinas de nuestro restaurante?</h4>
+                <form id="opinionRestauranteForm" class="space-y-6">
+                    <div>
+                        <label class="font-semibold block text-gray-700 mb-2 text-center">Calificación</label>
+                        <div id="estrellasRestaurante" class="flex gap-2 text-4xl justify-center">
+                            <span class="estrella-restaurante cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                                  onclick="seleccionarEstrellaRestaurante(1)" 
+                                  onmouseover="pintarEstrellasRestaurante(1)" 
+                                  onmouseout="pintarEstrellasRestaurante(calificacionRestaurante)">★</span>
+                            <span class="estrella-restaurante cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                                  onclick="seleccionarEstrellaRestaurante(2)" 
+                                  onmouseover="pintarEstrellasRestaurante(2)" 
+                                  onmouseout="pintarEstrellasRestaurante(calificacionRestaurante)">★</span>
+                            <span class="estrella-restaurante cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                                  onclick="seleccionarEstrellaRestaurante(3)" 
+                                  onmouseover="pintarEstrellasRestaurante(3)" 
+                                  onmouseout="pintarEstrellasRestaurante(calificacionRestaurante)">★</span>
+                            <span class="estrella-restaurante cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                                  onclick="seleccionarEstrellaRestaurante(4)" 
+                                  onmouseover="pintarEstrellasRestaurante(4)" 
+                                  onmouseout="pintarEstrellasRestaurante(calificacionRestaurante)">★</span>
+                            <span class="estrella-restaurante cursor-pointer text-gray-300 hover:text-yellow-400 transition" 
+                                  onclick="seleccionarEstrellaRestaurante(5)" 
+                                  onmouseover="pintarEstrellasRestaurante(5)" 
+                                  onmouseout="pintarEstrellasRestaurante(calificacionRestaurante)">★</span>
+                        </div>
+                    </div>
 
-                <button
-                    class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold transition hover:scale-[1.02]">
-                    Enviar Opinión
-                </button>
-            </form>
+                    <textarea id="comentarioRestaurante" 
+                              placeholder="Escribe tu comentario sobre el restaurante..."
+                              rows="4"
+                              class="w-full p-4 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"></textarea>
+
+                    <button type="button" onclick="enviarOpinionRestaurante()"
+                            class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold transition hover:scale-[1.02]">
+                        Enviar Opinión
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <h4 class="text-2xl font-semibold mb-6">Opiniones Recientes</h4>
-
-        <div id="opinionesList" class="space-y-6"></div>
-
-    </div>
-</section>
+    </section>
 
 
 
     <!-- Contact Info -->
-    <section class="py-16 bg-gray-50">
+    <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
             <h3 class="text-3xl font-bold text-center mb-12">Información de Contacto</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -411,7 +381,300 @@
             }
         }
     </script>
-    <script src="/js/opiniones.js"></script>
+    
+    <script>
+        // Sistema de opiniones del restaurante
+        let calificacionRestaurante = 0;
+
+        // Cargar opiniones del restaurante para el carrusel
+        async function cargarOpinionesCarrusel() {
+            try {
+                const response = await fetch('/api/opiniones/restaurante?limit=6');
+                const data = await response.json();
+                
+                if (data.success && data.opiniones) {
+                    const carrusel = document.getElementById('opinionesCarrusel');
+                    if (!carrusel) return;
+                    
+                    if (data.opiniones.length === 0) {
+                        carrusel.innerHTML = `
+                            <div class="col-span-full text-center text-gray-500 py-8">
+                                <p>Aún no hay opiniones. Sé el primero en comentar.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    carrusel.innerHTML = data.opiniones.map(opinion => {
+                        const estrellas = '★'.repeat(opinion.calificacion) + '☆'.repeat(5 - opinion.calificacion);
+                        const fecha = new Date(opinion.fecha_opinion).toLocaleDateString('es-ES');
+                        const tipoTexto = opinion.tipo_opinion === 'restaurante' 
+                            ? 'Restaurante' 
+                            : (opinion.nombre_producto || 'Producto');
+                        
+                        return `
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition">
+                                <div class="flex items-center mb-3 text-yellow-400 text-xl">
+                                    ${estrellas}
+                                </div>
+                                <p class="text-gray-700 mb-4">${opinion.comentario || 'Sin comentario'}</p>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold text-gray-800">${opinion.nombre_cliente || 'Cliente'}</span>
+                                    <span class="text-gray-500">${fecha}</span>
+                                </div>
+                                ${opinion.tipo_opinion === 'producto' && opinion.nombre_producto 
+                                    ? `<div class="mt-2 text-xs text-gray-500">Sobre: ${opinion.nombre_producto}</div>` 
+                                    : ''}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar opiniones:', error);
+            }
+        }
+
+        window.seleccionarEstrellaRestaurante = function(valor) {
+            calificacionRestaurante = valor;
+            pintarEstrellasRestaurante(valor);
+        };
+
+        window.pintarEstrellasRestaurante = function(valor) {
+            const estrellas = document.querySelectorAll('#estrellasRestaurante .estrella-restaurante');
+            estrellas.forEach((e, index) => {
+                if (index < valor) {
+                    e.classList.add('seleccionada');
+                } else {
+                    e.classList.remove('seleccionada');
+                }
+            });
+        };
+
+        window.enviarOpinionRestaurante = async function() {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicia sesión',
+                    text: 'Debes iniciar sesión para dejar una opinión',
+                    confirmButtonText: 'Iniciar Sesión',
+                    confirmButtonColor: '#f97316'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login.html';
+                    }
+                });
+                return;
+            }
+            
+            if (calificacionRestaurante === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Calificación requerida',
+                    text: 'Por favor selecciona una calificación',
+                    confirmButtonColor: '#f97316'
+                });
+                return;
+            }
+            
+            // Verificar si puede opinar
+            try {
+                const verifyResponse = await fetch('/api/opiniones/verificar/restaurante', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const verifyData = await verifyResponse.json();
+                
+                if (!verifyData.success || !verifyData.puedeOpinar) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No puedes opinar',
+                        text: verifyData.razon || 'No puedes opinar sobre el restaurante',
+                        confirmButtonColor: '#f97316'
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.error('Error al verificar:', error);
+            }
+            
+            const comentario = document.getElementById('comentarioRestaurante').value.trim();
+            
+            try {
+                const response = await fetch('/api/opiniones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        calificacion: calificacionRestaurante,
+                        comentario: comentario,
+                        tipo_opinion: 'restaurante'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Opinión enviada!',
+                        text: 'Tu opinión será revisada antes de ser publicada',
+                        confirmButtonColor: '#f97316'
+                    });
+                    
+                    // Limpiar formulario
+                    calificacionRestaurante = 0;
+                    pintarEstrellasRestaurante(0);
+                    document.getElementById('comentarioRestaurante').value = '';
+                    
+                    // Recargar carrusel
+                    cargarOpinionesCarrusel();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.mensaje || 'No se pudo enviar la opinión',
+                        confirmButtonColor: '#f97316'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al enviar opinión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo enviar la opinión',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        };
+
+        // Cargar productos destacados (los 4 mejor calificados)
+        async function cargarProductosDestacados() {
+            const loadingElement = document.getElementById('featured-products-loading');
+            const gridElement = document.getElementById('featured-products-grid');
+            const emptyElement = document.getElementById('featured-products-empty');
+            
+            try {
+                // Obtener todos los productos
+                const response = await fetch('/api/menu/products');
+                const data = await response.json();
+                
+                if (!data.success || !data.data || data.data.length === 0) {
+                    loadingElement.classList.add('hidden');
+                    emptyElement.classList.remove('hidden');
+                    return;
+                }
+                
+                const productos = data.data;
+                
+                // Obtener calificaciones para cada producto
+                const productosConCalificaciones = await Promise.all(
+                    productos.map(async (producto) => {
+                        try {
+                            const ratingResponse = await fetch(`/api/opiniones/producto/${producto.id}/promedio`);
+                            const ratingData = await ratingResponse.json();
+                            
+                            return {
+                                ...producto,
+                                promedio: ratingData.success && ratingData.promedio > 0 ? ratingData.promedio : 0,
+                                totalOpiniones: ratingData.success ? (ratingData.total || 0) : 0
+                            };
+                        } catch (error) {
+                            console.error(`Error al cargar calificación para producto ${producto.id}:`, error);
+                            return {
+                                ...producto,
+                                promedio: 0,
+                                totalOpiniones: 0
+                            };
+                        }
+                    })
+                );
+                
+                // Filtrar solo productos con calificaciones (promedio > 0) y ordenar por calificación descendente
+                const productosCalificados = productosConCalificaciones
+                    .filter(p => p.promedio > 0)
+                    .sort((a, b) => b.promedio - a.promedio)
+                    .slice(0, 4); // Tomar los 4 mejores
+                
+                // Si no hay productos calificados, mostrar los primeros 4 productos disponibles
+                const productosAMostrar = productosCalificados.length > 0 
+                    ? productosCalificados 
+                    : productos.slice(0, 4);
+                
+                loadingElement.classList.add('hidden');
+                
+                if (productosAMostrar.length === 0) {
+                    emptyElement.classList.remove('hidden');
+                    return;
+                }
+                
+                emptyElement.classList.add('hidden');
+                gridElement.classList.remove('hidden');
+                
+                // Renderizar productos
+                gridElement.innerHTML = productosAMostrar.map(producto => {
+                    const precioFinal = producto.hasDiscount ? producto.finalPrice : producto.price;
+                    const precioFormateado = precioFinal.toLocaleString('es-CR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    const estrellasLlenas = Math.floor(producto.promedio || 0);
+                    const tieneMedia = (producto.promedio || 0) % 1 >= 0.5;
+                    const estrellasVacias = 5 - estrellasLlenas - (tieneMedia ? 1 : 0);
+                    const ratingHtml = producto.promedio > 0
+                        ? `
+                            <div class="flex items-center text-yellow-500">
+                                <div class="flex">
+                                    ${'★'.repeat(estrellasLlenas)}${tieneMedia ? '☆' : ''}${'☆'.repeat(estrellasVacias)}
+                                </div>
+                                <span class="text-gray-600 ml-1 text-sm">${producto.promedio.toFixed(1)}</span>
+                                ${producto.totalOpiniones > 0 ? `<span class="text-gray-500 ml-1 text-xs">(${producto.totalOpiniones})</span>` : ''}
+                            </div>
+                        `
+                        : `
+                            <div class="flex items-center text-gray-400">
+                                <i class="fas fa-star"></i>
+                                <span class="text-gray-400 ml-1 text-sm">Sin calificaciones</span>
+                            </div>
+                        `;
+                    
+                    const imagenUrl = producto.image || 'https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400';
+                    const descripcion = producto.description || 'Delicioso producto de nuestro menú';
+                    
+                    return `
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="window.location.href='/menu.html'">
+                            <img src="${imagenUrl}" alt="${producto.name}"
+                                class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold text-lg">${producto.name}</h4>
+                                    <span class="text-orange-600 font-bold text-base">₡${precioFormateado}</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">${descripcion}</p>
+                                ${ratingHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error al cargar productos destacados:', error);
+                loadingElement.classList.add('hidden');
+                emptyElement.classList.remove('hidden');
+            }
+        }
+
+        // Cargar opiniones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarOpinionesCarrusel();
+            cargarProductosDestacados();
+        });
+    </script>
 </body>
 
 </html>

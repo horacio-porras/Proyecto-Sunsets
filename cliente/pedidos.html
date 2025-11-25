@@ -194,6 +194,31 @@
                         </div>
 
 
+                        <!-- Rewards -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Recompensas Disponibles</h3>
+                            
+                            <div id="rewards-loading" class="text-center py-4 hidden">
+                                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                                <p class="mt-2 text-sm text-gray-600">Cargando recompensas...</p>
+                            </div>
+
+                            <div id="rewards-empty" class="text-center py-4 hidden">
+                                <i class="fas fa-gift text-gray-300 text-3xl mb-2"></i>
+                                <p class="text-sm text-gray-600">No tienes recompensas disponibles</p>
+                                <p class="text-xs text-gray-500 mt-1">Canjea puntos por descuentos en tu dashboard</p>
+                            </div>
+
+                            <div id="rewards-list" class="space-y-2">
+                                <!-- Las recompensas se cargarán aquí dinámicamente -->
+                            </div>
+
+                            <button id="remove-reward-btn" onclick="removeSelectedReward()" class="w-full mt-3 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-md transition shadow-md hover:shadow-lg hidden">
+                                <i class="fas fa-times mr-1"></i>
+                                Quitar Recompensa
+                            </button>
+                        </div>
+
                         <!-- Loyalty Points -->
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-lg font-semibold mb-4">Programa de Lealtad</h3>
@@ -222,10 +247,37 @@
     <div id="footer-container" class="mt-auto"></div>
 
     <script>
+        //Variable global para almacenar la recompensa seleccionada
+        let selectedReward = null;
+
         //Auto-rellena la información de entrega con datos del cliente
         document.addEventListener('DOMContentLoaded', function() {
             autoFillDeliveryInfo();
             loadLoyaltyPoints();
+            
+            // Verificar si hay una recompensa ya seleccionada en localStorage
+            const storedReward = localStorage.getItem('sunsets-active-reward');
+            if (storedReward) {
+                try {
+                    const parsed = JSON.parse(storedReward);
+                    if (parsed && parsed.id_canje && parsed.estado_canje === 'pendiente') {
+                        selectedReward = {
+                            id_canje: parsed.id_canje,
+                            nombre: parsed.nombre,
+                            valor: parsed.valor_canje || parsed.valor,
+                            tipo: parsed.tipo_promocion || parsed.tipo
+                        };
+                        const removeBtn = document.getElementById('remove-reward-btn');
+                        if (removeBtn) {
+                            removeBtn.classList.remove('hidden');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error al parsear recompensa almacenada:', e);
+                }
+            }
+            
+            loadPendingRewards();
         });
 
         async function autoFillDeliveryInfo() {
@@ -456,6 +508,17 @@
                 status: 'pending'
             };
             
+            // Agregar recompensa seleccionada si existe
+            if (selectedReward) {
+                order.rewardCanje = {
+                    id_canje: selectedReward.id_canje,
+                    valor_canje: selectedReward.valor,
+                    nombre: selectedReward.nombre,
+                    tipo: selectedReward.tipo
+                };
+                order.rewardDiscount = selectedReward.valor;
+            }
+            
             order.total = order.subtotal + order.deliveryFee + order.taxes;
             
             console.log('Datos del pedido preparados:', order);
@@ -463,6 +526,190 @@
             localStorage.setItem('sunsets-order-data', JSON.stringify(order));
             
             window.location.href = '/pago.html';
+        }
+
+        //Función para cargar las recompensas pendientes del usuario
+        async function loadPendingRewards() {
+            const loadingElement = document.getElementById('rewards-loading');
+            const emptyElement = document.getElementById('rewards-empty');
+            const listElement = document.getElementById('rewards-list');
+
+            if (!loadingElement || !emptyElement || !listElement) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.log('No hay token de autenticación para cargar recompensas');
+                    emptyElement.classList.remove('hidden');
+                    return;
+                }
+
+                loadingElement.classList.remove('hidden');
+                emptyElement.classList.add('hidden');
+                listElement.innerHTML = '';
+
+                const response = await fetch('/api/cliente/recompensas/canjeadas', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                loadingElement.classList.add('hidden');
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'No se pudieron cargar las recompensas');
+                }
+
+                const canjes = Array.isArray(result.data?.canjes) ? result.data.canjes : [];
+                
+                // Filtrar solo las recompensas pendientes de tipo descuento
+                const pendingDiscounts = canjes.filter(canje => 
+                    canje.estado === 'pendiente' && 
+                    (canje.tipo === 'descuento' || canje.tipo === 'descuento_colones' || canje.tipo === 'descuento_porcentaje')
+                );
+
+                if (pendingDiscounts.length === 0) {
+                    emptyElement.classList.remove('hidden');
+                    return;
+                }
+
+                emptyElement.classList.add('hidden');
+                pendingDiscounts.forEach(reward => {
+                    const isSelected = selectedReward && selectedReward.id_canje === reward.id_canje;
+                    const rewardCard = document.createElement('div');
+                    rewardCard.className = `border rounded-lg p-3 cursor-pointer transition-all ${
+                        isSelected
+                            ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-red-50 shadow-md'
+                            : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50'
+                    }`;
+                    rewardCard.onclick = () => selectReward(reward);
+
+                    let valorText = '';
+                    if (reward.tipo === 'descuento_porcentaje') {
+                        valorText = `${parseFloat(reward.valor || 0)}% de descuento`;
+                    } else {
+                        valorText = `₡${parseFloat(reward.valor || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} de descuento`;
+                    }
+
+                    const fecha = new Date(reward.fecha_canje);
+                    const fechaFormateada = fecha.toLocaleDateString('es-CR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    rewardCard.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-semibold text-sm ${isSelected ? 'text-gray-900' : 'text-gray-800'}">${reward.nombre || 'Descuento'}</h4>
+                                    ${isSelected 
+                                        ? '<span class="text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full font-semibold shadow-sm"><i class="fas fa-check mr-1"></i>Seleccionada</span>'
+                                        : ''
+                                    }
+                                </div>
+                                <p class="text-sm ${isSelected ? 'text-green-700 font-bold' : 'text-green-600 font-semibold'} mb-1">${valorText}</p>
+                                ${reward.descripcion ? `<p class="text-xs ${isSelected ? 'text-gray-700' : 'text-gray-600'} mb-1">${reward.descripcion}</p>` : ''}
+                                <p class="text-xs ${isSelected ? 'text-gray-600' : 'text-gray-500'}">Canjeada el ${fechaFormateada}</p>
+                            </div>
+                            ${isSelected
+                                ? '<div class="ml-2 w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center"><i class="fas fa-check text-white text-sm"></i></div>'
+                                : '<i class="fas fa-circle text-gray-300 text-lg ml-2"></i>'
+                            }
+                        </div>
+                    `;
+                    listElement.appendChild(rewardCard);
+                });
+
+            } catch (error) {
+                console.error('Error al cargar recompensas pendientes:', error);
+                loadingElement.classList.add('hidden');
+                emptyElement.classList.remove('hidden');
+                listElement.innerHTML = `
+                    <div class="text-center py-4 text-red-600">
+                        <i class="fas fa-exclamation-circle mb-2"></i>
+                        <p class="text-sm">Error al cargar las recompensas. Intenta recargar la página.</p>
+                    </div>
+                `;
+            }
+        }
+
+        //Función para seleccionar una recompensa
+        function selectReward(reward) {
+            // Si ya está seleccionada, deseleccionarla
+            if (selectedReward && selectedReward.id_canje === reward.id_canje) {
+                removeSelectedReward();
+                return;
+            }
+
+            selectedReward = {
+                id_canje: reward.id_canje,
+                nombre: reward.nombre,
+                valor: reward.valor,
+                tipo: reward.tipo
+            };
+
+            // Guardar en localStorage para que updateOrderSummary lo detecte
+            const rewardPayload = {
+                id_canje: reward.id_canje,
+                nombre: reward.nombre,
+                valor_canje: reward.valor,
+                tipo_promocion: reward.tipo,
+                fecha_canje: reward.fecha_canje || new Date().toISOString(),
+                estado_canje: 'pendiente'
+            };
+            localStorage.setItem('sunsets-active-reward', JSON.stringify(rewardPayload));
+
+            const removeBtn = document.getElementById('remove-reward-btn');
+            if (removeBtn) {
+                removeBtn.classList.remove('hidden');
+            }
+
+            // Recargar la lista para actualizar la UI
+            loadPendingRewards();
+
+            // Actualizar el resumen del pedido si está disponible
+            if (typeof updateOrderSummary === 'function') {
+                updateOrderSummary();
+            }
+        }
+
+        //Función para quitar la recompensa seleccionada
+        function removeSelectedReward() {
+            selectedReward = null;
+            
+            // Limpiar localStorage solo si la recompensa fue seleccionada desde esta página
+            // (no limpiar si viene del dashboard)
+            const storedReward = localStorage.getItem('sunsets-active-reward');
+            if (storedReward) {
+                try {
+                    const parsed = JSON.parse(storedReward);
+                    // Si el id_canje coincide con el seleccionado, limpiarlo
+                    if (parsed && parsed.id_canje) {
+                        localStorage.removeItem('sunsets-active-reward');
+                    }
+                } catch (e) {
+                    // Si hay error, no hacer nada
+                }
+            }
+
+            const removeBtn = document.getElementById('remove-reward-btn');
+            if (removeBtn) {
+                removeBtn.classList.add('hidden');
+            }
+
+            // Recargar la lista para actualizar la UI
+            loadPendingRewards();
+
+            // Actualizar el resumen del pedido si está disponible
+            if (typeof updateOrderSummary === 'function') {
+                updateOrderSummary();
+            }
         }
 
         //Función para cargar los puntos de lealtad del usuario

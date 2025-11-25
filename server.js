@@ -20,6 +20,8 @@ const { sendDailyReminders } = require('./utils/reminderService');
 const reminderRoutes = require('./routes/reminderRoutes');
 const opinionesRoutes = require('./routes/opinionesRoutes');
 const facturaRoutes = require('./routes/facturaRoutes');
+const auditoriaRoutes = require('./routes/auditoriaRoutes');
+const reportesRoutes = require('./routes/reportesRoutes');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
@@ -88,6 +90,8 @@ app.use('/api/recompensas', recompensasRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/opiniones', opinionesRoutes);
 app.use('/api/facturas', facturaRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+app.use('/api/reportes', reportesRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor

@@ -434,6 +434,21 @@ const createPromocion = async (req, res) => {
                  VALUES ?`,
                 [valores]
             );
+
+            // Sincronizar descuentos de promoción con productos
+            if (activa) {
+                for (const productoId of productosSeleccionados) {
+                    await connection.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoId]
+                    );
+                }
+            }
         }
 
         await connection.commit();
@@ -509,7 +524,27 @@ const updatePromocion = async (req, res) => {
             ]
         );
 
+        // Obtener productos actuales de la promoción antes de eliminar
+        const [productosActuales] = await connection.execute(
+            `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+        const idsProductosActuales = productosActuales.map(p => p.id_producto);
+
         await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
+
+        // Desactivar descuentos en productos que ya no están en la promoción
+        if (idsProductosActuales.length > 0) {
+            await connection.execute(
+                `UPDATE producto 
+                 SET descuento_activo = 0,
+                     porcentaje_descuento = NULL,
+                     fecha_inicio_descuento = NULL,
+                     fecha_fin_descuento = NULL
+                 WHERE id_producto IN (${idsProductosActuales.map(() => '?').join(',')})`,
+                idsProductosActuales
+            );
+        }
 
         if (alcance === 'producto' && productosSeleccionados.length > 0) {
             const valores = productosSeleccionados.map((productoId) => [productoId, promocionId, new Date()]);
@@ -518,6 +553,21 @@ const updatePromocion = async (req, res) => {
                  VALUES ?`,
                 [valores]
             );
+
+            // Sincronizar descuentos de promoción con productos
+            if (activa) {
+                for (const productoId of productosSeleccionados) {
+                    await connection.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoId]
+                    );
+                }
+            }
         }
 
         await connection.commit();
@@ -564,6 +614,54 @@ const actualizarEstadoPromocion = async (req, res) => {
 
         await pool.execute(`UPDATE promocion SET activa = ? WHERE id_promocion = ?`, [normalizeBoolean(activa) ? 1 : 0, promocionId]);
 
+        // Sincronizar estado con productos si la promoción es de alcance "producto"
+        const [promocion] = await pool.execute(
+            `SELECT alcance FROM promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+
+        if (promocion.length > 0 && promocion[0].alcance === 'producto') {
+            const [productosPromocion] = await pool.execute(
+                `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+                [promocionId]
+            );
+
+            const [promocionDetalle] = await pool.execute(
+                `SELECT valor_descuento, fecha_inicio, fecha_fin FROM promocion WHERE id_promocion = ?`,
+                [promocionId]
+            );
+
+            const estaActiva = normalizeBoolean(activa);
+            const porcentajeDescuento = promocionDetalle[0]?.valor_descuento || null;
+            const fechaInicio = promocionDetalle[0]?.fecha_inicio || null;
+            const fechaFin = promocionDetalle[0]?.fecha_fin || null;
+
+            // Sincronizar estado con productos
+            for (const productoPromo of productosPromocion) {
+                if (estaActiva) {
+                    await pool.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoPromo.id_producto]
+                    );
+                } else {
+                    await pool.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 0,
+                             porcentaje_descuento = NULL,
+                             fecha_inicio_descuento = NULL,
+                             fecha_fin_descuento = NULL
+                         WHERE id_producto = ?`,
+                        [productoPromo.id_producto]
+                    );
+                }
+            }
+        }
+
         res.json({
             success: true,
             message: `Promoción ${normalizeBoolean(activa) ? 'activada' : 'desactivada'} correctamente`
@@ -598,8 +696,28 @@ const deletePromocion = async (req, res) => {
             });
         }
 
+        // Obtener productos de la promoción antes de eliminar
+        const [productosPromocion] = await connection.execute(
+            `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+        const idsProductos = productosPromocion.map(p => p.id_producto);
+
         await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
         await connection.execute(`DELETE FROM promocion WHERE id_promocion = ?`, [promocionId]);
+
+        // Desactivar descuentos en productos que estaban en esta promoción
+        if (idsProductos.length > 0) {
+            await connection.execute(
+                `UPDATE producto 
+                 SET descuento_activo = 0,
+                     porcentaje_descuento = NULL,
+                     fecha_inicio_descuento = NULL,
+                     fecha_fin_descuento = NULL
+                 WHERE id_producto IN (${idsProductos.map(() => '?').join(',')})`,
+                idsProductos
+            );
+        }
 
         await connection.commit();
 

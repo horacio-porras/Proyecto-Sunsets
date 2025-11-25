@@ -74,11 +74,8 @@ function verifyFullAuth() {
     const userData = localStorage.getItem('userData');
     
     if (!token || !userData || isTokenExpired()) {
-        console.log('Token expirado o usuario no autenticado, limpiando carrito...');
-        clearCartFromStorage();
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('lastUserId');
+        console.log('Token expirado o usuario no autenticado');
+        handleTokenExpiration();
         return false;
     }
     
@@ -114,13 +111,19 @@ function checkAuth() {
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('userData');
     
-    if (!token || !userData) {
-        clearCartFromStorage();
-        window.location.href = '/';
+    if (!token || !userData || isTokenExpired()) {
+        console.log('Token expirado o usuario no autenticado, cerrando sesión...');
+        handleTokenExpiration();
         return false;
     }
     
     return true;
+}
+
+//Función para manejar la expiración del token
+function handleTokenExpiration() {
+    console.log('🔒 Token expirado, cerrando sesión automáticamente...');
+    logout();
 }
 
 //Función para obtener datos del usuario actual
@@ -200,8 +203,15 @@ function addLogoutButton() {
 function initAuth() {
     const currentPage = window.location.pathname;
     
+    // Verificar si el token ha expirado antes de continuar
+    if (localStorage.getItem('authToken') && isTokenExpired()) {
+        console.log('🔒 Token expirado al inicializar autenticación');
+        handleTokenExpiration();
+        return;
+    }
+    
     const user = getCurrentUser();
-    const hasValidSession = user && localStorage.getItem('authToken');
+    const hasValidSession = user && localStorage.getItem('authToken') && !isTokenExpired();
     
     if (currentPage === '/' || currentPage === '/index.html') {
         const userNotLoggedIn = document.getElementById('userNotLoggedIn');
@@ -263,9 +273,64 @@ function initAuth() {
     }
 }
 
+//Interceptar fetch para detectar respuestas 401 (token expirado)
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    try {
+        const response = await originalFetch(...args);
+        
+        // Si la respuesta es 401, verificar si es por token expirado
+        if (response.status === 401) {
+            const clonedResponse = response.clone();
+            try {
+                const data = await clonedResponse.json();
+                if (data.message && (
+                    data.message.includes('Token expirado') || 
+                    data.message.includes('expirado') ||
+                    data.message.includes('Token de acceso requerido') ||
+                    data.message === 'Token expirado'
+                )) {
+                    console.log('🔒 Token expirado detectado en respuesta del servidor');
+                    handleTokenExpiration();
+                    return response;
+                }
+            } catch (e) {
+                // Si no se puede parsear como JSON, verificar el token localmente
+                if (isTokenExpired()) {
+                    console.log('🔒 Token expirado detectado localmente');
+                    handleTokenExpiration();
+                }
+            }
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Error en fetch interceptor:', error);
+        return originalFetch(...args);
+    }
+};
+
+//Verificar periódicamente si el token ha expirado
+function startTokenExpirationCheck() {
+    // Verificar cada 60 segundos
+    setInterval(() => {
+        if (localStorage.getItem('authToken') && isTokenExpired()) {
+            console.log('🔒 Token expirado detectado en verificación periódica');
+            handleTokenExpiration();
+        }
+    }, 60000); // 60 segundos
+    
+    // También verificar inmediatamente al cargar
+    if (localStorage.getItem('authToken') && isTokenExpired()) {
+        console.log('🔒 Token expirado detectado al iniciar');
+        handleTokenExpiration();
+    }
+}
+
 //Se ejecuta cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     initAuth();
+    startTokenExpirationCheck();
 });
 
 //Función para toggle del dropdown del usuario
