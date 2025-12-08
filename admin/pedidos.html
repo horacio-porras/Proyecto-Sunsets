@@ -338,7 +338,7 @@
             tbody.innerHTML = pedidosPagina.map(pedido => {
                 const estadoBadgeClass = getEstadoBadgeClass(pedido.estado_pedido);
                 const fechaPedido = new Date(pedido.fecha_pedido);
-                const fechaFormateada = fechaPedido.toLocaleDateString('es-CR', {
+                const fechaFormateada = fechaPedido.toLocaleString('es-CR', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',
@@ -540,7 +540,7 @@
 
                 // Mostrar detalles en un modal o alerta
                 const fechaPedido = new Date(pedido.fecha_pedido);
-                const fechaFormateada = fechaPedido.toLocaleDateString('es-CR', {
+                const fechaFormateada = fechaPedido.toLocaleString('es-CR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
