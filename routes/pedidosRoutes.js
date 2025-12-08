@@ -477,7 +477,7 @@ router.get('/assigned', authenticateToken, async (req, res) => {
 
         const empleadoId = empleadoRows[0].id_empleado;
 
-        //Obtiene pedidos asignados al empleado
+        //Obtiene pedidos asignados al empleado (incluyendo entregados y cancelados para que se puedan filtrar)
         const [pedidos] = await pool.execute(`
             SELECT 
                 p.id_pedido,
@@ -502,7 +502,7 @@ router.get('/assigned', authenticateToken, async (req, res) => {
             LEFT JOIN direccion d ON p.id_direccion = d.id_direccion
             LEFT JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
             WHERE p.id_empleado_asignado = ? 
-            AND p.estado_pedido IN ('pendiente', 'confirmado', 'preparando', 'listo', 'en_camino')
+            AND p.estado_pedido IN ('pendiente', 'confirmado', 'preparando', 'listo', 'en_camino', 'entregado', 'cancelado')
             GROUP BY p.id_pedido
             ORDER BY p.fecha_pedido DESC
         `, [empleadoId]);

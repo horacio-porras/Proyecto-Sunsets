@@ -9,6 +9,7 @@ const PROTECTED_ROUTES = {
     '/cliente/mis-pedidos.html': 'Cliente',
     '/cliente/mis-opiniones.html': 'Cliente',
     '/cliente/mis-reservas.html': 'Cliente',
+    '/pedidos.html': 'Cliente', // Solo clientes pueden hacer pedidos
     
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',
@@ -21,6 +22,7 @@ const PROTECTED_ROUTES = {
     '/admin/inventario.html': 'Administrador',
     '/admin/personal.html': 'Administrador',
     '/admin/pedidos.html': 'Administrador',
+    '/admin/reservaciones.html': 'Administrador',
     '/admin/auditoria.html': 'Administrador',
     '/admin/reportes.html': 'Administrador',
     '/admin/moderacion-opiniones.html': 'Administrador'
@@ -33,8 +35,7 @@ const PUBLIC_ROUTES = [
     '/menu.html',
     '/reservaciones.html',
     '/about.html',
-    '/contacto.html',
-    '/pedidos.html'
+    '/contacto.html'
 ];
 
 //Función para obtener el usuario actual desde localStorage
@@ -71,6 +72,16 @@ function checkRouteProtection() {
     //Verifica si la ruta actual es pública
     if (PUBLIC_ROUTES.includes(currentPath)) {
         return;
+    }
+    
+    //Bloquear acceso de admin y empleado a pedidos.html
+    if (currentPath === '/pedidos.html') {
+        const user = getCurrentUser();
+        if (user && (user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado')) {
+            console.log('Admin/Empleado cannot access pedidos.html, redirecting to home');
+            redirectToHome();
+            return;
+        }
     }
     
     //Verifica si la ruta actual requiere autenticación

@@ -306,10 +306,6 @@
 
                     <!-- Modal Footer -->
                     <div class="flex justify-end pt-4">
-                        <button id="modalReorderBtn" onclick="reorderFromModal()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold hidden">
-                            <i class="fas fa-redo mr-2"></i>
-                            Pedir de Nuevo
-                        </button>
                     </div>
                 </div>
             </div>
@@ -611,10 +607,6 @@
                                     <i class="fas fa-star"></i>
                                     Calificar
                                 </button>
-                                <button onclick="reorderItems(${order.id_pedido})" class="bg-orange-100 text-orange-700 hover:bg-orange-200 px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2">
-                                    <i class="fas fa-redo"></i>
-                                    Pedir de Nuevo
-                                </button>
                             ` : ''}
                         </div>
                     </div>
@@ -831,14 +823,6 @@
             }
 
             document.getElementById('modalLoyaltyPoints').textContent = `${order.puntos_otorgados || 0} puntos`;
-
-            const reorderBtn = document.getElementById('modalReorderBtn');
-            if (order.estado_pedido === 'entregado') {
-                reorderBtn.classList.remove('hidden');
-                reorderBtn.setAttribute('data-order-id', order.id_pedido);
-            } else {
-                reorderBtn.classList.add('hidden');
-            }
         }
 
         //Cierra el modal de detalles del pedido

@@ -450,19 +450,19 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-gift mr-2 text-gray-700"></i>Recompensas
                 </a>
                 <a href="/admin/pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-clipboard-list mr-2 text-gray-700"></i>Historial de Pedidos
+                    <i class="fas fa-clipboard-list mr-2 text-gray-700"></i>Pedidos
                 </a>
-                <a href="/admin/auditoria.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-history mr-2 text-gray-700"></i>Historial de Cambios
-                </a>
-                <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-file-export mr-2 text-gray-700"></i>Generar Reportes
+                <a href="/admin/reservaciones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-shield-alt mr-2 text-gray-700"></i>Moderación de Reseñas
+                    <i class="fas fa-comments mr-2 text-gray-700"></i>Moderación
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-cog mr-2 text-gray-700"></i>Configuración
+                <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
+                </a>
+                <a href="/admin/auditoria.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-history mr-2 text-gray-700"></i>Auditoría
                 </a>
             `;
             mobileRoleMenuItems = `
@@ -485,19 +485,19 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-gift mr-2"></i>Recompensas
                 </a>
                 <a href="/admin/pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-clipboard-list mr-2"></i>Historial de Pedidos
+                    <i class="fas fa-clipboard-list mr-2"></i>Pedidos
                 </a>
-                <a href="/admin/auditoria.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-history mr-2"></i>Historial de Cambios
-                </a>
-                <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-file-export mr-2"></i>Generar Reportes
+                <a href="/admin/reservaciones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-shield-alt mr-2"></i>Moderación de Reseñas
+                    <i class="fas fa-comments mr-2"></i>Moderación
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-cog mr-2"></i>Configuración
+                <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-chart-bar mr-2"></i>Reportes
+                </a>
+                <a href="/admin/auditoria.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-history mr-2"></i>Auditoría
                 </a>
             `;
             break;

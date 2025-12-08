@@ -724,6 +724,31 @@ function setupCartClickOutside() {
 
 //Función para proceder al checkout
 window.checkout = function() {
+    // Función para verificar si el usuario es admin o empleado
+    function isAdminOrEmployee() {
+        const userData = localStorage.getItem('userData');
+        if (!userData) return false;
+        
+        try {
+            const user = JSON.parse(userData);
+            return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // Verificar si el usuario es admin o empleado
+    if (isAdminOrEmployee()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Acceso restringido',
+            text: 'Los administradores y empleados no pueden realizar pedidos.',
+            confirmButtonColor: '#f97316',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
     window.location.href = '/pedidos.html';
 };
 

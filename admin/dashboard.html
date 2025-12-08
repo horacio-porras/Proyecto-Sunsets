@@ -24,6 +24,15 @@
         .main-content {
             flex: 1;
         }
+
+        .quick-access-card {
+            transition: all 0.2s;
+        }
+
+        .quick-access-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -32,406 +41,171 @@
 
     <!-- Main Content -->
     <div class="main-content">
-    <!-- Dashboard Content -->
-    <div class="container mx-auto px-4 py-8">
-        <!-- Welcome Section -->
-        <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
-            <h1 class="text-3xl font-bold mb-2">¡Bienvenido, <span class="user-name">-</span>!</h1>
-            <p class="text-gray-300">Gestiona el restaurante, personal, productos y monitorea el rendimiento</p>
-        </div>
+        <div class="container mx-auto px-4 py-8">
+            <!-- Welcome Section -->
+            <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
+                <h1 class="text-3xl font-bold mb-2">¡Bienvenido, <span class="user-name">-</span>!</h1>
+                <p class="text-gray-300">Gestiona el restaurante, personal, productos y monitorea el rendimiento</p>
+            </div>
 
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-users text-blue-600 text-xl"></i>
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <!-- Left Column - 2/3 width -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Quick Access Cards -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-bolt text-orange-500 mr-3"></i>
+                            Accesos Rápidos
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="quickAccessGrid">
+                            <!-- Cards will be populated by JavaScript -->
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900" id="totalEmpleados">-</h3>
-                        <p class="text-gray-600">Empleados Activos</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-boxes text-green-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900" id="totalInventario">-</h3>
-                        <p class="text-gray-600">Items en Inventario</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-utensils text-purple-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900" id="totalProductos">-</h3>
-                        <p class="text-gray-600">Productos del Menú</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900" id="alertasInventario">-</h3>
-                        <p class="text-gray-600">Alertas de Stock</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Active Orders -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Activos</h2>
-                        <hr class="mb-4">
+                    <!-- Recent Orders -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-6 border-b border-gray-200">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-clock text-orange-500 mr-3"></i>
+                                Pedidos Recientes
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div id="pedidosActivosContainer" class="space-y-4">
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                                    <p>Cargando pedidos...</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <a href="/admin/pedidos.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver Historial Completo
+                                    <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-6 pt-0">
+
+                    <!-- Inventory Alerts -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-6 border-b border-gray-200">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-exclamation-triangle text-orange-500 mr-3"></i>
+                                Alertas de Inventario
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div id="alertasInventarioContainer" class="space-y-4">
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                                    <p>Cargando alertas...</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <a href="/admin/inventario.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver Inventario Completo
+                                    <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - 1/3 width -->
+                <div class="space-y-6">
+                    <!-- Staff Preview -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-6 border-b border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-users text-orange-500 mr-3"></i>
+                                Personal Actual
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div id="personalContainer" class="space-y-3">
+                                <div class="text-center py-4 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                                    <p class="text-sm">Cargando...</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <a href="/admin/personal.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold text-sm">
+                                    Ver Todo el Personal
+                                    <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Summary -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-chart-line text-orange-500 mr-3"></i>
+                            Resumen de Ventas
+                        </h3>
                         <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-clock text-yellow-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12346</h4>
-                                        <p class="text-sm text-gray-600">Pizza Margherita, Pasta Carbonara</p>
-                                        <p class="text-sm text-gray-600">Cliente: Juan Pérez • 15 min</p>
-                                    </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="text-sm text-gray-600">Hoy</p>
+                                    <p class="text-lg font-bold text-gray-900" id="ventasHoy">₡0</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡18,500</p>
-                                    <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">En Preparación</span>
-                                </div>
+                                <i class="fas fa-calendar-day text-orange-500 text-xl"></i>
                             </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-motorcycle text-blue-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12347</h4>
-                                        <p class="text-sm text-gray-600">Pizza Pepperoni, Limonada</p>
-                                        <p class="text-sm text-gray-600">Cliente: María López • 8 min</p>
-                                    </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="text-sm text-gray-600">Esta Semana</p>
+                                    <p class="text-lg font-bold text-gray-900" id="ventasSemana">₡0</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡11,000</p>
-                                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">En Camino</span>
-                                </div>
+                                <i class="fas fa-calendar-week text-orange-500 text-xl"></i>
                             </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-400 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-check text-green-600"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Orden #12348</h4>
-                                        <p class="text-sm text-gray-600">Tiramisú, Café</p>
-                                        <p class="text-sm text-gray-600">Cliente: Carlos Ruiz • 2 min</p>
-                                    </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="text-sm text-gray-600">Este Mes</p>
+                                    <p class="text-lg font-bold text-gray-900" id="ventasMes">₡0</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="font-semibold">₡4,800</p>
-                                    <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Listo</span>
-                                </div>
+                                <i class="fas fa-calendar-alt text-orange-500 text-xl"></i>
                             </div>
                         </div>
-                        <div class="mt-6 text-center">
-                            <a href="/admin/pedidos.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver Historial de Pedidos</a>
+                        <div class="mt-4 text-center">
+                            <a href="/admin/reportes.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold text-sm">
+                                Generar Reportes
+                                <i class="fas fa-file-export ml-2"></i>
+                            </a>
                         </div>
                     </div>
-                </div>
 
-                <!-- Staff Management -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Personal</h2>
-                        <hr class="mb-4">
-                    </div>
-                    <div class="p-6 pt-0">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-orange-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Chef Marco Rossi</h4>
-                                        <p class="text-sm text-gray-600">Chef Ejecutivo</p>
-                                        <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                                    </div>
-                                </div>
+                    <!-- System Status -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-server text-orange-500 mr-3"></i>
+                            Estado del Sistema
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-2">
+                                <span class="text-sm text-gray-600">Sistema de Pedidos</span>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                    <i class="fas fa-check-circle mr-1"></i>Online
+                                </span>
                             </div>
-                            
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-orange-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Chef Ana Martínez</h4>
-                                        <p class="text-sm text-gray-600">Chef de Pastas</p>
-                                        <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center justify-between p-2">
+                                <span class="text-sm text-gray-600">Base de Datos</span>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                    <i class="fas fa-check-circle mr-1"></i>Activo
+                                </span>
                             </div>
-                            
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-orange-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Chef Carlos Jiménez</h4>
-                                        <p class="text-sm text-gray-600">Chef de Postres</p>
-                                        <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center justify-between p-2">
+                                <span class="text-sm text-gray-600">Sistema de Pagos</span>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                    <i class="fas fa-check-circle mr-1"></i>Funcionando
+                                </span>
                             </div>
-                            
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-orange-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold">Luis Mora</h4>
-                                        <p class="text-sm text-gray-600">Repartidor</p>
-                                        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">En Entrega</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center justify-between p-2">
+                                <span class="text-sm text-gray-600">Notificaciones</span>
+                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                    <i class="fas fa-check-circle mr-1"></i>Activo
+                                </span>
                             </div>
-                        </div>
-                        <div class="mt-6 text-center">
-    <a id="btnEmpleados" href="/admin/personal.html"
-       class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md transition">
-        Gestionar Personal
-    </a>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Inventory Alerts -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Alertas de Inventario</h2>
-                        <hr class="mb-4">
-                    </div>
-                    <div class="p-6 pt-0">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-red-800">Mozzarella Fresca</h4>
-                                        <p class="text-sm text-red-600">Stock bajo: 2kg restantes</p>
-                                    </div>
-                                </div>
-                                <button class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Reabastecer</button>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-exclamation-circle text-yellow-500"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-yellow-800">Harina de Trigo</h4>
-                                        <p class="text-sm text-yellow-600">Stock medio: 15kg restantes</p>
-                                    </div>
-                                </div>
-                                <button class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700">Revisar</button>
-                            </div>
-                        </div>
-                        <div class="mt-6 text-center">
-                            <a href="/admin/inventario.html" class="text-orange-600 hover:text-orange-700 font-semibold">Ver inventario completo</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column -->
-            <div class="space-y-8">
-                <!-- Accesos Rápidos -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Accesos Rápidos</h3>
-                    <hr class="mb-4">
-                    
-                    <div class="space-y-3">
-                        <!-- Acceso a Personal -->
-                        <a href="/admin/personal.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <i class="fas fa-users text-gray-400 mr-3"></i>
-                            <span class="text-gray-700">Gestionar Personal</span>
-                        </a>
-
-                        <!-- Acceso a Inventario -->
-                        <a href="/admin/inventario.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <i class="fas fa-boxes text-gray-400 mr-3"></i>
-                            <span class="text-gray-700">Gestionar Inventario</span>
-                        </a>
-
-                        <!-- Acceso a Productos -->
-                        <a href="/admin/productos.html" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <i class="fas fa-utensils text-gray-400 mr-3"></i>
-                            <span class="text-gray-700">Gestionar Productos</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Sales Chart -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Ventas de la Semana</h3>
-                    <hr class="mb-4">
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Lunes</span>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-20 bg-gray-200 rounded-full h-2">
-                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 70%"></div>
-                                </div>
-                                <span class="text-sm font-semibold">₡180K</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Martes</span>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-20 bg-gray-200 rounded-full h-2">
-                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 85%"></div>
-                                </div>
-                                <span class="text-sm font-semibold">₡220K</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Miércoles</span>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-20 bg-gray-200 rounded-full h-2">
-                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 60%"></div>
-                                </div>
-                                <span class="text-sm font-semibold">₡150K</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Jueves</span>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-20 bg-gray-200 rounded-full h-2">
-                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 90%"></div>
-                                </div>
-                                <span class="text-sm font-semibold">₡245K</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Hoy</span>
-                            <div class="flex items-center space-x-2">
-                                <div class="w-20 bg-gray-200 rounded-full h-2">
-                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 75%"></div>
-                                </div>
-                                <span class="text-sm font-semibold">₡195K</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Reviews -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Opiniones Recientes</h3>
-                    <hr class="mb-4">
-                    
-                    <div class="space-y-4">
-                        <div class="border-b border-gray-200 pb-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <span class="text-sm text-gray-600">Juan Pérez</span>
-                            </div>
-                            <p class="text-sm text-gray-700">"Excelente pizza, muy buena atención. Volveré pronto!"</p>
-                        </div>
-                        
-                        <div class="border-b border-gray-200 pb-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="far fa-star"></i>
-                                </div>
-                                <span class="text-sm text-gray-600">María López</span>
-                            </div>
-                            <p class="text-sm text-gray-700">"La pasta carbonara estaba deliciosa, pero tardó un poco en llegar."</p>
-                        </div>
-                        
-                        <div>
-                            <div class="flex items-center space-x-2 mb-2">
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <span class="text-sm text-gray-600">Carlos Ruiz</span>
-                            </div>
-                            <p class="text-sm text-gray-700">"El tiramisú es espectacular, definitivamente el mejor de la ciudad."</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 text-center">
-                        <a href="#reviews" class="text-orange-600 hover:text-orange-700 font-semibold">Ver todas las opiniones</a>
-                    </div>
-                </div>
-
-                <!-- System Status -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Estado del Sistema</h3>
-                    <hr class="mb-4">
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Sistema de Pedidos</span>
-                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Online</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Base de Datos</span>
-                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Sistema de Pagos</span>
-                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Funcionando</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Notificaciones</span>
-                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -443,7 +217,102 @@
     <div id="footer-container"></div>
 
     <script>
-        //Carga los datos del perfil del administrador
+        // Configuración de accesos rápidos
+        const quickAccessItems = [
+            {
+                title: 'Personal',
+                icon: 'fa-users',
+                link: '/admin/personal.html',
+                color: 'from-indigo-500 to-indigo-600',
+                description: 'Gestiona empleados'
+            },
+            {
+                title: 'Inventario',
+                icon: 'fa-boxes',
+                link: '/admin/inventario.html',
+                color: 'from-green-500 to-green-600',
+                description: 'Control de stock'
+            },
+            {
+                title: 'Productos',
+                icon: 'fa-utensils',
+                link: '/admin/productos.html',
+                color: 'from-purple-500 to-purple-600',
+                description: 'Menú y productos'
+            },
+            {
+                title: 'Promociones',
+                icon: 'fa-tags',
+                link: '/admin/promociones.html',
+                color: 'from-pink-500 to-pink-600',
+                description: 'Ofertas especiales'
+            },
+            {
+                title: 'Recompensas',
+                icon: 'fa-gift',
+                link: '/admin/recompensas.html',
+                color: 'from-yellow-500 to-yellow-600',
+                description: 'Sistema de puntos'
+            },
+            {
+                title: 'Pedidos',
+                icon: 'fa-clipboard-list',
+                link: '/admin/pedidos.html',
+                color: 'from-orange-500 to-orange-600',
+                description: 'Historial de pedidos'
+            },
+            {
+                title: 'Reservaciones',
+                icon: 'fa-calendar-alt',
+                link: '/admin/reservaciones.html',
+                color: 'from-cyan-500 to-cyan-600',
+                description: 'Gestionar reservaciones'
+            },
+            {
+                title: 'Auditoría',
+                icon: 'fa-history',
+                link: '/admin/auditoria.html',
+                color: 'from-gray-500 to-gray-600',
+                description: 'Historial de cambios'
+            },
+            {
+                title: 'Reportes',
+                icon: 'fa-file-export',
+                link: '/admin/reportes.html',
+                color: 'from-teal-500 to-teal-600',
+                description: 'Generar reportes'
+            },
+            {
+                title: 'Moderación',
+                icon: 'fa-shield-alt',
+                link: '/admin/moderacion-opiniones.html',
+                color: 'from-red-500 to-red-600',
+                description: 'Moderar reseñas'
+            }
+        ];
+
+        // Renderizar accesos rápidos
+        function renderQuickAccess() {
+            const container = document.getElementById('quickAccessGrid');
+            if (!container) return;
+
+            container.innerHTML = quickAccessItems.map(item => `
+                <a href="${item.link}" class="quick-access-card bg-white border border-gray-200 rounded-lg p-4 hover:border-orange-300">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-gradient-to-r ${item.color} text-white p-3 rounded-lg">
+                            <i class="fas ${item.icon} text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900">${item.title}</h4>
+                            <p class="text-sm text-gray-500">${item.description}</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Cargar perfil del administrador
         async function loadAdminProfile() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -463,13 +332,9 @@
 
                 if (data.success) {
                     const userData = data.data.user;
-                    
-                    //Actualiza el nombre de usuario en el mensaje de bienvenida
                     document.querySelectorAll('.user-name').forEach(element => {
                         element.textContent = userData.nombre || '-';
                     });
-
-                    //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
                     console.error('Error al cargar perfil:', data.message);
@@ -479,20 +344,11 @@
             }
         }
 
-        //Inicializa la página
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAdminProfile();
-        });
-    </script>
-    <script>
-        // Cargar empleados desde la API
+        // Cargar empleados
         async function cargarEmpleados() {
             try {
                 const token = localStorage.getItem('authToken');
-                if (!token) {
-                    console.error('No hay token de autenticación');
-                    return;
-                }
+                if (!token) return;
 
                 const response = await fetch('/api/empleados', {
                     method: 'GET',
@@ -506,32 +362,38 @@
 
                 if (data.success) {
                     const empleados = data.data.empleados;
-                    console.log("Empleados cargados:", empleados);
-
-                    const contenedor = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-4');
-                    if (contenedor && empleados.length > 0) {
-                        contenedor.innerHTML = empleados.slice(0, 4).map(e => {
-                            const estadoClass = e.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                            const areaText = getAreaText(e.area_trabajo);
-                            
-                            return `
-                                <div class="border border-gray-200 rounded-lg p-4">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-user text-orange-600 text-xl"></i>
+                    const container = document.getElementById('personalContainer');
+                    
+                    if (container && empleados.length > 0) {
+                        // Filtrar solo empleados activos
+                        const empleadosActivos = empleados.filter(e => e.estado === 'activo');
+                        
+                        // Ordenar aleatoriamente
+                        const empleadosAleatorios = empleadosActivos.sort(() => Math.random() - 0.5);
+                        
+                        if (empleadosAleatorios.length > 0) {
+                            container.innerHTML = empleadosAleatorios.slice(0, 3).map(e => {
+                                const areaText = getAreaText(e.area_trabajo);
+                                
+                                return `
+                                    <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user text-orange-600"></i>
                                         </div>
-                                        <div>
-                                            <h4 class="font-semibold">${e.nombre}</h4>
-                                            <p class="text-sm text-gray-600">${areaText}</p>
-                                            <span class="text-sm ${estadoClass} px-2 py-1 rounded">${e.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-sm text-gray-900 truncate">${e.nombre}</p>
+                                            <p class="text-xs text-gray-500">${areaText}</p>
                                         </div>
+                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Activo</span>
                                     </div>
-                                </div>
-                            `;
-                        }).join('');
+                                `;
+                            }).join('');
+                        } else {
+                            container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No hay empleados activos</p>';
+                        }
+                    } else if (container) {
+                        container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No hay empleados registrados</p>';
                     }
-                } else {
-                    console.error('Error al cargar empleados:', data.message);
                 }
             } catch (error) {
                 console.error('Error al cargar empleados:', error);
@@ -549,76 +411,83 @@
             return areas[area] || area;
         }
 
-        document.addEventListener('DOMContentLoaded', cargarEmpleados);
-    </script>
-   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btnEmpleados');
-    if(btn){
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = '/admin/personal.html';
-        });
-    }
-});
-
-    </script>
-    <script>
-        //Carga las estadísticas del dashboard
-        async function cargarEstadisticas() {
+        // Cargar pedidos recientes
+        async function cargarPedidosRecientes() {
             try {
                 const token = localStorage.getItem('authToken');
-                if (!token) {
-                    console.error('No hay token de autenticación');
-                    return;
-                }
+                if (!token) return;
 
-                //Carga las estadísticas de empleados
-                const empleadosResponse = await fetch('/api/empleados/estadisticas', {
+                const response = await fetch('/api/pedidos/admin?limit=3', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                if (empleadosResponse.ok) {
-                    const empleadosData = await empleadosResponse.json();
-                    if (empleadosData.success) {
-                        document.getElementById('totalEmpleados').textContent = empleadosData.data.total_activos || 0;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const container = document.getElementById('pedidosActivosContainer');
+                    
+                    if (container) {
+                        if (data.success && data.data.pedidos && data.data.pedidos.length > 0) {
+                            container.innerHTML = data.data.pedidos.map(pedido => {
+                                const statusConfig = {
+                                    'pendiente': { bg: 'bg-yellow-50', border: 'border-yellow-400', icon: 'fa-clock', text: 'Pendiente' },
+                                    'en_preparacion': { bg: 'bg-blue-50', border: 'border-blue-400', icon: 'fa-utensils', text: 'En Preparación' },
+                                    'listo': { bg: 'bg-green-50', border: 'border-green-400', icon: 'fa-check', text: 'Listo' },
+                                    'en_camino': { bg: 'bg-purple-50', border: 'border-purple-400', icon: 'fa-motorcycle', text: 'En Camino' },
+                                    'completado': { bg: 'bg-gray-50', border: 'border-gray-400', icon: 'fa-check-circle', text: 'Completado' },
+                                    'cancelado': { bg: 'bg-red-50', border: 'border-red-400', icon: 'fa-times-circle', text: 'Cancelado' }
+                                };
+                                
+                                const estado = pedido.estado_pedido || 'pendiente';
+                                const status = statusConfig[estado] || statusConfig['pendiente'];
+                                const productos = pedido.items && pedido.items.length > 0 
+                                    ? pedido.items.slice(0, 2).map(p => p.producto_nombre || p.nombre || 'Producto').join(', ')
+                                    : 'Sin productos';
+                                
+                                const fecha = new Date(pedido.fecha_pedido);
+                                const fechaFormateada = fecha.toLocaleDateString('es-CR', { 
+                                    day: '2-digit', 
+                                    month: '2-digit', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                });
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-4 ${status.bg} border-l-4 ${status.border} rounded-lg">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 ${status.bg.replace('50', '100')} rounded-full flex items-center justify-center">
+                                                <i class="fas ${status.icon} ${status.border.replace('border-', 'text-')}"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900">Pedido #${pedido.id_pedido}</h4>
+                                                <p class="text-sm text-gray-600">${productos}</p>
+                                                <p class="text-xs text-gray-500">Cliente: ${pedido.cliente_nombre || 'N/A'} • ${fechaFormateada}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toFixed(2)}</p>
+                                            <span class="text-xs ${status.bg.replace('50', '100')} ${status.border.replace('border-', 'text-')} px-2 py-1 rounded">${status.text}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            container.innerHTML = `
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-clipboard text-3xl mb-2"></i>
+                                    <p>No hay pedidos recientes</p>
+                                </div>
+                            `;
+                        }
                     }
                 }
-
-                //Carga las estadísticas de inventario
-                const inventarioResponse = await fetch('/api/inventario/estadisticas', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (inventarioResponse.ok) {
-                    const inventarioData = await inventarioResponse.json();
-                    if (inventarioData.success) {
-                        document.getElementById('totalInventario').textContent = inventarioData.data.total_items || 0;
-                        document.getElementById('alertasInventario').textContent = inventarioData.data.items_bajo_stock || 0;
-                    }
-                }
-
-                //Carga las estadísticas de productos
-                const productosResponse = await fetch('/api/inventario/productos', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (productosResponse.ok) {
-                    const productosData = await productosResponse.json();
-                    if (productosData.success) {
-                        document.getElementById('totalProductos').textContent = productosData.data.productos.length || 0;
-                    }
-                }
-
             } catch (error) {
-                console.error('Error al cargar estadísticas:', error);
+                console.error('Error al cargar pedidos recientes:', error);
             }
         }
 
-        //Carga las alertas de inventario reales
+        // Cargar alertas de inventario
         async function cargarAlertasInventario() {
             try {
                 const token = localStorage.getItem('authToken');
@@ -632,44 +501,39 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.success) {
-                        const items = data.data.items;
-                        const alertasContainer = document.querySelector('.space-y-4');
+                    const container = document.getElementById('alertasInventarioContainer');
+                    
+                    if (container && data.success) {
+                        const items = data.data.items || [];
+                        const alertas = items.filter(item => item.cantidad_actual <= item.cantidad_minima);
                         
-                        if (alertasContainer && items.length > 0) {
-                            const alertas = items.filter(item => item.cantidad_actual <= item.cantidad_minima);
-                            
-                            if (alertas.length > 0) {
-                                alertasContainer.innerHTML = alertas.slice(0, 2).map(item => {
-                                    const isCritical = item.cantidad_actual === 0;
-                                    const bgClass = isCritical ? 'bg-red-50 border-red-400' : 'bg-yellow-50 border-yellow-400';
-                                    const textClass = isCritical ? 'text-red-800' : 'text-yellow-800';
-                                    const subtextClass = isCritical ? 'text-red-600' : 'text-yellow-600';
-                                    const iconClass = isCritical ? 'text-red-500' : 'text-yellow-500';
-                                    const buttonClass = isCritical ? 'bg-red-600 hover:bg-red-700' : 'bg-yellow-600 hover:bg-yellow-700';
-                                    const buttonText = isCritical ? 'Urgente' : 'Revisar';
-                                    
-                                    return `
-                                        <div class="flex items-center justify-between p-4 ${bgClass} border-l-4 rounded-lg">
-                                            <div class="flex items-center space-x-3">
-                                                <i class="fas fa-exclamation-triangle ${iconClass}"></i>
-                                                <div>
-                                                    <h4 class="font-semibold ${textClass}">${item.nombre}</h4>
-                                                    <p class="text-sm ${subtextClass}">Stock: ${item.cantidad_actual} ${item.unidad_medida} (mín: ${item.cantidad_minima})</p>
-                                                </div>
+                        if (alertas.length > 0) {
+                            container.innerHTML = alertas.slice(0, 3).map(item => {
+                                const isCritical = item.cantidad_actual === 0;
+                                const bgClass = isCritical ? 'bg-red-50 border-red-400' : 'bg-yellow-50 border-yellow-400';
+                                const textClass = isCritical ? 'text-red-800' : 'text-yellow-800';
+                                const subtextClass = isCritical ? 'text-red-600' : 'text-yellow-600';
+                                const iconClass = isCritical ? 'text-red-500' : 'text-yellow-500';
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-4 ${bgClass} border-l-4 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-exclamation-triangle ${iconClass}"></i>
+                                            <div>
+                                                <h4 class="font-semibold ${textClass}">${item.nombre}</h4>
+                                                <p class="text-sm ${subtextClass}">Stock: ${item.cantidad_actual} ${item.unidad_medida} (mín: ${item.cantidad_minima})</p>
                                             </div>
-                                            <button class="${buttonClass} text-white px-3 py-1 rounded text-sm">${buttonText}</button>
                                         </div>
-                                    `;
-                                }).join('');
-                            } else {
-                                alertasContainer.innerHTML = `
-                                    <div class="text-center py-8 text-gray-500">
-                                        <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
-                                        <p>No hay alertas de inventario</p>
                                     </div>
                                 `;
-                            }
+                            }).join('');
+                        } else {
+                            container.innerHTML = `
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                                    <p>No hay alertas de inventario</p>
+                                </div>
+                            `;
                         }
                     }
                 }
@@ -678,11 +542,96 @@
             }
         }
 
-        //Inicializa el dashboard
+        // Cargar ventas reales basadas en pedidos
+        async function cargarVentas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                // Fechas para los cálculos
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                const inicioSemana = new Date(hoy);
+                const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+                const diasDesdeLunes = diaSemana === 0 ? 6 : diaSemana - 1; // Si es domingo, retroceder 6 días, sino retroceder (diaSemana - 1)
+                inicioSemana.setDate(hoy.getDate() - diasDesdeLunes); // Lunes de esta semana
+                inicioSemana.setHours(0, 0, 0, 0);
+                
+                const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                inicioMes.setHours(0, 0, 0, 0);
+
+                // Formatear fechas para la API (YYYY-MM-DD)
+                const formatoFecha = (fecha) => {
+                    return fecha.toISOString().split('T')[0];
+                };
+
+                const fechaHoy = formatoFecha(hoy);
+                const fechaInicioSemana = formatoFecha(inicioSemana);
+                const fechaInicioMes = formatoFecha(inicioMes);
+
+                // Función auxiliar para calcular total de ventas
+                const calcularVentas = async (fechaDesde, fechaHasta) => {
+                    try {
+                        const response = await fetch(
+                            `/api/pedidos/admin?fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`,
+                            {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            }
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success && data.data.pedidos) {
+                                // Sumar totales de pedidos que no estén cancelados
+                                const total = data.data.pedidos
+                                    .filter(pedido => pedido.estado_pedido !== 'cancelado')
+                                    .reduce((sum, pedido) => {
+                                        const totalPedido = parseFloat(pedido.total) || 0;
+                                        return sum + totalPedido;
+                                    }, 0);
+                                return total;
+                            }
+                        }
+                        return 0;
+                    } catch (error) {
+                        console.error('Error al calcular ventas:', error);
+                        return 0;
+                    }
+                };
+
+                // Calcular ventas de hoy
+                const ventasHoy = await calcularVentas(fechaHoy, fechaHoy);
+                document.getElementById('ventasHoy').textContent = `₡${ventasHoy.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                // Calcular ventas de esta semana
+                const ventasSemana = await calcularVentas(fechaInicioSemana, fechaHoy);
+                document.getElementById('ventasSemana').textContent = `₡${ventasSemana.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                // Calcular ventas de este mes
+                const ventasMes = await calcularVentas(fechaInicioMes, fechaHoy);
+                document.getElementById('ventasMes').textContent = `₡${ventasMes.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            } catch (error) {
+                console.error('Error al cargar ventas:', error);
+                // En caso de error, mostrar 0
+                document.getElementById('ventasHoy').textContent = '₡0.00';
+                document.getElementById('ventasSemana').textContent = '₡0.00';
+                document.getElementById('ventasMes').textContent = '₡0.00';
+            }
+        }
+
+        // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', () => {
-            cargarEstadisticas();
+            renderQuickAccess();
+            loadAdminProfile();
+            cargarVentas();
+            cargarEmpleados();
+            cargarPedidosRecientes();
             cargarAlertasInventario();
         });
     </script>
 </body>
-</html> 
+</html>

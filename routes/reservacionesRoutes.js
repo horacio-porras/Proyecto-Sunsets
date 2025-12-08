@@ -7,7 +7,9 @@ const {
     getActiveReservations,
     getAllReservations,
     updateReservation,
-    cancelReservation
+    cancelReservation,
+    getAllReservationsAdmin,
+    cancelReservationAdmin
 } = require('../controllers/reservacionController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { createReservationValidation } = require('../validators/authValidator');
@@ -48,6 +50,21 @@ router.patch(
     authenticateToken,
     authorizeRoles('Cliente'),
     cancelReservation
+);
+
+// Rutas para administrador
+router.get(
+    '/admin/todas',
+    authenticateToken,
+    authorizeRoles('Administrador'),
+    getAllReservationsAdmin
+);
+
+router.patch(
+    '/admin/:id/cancel',
+    authenticateToken,
+    authorizeRoles('Administrador'),
+    cancelReservationAdmin
 );
 
 module.exports = router;

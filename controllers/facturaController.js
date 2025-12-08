@@ -18,7 +18,6 @@ try {
                 pass: process.env.SMTP_PASS
             }
         });
-        console.log('✓ Transporter SMTP configurado para facturas');
     } else {
         console.warn('⚠ Variables SMTP no configuradas en config.env para facturas');
     }

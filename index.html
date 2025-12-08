@@ -386,6 +386,19 @@
         // Sistema de opiniones del restaurante
         let calificacionRestaurante = 0;
 
+        // Función para verificar si el usuario es admin o empleado
+        function isAdminOrEmployee() {
+            const userData = localStorage.getItem('userData');
+            if (!userData) return false;
+            
+            try {
+                const user = JSON.parse(userData);
+                return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+            } catch (error) {
+                return false;
+            }
+        }
+
         // Cargar opiniones del restaurante para el carrusel
         async function cargarOpinionesCarrusel() {
             try {
@@ -451,6 +464,18 @@
         };
 
         window.enviarOpinionRestaurante = async function() {
+            // Verificar si el usuario es admin o empleado
+            if (isAdminOrEmployee()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso restringido',
+                    text: 'Los administradores y empleados no pueden dejar opiniones sobre el restaurante.',
+                    confirmButtonColor: '#f97316',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             
             if (!token) {

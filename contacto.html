@@ -269,10 +269,45 @@
             }
         }
 
+        // Función para verificar si el usuario es admin o empleado
+        function isAdminOrEmployee() {
+            const userData = localStorage.getItem('userData');
+            if (!userData) return false;
+            
+            try {
+                const user = JSON.parse(userData);
+                return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+            } catch (error) {
+                return false;
+            }
+        }
+
         //Maneja el envío del formulario
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.');
+            
+            // Verificar si el usuario es admin o empleado
+            if (isAdminOrEmployee()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso restringido',
+                    text: 'Los administradores y empleados no pueden enviar mensajes de contacto.',
+                    confirmButtonColor: '#f97316',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+            
+            const form = e.target;
+            Swal.fire({
+                icon: 'success',
+                title: '¡Mensaje enviado!',
+                text: 'Nos pondremos en contacto contigo pronto.',
+                confirmButtonColor: '#f97316',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                form.reset();
+            });
         });
     </script>
 </body>
