@@ -19,12 +19,23 @@ const recompensasRoutes = require('./routes/recompensasRoutes');
 const { sendDailyReminders } = require('./utils/reminderService');
 const reminderRoutes = require('./routes/reminderRoutes');
 const opinionesRoutes = require('./routes/opinionesRoutes');
+const facturaRoutes = require('./routes/facturaRoutes');
+const auditoriaRoutes = require('./routes/auditoriaRoutes');
+const reportesRoutes = require('./routes/reportesRoutes');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Railway asigna el puerto automáticamente, si no está definido usa 3000
+// Maneja el caso de PORT vacío o inválido
+let PORT = 3000;
+if (process.env.PORT) {
+    const portNum = parseInt(process.env.PORT, 10);
+    if (!isNaN(portNum) && portNum > 0 && portNum <= 65535) {
+        PORT = portNum;
+    }
+}
 
 //Configuración de seguridad
 app.use(helmet({
@@ -42,24 +53,55 @@ app.use(cors({
 
 //Rate limiting
 const isDevelopment = process.env.NODE_ENV === 'development';
+// Detectar Railway: Railway expone estas variables de entorno
+const isRailway = !!(
+    process.env.RAILWAY_ENVIRONMENT ||
+    process.env.RAILWAY_SERVICE_NAME ||
+    process.env.RAILWAY_PROJECT_NAME ||
+    (process.env.PORT && process.env.PORT.length > 4) // Railway asigna puertos > 9999
+);
+
+// Determina los límites según el entorno
+// Railway y producción: límites mucho más altos para evitar bloqueos
+// Development: límites muy altos para desarrollo local
+const getMaxRequests = () => {
+    if (isDevelopment) return 1000;
+    if (isRailway || process.env.NODE_ENV === 'production') return 1000; // Aumentado significativamente para Railway
+    return 200; // Límite base aumentado
+};
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: isDevelopment ? 1000 : 100,
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: getMaxRequests(),
     message: {
         success: false,
         message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde'
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    // Excluir endpoints de polling y archivos estáticos del rate limiting
+    skip: (req) => {
+        // Excluir archivos estáticos (HTML, CSS, JS, imágenes, etc.)
+        if (req.path.match(/\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)) {
+            return true;
+        }
+        // Excluir endpoints de polling que se llaman frecuentemente
+        const pollingEndpoints = [
+            '/api/pedidos/assigned',
+            '/api/pedidos/unassigned',
+            '/api/cliente/notificaciones',
+            '/api/health'
+        ];
+        return pollingEndpoints.some(endpoint => req.path.startsWith(endpoint));
+    }
 });
 
 app.use(limiter);
 
-//Rate limiting para autenticación
+//Rate limiting para autenticación (más restrictivo)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: isDevelopment ? 50 : 5,
+    max: isDevelopment ? 50 : (isRailway ? 30 : 15), // Aumentado para Railway
     message: {
         success: false,
         message: 'Demasiados intentos de autenticación, intenta de nuevo más tarde'
@@ -86,6 +128,9 @@ app.use('/api/promociones', promocionesRoutes);
 app.use('/api/recompensas', recompensasRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/opiniones', opinionesRoutes);
+app.use('/api/facturas', facturaRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+app.use('/api/reportes', reportesRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 //Ruta de salud del servidor
@@ -168,9 +213,11 @@ async function startServer() {
             console.log(`API: http://localhost:${PORT}/api`);
             console.log(`Health check: http://localhost:${PORT}/api/health`);
             console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`Railway detectado: ${isRailway ? 'Sí' : 'No'}`);
+            console.log(`Rate limiting: ${getMaxRequests()} requests por 15 minutos`);
             
-            // Inicializar tarea programada de recordatorios
-            // Se ejecuta todos los días a las 10:00 AM
+            //Inicializa la tarea programada de recordatorios
+            //Se ejecuta todos los días a las 10:00 AM
             cron.schedule('0 10 * * *', async () => {
                 console.log('[CRON] Ejecutando tarea de recordatorios diarios...');
                 try {
@@ -180,7 +227,6 @@ async function startServer() {
                 }
             });
             
-            console.log('Tarea programada de recordatorios activada (se ejecuta diariamente a las 10:00 AM)');
         });
 
     } catch (error) {

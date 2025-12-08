@@ -163,52 +163,67 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-yellow-100 rounded-full">
-                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-yellow-100 rounded-full mb-2">
+                            <i class="fas fa-clock text-yellow-600 text-lg"></i>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Pendientes</p>
-                            <p class="text-2xl font-bold text-gray-900" id="statsPendientes">0</p>
-                        </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsPendientes">0</p>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-blue-100 rounded-full">
-                            <i class="fas fa-check-circle text-blue-600 text-xl"></i>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-blue-100 rounded-full mb-2">
+                            <i class="fas fa-check-circle text-blue-600 text-lg"></i>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Confirmados</p>
-                            <p class="text-2xl font-bold text-gray-900" id="statsConfirmados">0</p>
-                        </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsConfirmados">0</p>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-orange-100 rounded-full">
-                            <i class="fas fa-utensils text-orange-600 text-xl"></i>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-orange-100 rounded-full mb-2">
+                            <i class="fas fa-utensils text-orange-600 text-lg"></i>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Preparando</p>
-                            <p class="text-2xl font-bold text-gray-900" id="statsPreparando">0</p>
-                        </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsPreparando">0</p>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-green-100 rounded-full">
-                            <i class="fas fa-check text-green-600 text-xl"></i>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-green-100 rounded-full mb-2">
+                            <i class="fas fa-check text-green-600 text-lg"></i>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Listos</p>
-                            <p class="text-2xl font-bold text-gray-900" id="statsListos">0</p>
+                        <p class="text-xl font-bold text-gray-900" id="statsListos">0</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-purple-100 rounded-full mb-2">
+                            <i class="fas fa-motorcycle text-purple-600 text-lg"></i>
                         </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsEnCamino">0</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-gray-100 rounded-full mb-2">
+                            <i class="fas fa-check-double text-gray-600 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsEntregado">0</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="p-2 bg-red-100 rounded-full mb-2">
+                            <i class="fas fa-times-circle text-red-600 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900" id="statsCancelado">0</p>
                     </div>
                 </div>
             </div>
@@ -680,7 +695,7 @@
                 if (data.success) {
                     pedidosData = data.data.pedidos || [];
                     assignedCurrentPage = 1;
-                    // Aplicar filtro por defecto (ocultar pedidos "listo")
+                    // Aplicar filtro por defecto (ocultar pedidos "entregado")
                     filterPedidos();
                     updateStats();
                 } else {
@@ -870,7 +885,7 @@
                             Ver Detalles
                         </button>
                         
-                        <div class="w-full flex justify-end">
+                        <div class="w-full flex flex-col items-end gap-2">
                             ${getActionButtons(pedido.estado_pedido, pedido.id_pedido)}
                         </div>
                     </div>
@@ -882,38 +897,81 @@
 
         //Función para obtener botones de acción según el estado
         function getActionButtons(estado, pedidoId) {
+            let buttons = '';
+            
+            // Botones según el estado
             switch (estado) {
                 case 'pendiente':
-                    return `
+                    buttons = `
                         <button onclick="cambiarEstadoPedido(${pedidoId}, 'confirmado')" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
                             <i class="fas fa-check"></i>
                             Confirmar
                         </button>
                     `;
+                    break;
                 case 'confirmado':
-                    return `
+                    buttons = `
                         <button onclick="cambiarEstadoPedido(${pedidoId}, 'preparando')" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
                             <i class="fas fa-utensils"></i>
                             Iniciar Preparación
                         </button>
                     `;
+                    break;
                 case 'preparando':
-                    return `
+                    buttons = `
                         <button onclick="cambiarEstadoPedido(${pedidoId}, 'listo')" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
                             <i class="fas fa-check-circle"></i>
                             Marcar Listo
                         </button>
                     `;
+                    break;
                 case 'listo':
-                    return `
+                    buttons = `
+                        <button onclick="cambiarEstadoPedido(${pedidoId}, 'en_camino')" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-motorcycle"></i>
+                            En Camino
+                        </button>
+                    `;
+                    break;
+                case 'en_camino':
+                    buttons = `
+                        <button onclick="cambiarEstadoPedido(${pedidoId}, 'entregado')" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-check-double"></i>
+                            Marcar Entregado
+                        </button>
+                    `;
+                    break;
+                case 'entregado':
+                    buttons = `
                         <div class="text-center text-sm text-gray-600">
-                            <i class="fas fa-check-circle text-green-500 mr-1"></i>
-                            Listo para entrega
+                            <i class="fas fa-check-double text-green-500 mr-1"></i>
+                            Entregado
                         </div>
                     `;
+                    break;
+                case 'cancelado':
+                    buttons = `
+                        <div class="text-center text-sm text-gray-600">
+                            <i class="fas fa-times-circle text-red-500 mr-1"></i>
+                            Cancelado
+                        </div>
+                    `;
+                    break;
                 default:
-                    return '';
+                    buttons = '';
             }
+            
+            // Agregar botón de cancelar si el estado no es cancelado ni entregado
+            if (estado !== 'cancelado' && estado !== 'entregado') {
+                buttons += `
+                    <button onclick="cancelarPedido(${pedidoId})" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-semibold transition flex items-center gap-2 mt-2">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                `;
+            }
+            
+            return buttons;
         }
 
         //Función para crear tarjeta de pedido sin asignar
@@ -1014,6 +1072,52 @@
                 }
             } catch (error) {
                 showError('Error de conexión al actualizar estado');
+            }
+        }
+
+        //Función para cancelar pedido
+        async function cancelarPedido(pedidoId) {
+            const result = await Swal.fire({
+                title: '¿Cancelar pedido?',
+                text: `¿Estás seguro de que deseas cancelar el pedido #${pedidoId.toString().padStart(6, '0')}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`/api/pedidos/${pedidoId}/estado`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ estado: 'cancelado' })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Pedido cancelado',
+                            text: `El pedido #${pedidoId.toString().padStart(6, '0')} ha sido cancelado`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        
+                        cargarPedidosAsignados();
+                    } else {
+                        showError('Error al cancelar pedido: ' + (data.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    showError('Error de conexión al cancelar pedido');
+                }
             }
         }
 
@@ -1235,8 +1339,10 @@
             filteredPedidos = pedidosData.filter(pedido => {
                 let matchesEstado;
                 if (!estadoValue) {
-                    matchesEstado = hasSearch ? true : pedido.estado_pedido !== 'listo';
+                    // En "Todos los estados", ocultar pedidos "entregado" y "cancelado" (incluso con búsqueda)
+                    matchesEstado = pedido.estado_pedido !== 'entregado' && pedido.estado_pedido !== 'cancelado';
                 } else {
+                    // Si hay un filtro específico, mostrar solo ese estado
                     matchesEstado = pedido.estado_pedido === estadoValue;
                 }
 
@@ -1244,6 +1350,7 @@
                     return false;
                 }
 
+                // Aplicar búsqueda si existe
                 if (hasSearch) {
                     return pedido.id_pedido && pedido.id_pedido.toString().includes(normalizedSearch);
                 }
@@ -1267,13 +1374,19 @@
                 pendientes: pedidosData.filter(p => p.estado_pedido === 'pendiente').length,
                 confirmados: pedidosData.filter(p => p.estado_pedido === 'confirmado').length,
                 preparando: pedidosData.filter(p => p.estado_pedido === 'preparando').length,
-                listos: pedidosData.filter(p => p.estado_pedido === 'listo').length
+                listos: pedidosData.filter(p => p.estado_pedido === 'listo').length,
+                enCamino: pedidosData.filter(p => p.estado_pedido === 'en_camino').length,
+                entregado: pedidosData.filter(p => p.estado_pedido === 'entregado').length,
+                cancelado: pedidosData.filter(p => p.estado_pedido === 'cancelado').length
             };
 
             document.getElementById('statsPendientes').textContent = stats.pendientes;
             document.getElementById('statsConfirmados').textContent = stats.confirmados;
             document.getElementById('statsPreparando').textContent = stats.preparando;
             document.getElementById('statsListos').textContent = stats.listos;
+            document.getElementById('statsEnCamino').textContent = stats.enCamino;
+            document.getElementById('statsEntregado').textContent = stats.entregado;
+            document.getElementById('statsCancelado').textContent = stats.cancelado;
             
             // Actualizar total de pedidos en el header (suma de asignados + sin asignar)
             const totalPedidos = pedidosData.length + pedidosSinAsignarData.length;

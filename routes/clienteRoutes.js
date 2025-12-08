@@ -94,9 +94,9 @@ router.post('/puntos/actualizar', authenticateToken, async (req, res) => {
         }
         
         const cliente = clienteRows[0];
-        let nuevosPuntos = cliente.puntos_acumulados + (puntosGanados || 0) - (puntosUtilizados || 0);
-        
-        nuevosPuntos = Math.max(0, nuevosPuntos);
+        // Los puntos_acumulados solo aumentan (nunca disminuyen) para mantener el nivel del cliente
+        // Solo sumamos los puntos ganados, sin restar los utilizados
+        let nuevosPuntos = cliente.puntos_acumulados + (puntosGanados || 0);
         
         const updateQuery = `
             UPDATE cliente 
@@ -126,6 +126,69 @@ router.get('/recompensas', authenticateToken, getRecompensasCliente);
 
 //Canje de recompensas
 router.post('/recompensas/:id/canjear', authenticateToken, canjearRecompensa);
+
+//Obtiene las recompensas canjeadas por el cliente
+router.get('/recompensas/canjeadas', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const [clienteRows] = await pool.execute(
+            `SELECT c.id_cliente FROM cliente c JOIN usuario u ON c.id_usuario = u.id_usuario WHERE u.id_usuario = ?`,
+            [userId]
+        );
+
+        if (clienteRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cliente no encontrado'
+            });
+        }
+
+        const clienteId = clienteRows[0].id_cliente;
+
+        const [canjes] = await pool.execute(
+            `SELECT 
+                cp.id_canje,
+                cp.id_recompensa,
+                cp.producto_canjeado,
+                cp.valor_canje,
+                cp.fecha_canje,
+                cp.estado_canje,
+                cp.puntos_utilizados,
+                r.tipo_recompensa,
+                r.descripcion
+            FROM canje_puntos cp
+            LEFT JOIN recompensa r ON cp.id_recompensa = r.id_recompensa
+            WHERE cp.id_cliente = ?
+            ORDER BY cp.fecha_canje DESC`,
+            [clienteId]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                canjes: canjes.map(canje => ({
+                    id_canje: canje.id_canje,
+                    id_recompensa: canje.id_recompensa,
+                    nombre: canje.producto_canjeado,
+                    valor: Number(canje.valor_canje) || 0,
+                    fecha_canje: canje.fecha_canje,
+                    estado: canje.estado_canje,
+                    puntos_utilizados: Number(canje.puntos_utilizados) || 0,
+                    tipo: canje.tipo_recompensa,
+                    descripcion: canje.descripcion
+                }))
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener recompensas canjeadas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
 //Obtiene las direcciones del cliente logueado
 router.get('/direcciones', authenticateToken, async (req, res) => {
     try {

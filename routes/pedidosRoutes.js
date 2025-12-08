@@ -173,8 +173,14 @@ router.post('/', authenticateToken, async (req, res) => {
         const subtotalAmount = Number(subtotal) || 0;
         const taxesAmount = Number(taxes) || 0;
         const descuentoTotal = descuentoPorRecompensa;
-
-        let totalCalculado = subtotalAmount + deliveryAmount + taxesAmount - descuentoTotal;
+        
+        // Usar el total que viene del frontend (ya calculado correctamente con promociones)
+        // Si no viene, calcularlo como fallback
+        const totalFromFrontend = Number(total) || 0;
+        let totalCalculado = totalFromFrontend > 0 
+            ? totalFromFrontend 
+            : subtotalAmount + deliveryAmount + taxesAmount - descuentoTotal;
+        
         if (totalCalculado < 0) {
             totalCalculado = 0;
         }
@@ -206,7 +212,7 @@ router.post('/', authenticateToken, async (req, res) => {
                 totalCalculado,
                 payment.method,
                 delivery.instructions || null,
-                Math.floor(subtotalAmount / 100)
+                Math.floor(totalCalculado / 100)
             ]
         );
 
@@ -231,18 +237,15 @@ router.post('/', authenticateToken, async (req, res) => {
             );
         }
 
-        const puntosGanados = Math.floor(subtotalAmount / 100);
+        // Los puntos se calculan sobre el total final pagado (después de todos los descuentos)
+        const puntosGanados = Math.floor(totalCalculado / 100);
         
         //Solo aplica puntos de lealtad si es un cliente registrado
+        // Los puntos_acumulados solo aumentan (nunca disminuyen) para mantener el nivel del cliente
         if (clienteId && userRole === 'Cliente') {
-            if (loyaltyPointsUsed && loyaltyPointsUsed > 0) {
-                await connection.execute(
-                    `UPDATE cliente 
-                     SET puntos_acumulados = puntos_acumulados - ? + ? 
-                     WHERE id_cliente = ?`,
-                    [loyaltyPointsUsed, puntosGanados, clienteId]
-                );
-            } else {
+            // Solo sumamos los puntos ganados, sin restar los usados
+            // Los puntos acumulados nunca deben disminuir porque afectan el nivel del cliente
+            if (puntosGanados > 0) {
                 await connection.execute(
                     `UPDATE cliente 
                      SET puntos_acumulados = puntos_acumulados + ? 
@@ -262,6 +265,35 @@ router.post('/', authenticateToken, async (req, res) => {
         }
 
         await connection.commit();
+
+        // Generar factura automáticamente si el método de pago es efectivo o SINPE (pago confirmado)
+        // Normalizar el método de pago para comparación
+        const metodoPagoNormalizado = (payment.method || '').toLowerCase().trim();
+        const esPagoInmediato = metodoPagoNormalizado === 'efectivo' || 
+                                metodoPagoNormalizado === 'sinpe' || 
+                                metodoPagoNormalizado === 'sinpe móvil' ||
+                                metodoPagoNormalizado === 'pago en efectivo';
+        
+        if (esPagoInmediato) {
+            try {
+                const { generarFacturaAutomatica } = require('../controllers/facturaController');
+                // Usar setTimeout para generar la factura de forma asíncrona sin bloquear la respuesta
+                setTimeout(async () => {
+                    try {
+                        const connectionFactura = await pool.getConnection();
+                        console.log(`Generando factura automática para pedido ${pedidoId}...`);
+                        await generarFacturaAutomatica(pedidoId, connectionFactura);
+                        connectionFactura.release();
+                        console.log(`Factura generada exitosamente para pedido ${pedidoId}`);
+                    } catch (facturaError) {
+                        console.error('Error al generar factura automática:', facturaError);
+                    }
+                }, 1000);
+            } catch (facturaError) {
+                console.error('Error al inicializar generación de factura:', facturaError);
+                // No fallar el pedido si hay error en la factura
+            }
+        }
 
         res.json({
             success: true,
@@ -368,9 +400,12 @@ router.get('/', authenticateToken, async (req, res) => {
                 p.metodo_pago,
                 p.notas_especiales,
                 p.puntos_otorgados,
-                COUNT(dp.id_detalle) as total_items
+                MAX(f.id_factura) as factura_id,
+                MAX(f.numero_factura) as numero_factura,
+                COUNT(DISTINCT dp.id_detalle) as total_items
              FROM pedido p
              LEFT JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+             LEFT JOIN factura f ON p.id_pedido = f.id_pedido
              WHERE p.id_cliente = ?
              GROUP BY p.id_pedido
              ORDER BY p.fecha_pedido DESC`;
@@ -442,7 +477,7 @@ router.get('/assigned', authenticateToken, async (req, res) => {
 
         const empleadoId = empleadoRows[0].id_empleado;
 
-        //Obtiene pedidos asignados al empleado
+        //Obtiene pedidos asignados al empleado (incluyendo entregados y cancelados para que se puedan filtrar)
         const [pedidos] = await pool.execute(`
             SELECT 
                 p.id_pedido,
@@ -467,7 +502,7 @@ router.get('/assigned', authenticateToken, async (req, res) => {
             LEFT JOIN direccion d ON p.id_direccion = d.id_direccion
             LEFT JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
             WHERE p.id_empleado_asignado = ? 
-            AND p.estado_pedido IN ('pendiente', 'confirmado', 'preparando', 'listo', 'en_camino')
+            AND p.estado_pedido IN ('pendiente', 'confirmado', 'preparando', 'listo', 'en_camino', 'entregado', 'cancelado')
             GROUP BY p.id_pedido
             ORDER BY p.fecha_pedido DESC
         `, [empleadoId]);
@@ -654,6 +689,224 @@ function determinarAreaAsignacionSimple(categorias) {
     return 'cocina';
 }
 
+//Endpoint para obtener todos los pedidos del sistema (solo administradores)
+router.get('/admin', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.tipoUsuario;
+        
+        //Verificar que el usuario es administrador
+        if (userRole !== 'Administrador') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'No tienes permisos para acceder a esta información' 
+            });
+        }
+
+        const limit = req.query.limit ? parseInt(req.query.limit) : null;
+        const estado = req.query.estado || null;
+        const fechaDesde = req.query.fechaDesde || null;
+        const fechaHasta = req.query.fechaHasta || null;
+        
+        //Primero obtener todos los pedidos directamente sin JOINs complejos
+        //para evitar problemas con GROUP BY en MySQL
+        let baseQuery = `
+            SELECT 
+                p.id_pedido,
+                p.estado_pedido,
+                p.subtotal,
+                p.impuestos,
+                p.descuentos,
+                p.total,
+                p.fecha_pedido,
+                p.fecha_entrega_estimada,
+                p.metodo_pago,
+                p.notas_especiales,
+                p.area_asignacion,
+                p.id_empleado_asignado,
+                p.id_cliente,
+                p.id_direccion,
+                p.cliente_invitado_nombre,
+                p.cliente_invitado_telefono,
+                p.cliente_invitado_email
+            FROM pedido p
+            WHERE 1=1
+        `;
+        
+        const params = [];
+        
+        if (estado) {
+            baseQuery += ` AND p.estado_pedido = ?`;
+            params.push(estado);
+        }
+        
+        if (fechaDesde) {
+            baseQuery += ` AND DATE(p.fecha_pedido) >= ?`;
+            params.push(fechaDesde);
+        }
+        
+        if (fechaHasta) {
+            baseQuery += ` AND DATE(p.fecha_pedido) <= ?`;
+            params.push(fechaHasta);
+        }
+        
+        baseQuery += ` ORDER BY p.fecha_pedido DESC`;
+        
+        if (limit && limit > 0) {
+            baseQuery += ` LIMIT ${limit}`;
+        }
+
+        const [pedidosBase] = await pool.execute(baseQuery, params);
+        
+        if (pedidosBase.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    pedidos: []
+                }
+            });
+        }
+
+        //Ahora enriquecer cada pedido con información adicional
+        const pedidos = [];
+
+        for (let i = 0; i < pedidosBase.length; i++) {
+            const pedidoBase = pedidosBase[i];
+            const pedido = { ...pedidoBase };
+            
+            try {
+                // Obtener información del cliente si existe
+                if (pedido.id_cliente) {
+                    const [clienteRows] = await pool.execute(`
+                        SELECT 
+                            u.nombre,
+                            u.telefono,
+                            u.correo
+                        FROM cliente cl
+                        LEFT JOIN usuario u ON cl.id_usuario = u.id_usuario
+                        WHERE cl.id_cliente = ?
+                    `, [pedido.id_cliente]);
+                    
+                    if (clienteRows.length > 0) {
+                        pedido.cliente_nombre = clienteRows[0].nombre || pedido.cliente_invitado_nombre || 'Cliente invitado';
+                        pedido.cliente_telefono = clienteRows[0].telefono || pedido.cliente_invitado_telefono || null;
+                        pedido.cliente_email = clienteRows[0].correo || pedido.cliente_invitado_email || null;
+                    } else {
+                        pedido.cliente_nombre = pedido.cliente_invitado_nombre || 'Cliente invitado';
+                        pedido.cliente_telefono = pedido.cliente_invitado_telefono || null;
+                        pedido.cliente_email = pedido.cliente_invitado_email || null;
+                    }
+                } else {
+                    pedido.cliente_nombre = pedido.cliente_invitado_nombre || 'Cliente invitado';
+                    pedido.cliente_telefono = pedido.cliente_invitado_telefono || null;
+                    pedido.cliente_email = pedido.cliente_invitado_email || null;
+                }
+                
+                // Obtener información de dirección si existe
+                if (pedido.id_direccion) {
+                    const [direccionRows] = await pool.execute(`
+                        SELECT direccion_completa, referencia
+                        FROM direccion
+                        WHERE id_direccion = ?
+                    `, [pedido.id_direccion]);
+                    
+                    if (direccionRows.length > 0) {
+                        pedido.direccion_completa = direccionRows[0].direccion_completa || null;
+                        pedido.referencia = direccionRows[0].referencia || null;
+                    }
+                }
+                
+                // Obtener información del empleado asignado si existe
+                if (pedido.id_empleado_asignado) {
+                    const [empleadoRows] = await pool.execute(`
+                        SELECT 
+                            e.area_trabajo,
+                            u.nombre as empleado_nombre
+                        FROM empleado e
+                        LEFT JOIN usuario u ON e.id_usuario = u.id_usuario
+                        WHERE e.id_empleado = ?
+                    `, [pedido.id_empleado_asignado]);
+                    
+                    if (empleadoRows.length > 0) {
+                        pedido.empleado_asignado_nombre = empleadoRows[0].empleado_nombre || 'Sin asignar';
+                        pedido.empleado_area = empleadoRows[0].area_trabajo || pedido.area_asignacion || 'Sin asignar';
+                    } else {
+                        pedido.empleado_asignado_nombre = 'Sin asignar';
+                        pedido.empleado_area = pedido.area_asignacion || 'Sin asignar';
+                    }
+                } else {
+                    pedido.empleado_asignado_nombre = 'Sin asignar';
+                    pedido.empleado_area = pedido.area_asignacion || 'Sin asignar';
+                }
+                
+                // Contar items del pedido
+                const [countRows] = await pool.execute(`
+                    SELECT COUNT(*) as total_items
+                    FROM detalle_pedido
+                    WHERE id_pedido = ?
+                `, [pedido.id_pedido]);
+                
+                pedido.total_items = countRows[0]?.total_items || 0;
+                
+                // Obtener detalles de productos
+                const [detalles] = await pool.execute(`
+                    SELECT 
+                        dp.cantidad,
+                        dp.precio_unitario,
+                        dp.subtotal_item,
+                        pr.nombre as producto_nombre
+                    FROM detalle_pedido dp
+                    LEFT JOIN producto pr ON dp.id_producto = pr.id_producto
+                    WHERE dp.id_pedido = ?
+                `, [pedido.id_pedido]);
+                
+                pedido.items = detalles || [];
+                
+                // Obtener información de factura si existe
+                const [facturaRows] = await pool.execute(`
+                    SELECT id_factura, numero_factura
+                    FROM factura
+                    WHERE id_pedido = ?
+                    ORDER BY fecha_emision DESC
+                    LIMIT 1
+                `, [pedido.id_pedido]);
+                
+                if (facturaRows.length > 0) {
+                    pedido.factura_id = facturaRows[0].id_factura;
+                    pedido.numero_factura = facturaRows[0].numero_factura;
+                }
+                
+                pedidos.push(pedido);
+            } catch (error) {
+                console.error(`[Admin Pedidos] Error al enriquecer pedido ${pedido.id_pedido}:`, error);
+                // Agregar el pedido básico aunque haya error en el enriquecimiento
+                pedido.cliente_nombre = pedido.cliente_invitado_nombre || 'Cliente invitado';
+                pedido.cliente_telefono = pedido.cliente_invitado_telefono || null;
+                pedido.empleado_asignado_nombre = 'Sin asignar';
+                pedido.empleado_area = pedido.area_asignacion || 'Sin asignar';
+                pedido.total_items = 0;
+                pedido.items = [];
+                pedidos.push(pedido);
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                pedidos: pedidos
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener pedidos para administrador:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
 //Endpoint para obtener detalles completos de un pedido específico (para empleados y administradores)
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
@@ -714,10 +967,42 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         const pedido = pedidoRows[0];
 
+        // Si es administrador o empleado, incluir información del empleado asignado
+        if (userRole === 'Administrador' || userRole === 'Empleado') {
+            const [empleadoRows] = await pool.execute(`
+                SELECT 
+                    e.id_empleado,
+                    e.area_trabajo,
+                    u.nombre as empleado_nombre
+                FROM pedido p
+                LEFT JOIN empleado e ON p.id_empleado_asignado = e.id_empleado
+                LEFT JOIN usuario u ON e.id_usuario = u.id_usuario
+                WHERE p.id_pedido = ?
+            `, [pedidoId]);
+
+            if (empleadoRows.length > 0) {
+                pedido.empleado_asignado_nombre = empleadoRows[0].empleado_nombre || 'Sin asignar';
+                pedido.empleado_area = empleadoRows[0].area_trabajo || null;
+            } else {
+                pedido.empleado_asignado_nombre = 'Sin asignar';
+                pedido.empleado_area = null;
+            }
+
+            // Obtener área de asignación del pedido
+            const [areaRows] = await pool.execute(`
+                SELECT area_asignacion FROM pedido WHERE id_pedido = ?
+            `, [pedidoId]);
+            
+            if (areaRows.length > 0 && areaRows[0].area_asignacion) {
+                pedido.area_asignacion = areaRows[0].area_asignacion;
+            }
+        }
+
         //Obtiene productos del pedido
         const [productosRows] = await pool.execute(`
             SELECT 
                 dp.id_detalle,
+                dp.id_producto,
                 dp.cantidad,
                 dp.precio_unitario,
                 dp.subtotal_item,
@@ -731,6 +1016,36 @@ router.get('/:id', authenticateToken, async (req, res) => {
         `, [pedidoId]);
 
         pedido.productos = productosRows;
+
+        // Obtener información del canje de puntos asociado si existe
+        if (pedido.id_cliente) {
+            const [canjeRows] = await pool.execute(`
+                SELECT 
+                    cp.id_canje,
+                    cp.valor_canje,
+                    cp.estado_canje,
+                    r.tipo_promocion,
+                    r.nombre as recompensa_nombre
+                FROM canje_puntos cp
+                LEFT JOIN recompensa r ON cp.id_recompensa = r.id_recompensa
+                WHERE cp.id_cliente = ? 
+                AND cp.estado_canje = 'aplicado'
+                AND DATE(cp.fecha_canje) = DATE(?)
+                ORDER BY cp.fecha_canje DESC
+                LIMIT 1
+            `, [pedido.id_cliente, pedido.fecha_pedido]);
+
+            if (canjeRows.length > 0) {
+                const canje = canjeRows[0];
+                pedido.rewardCanje = {
+                    id_canje: canje.id_canje,
+                    valor_canje: canje.valor_canje,
+                    tipo: canje.tipo_promocion,
+                    tipo_promocion: canje.tipo_promocion,
+                    nombre: canje.recompensa_nombre || 'Descuento por puntos'
+                };
+            }
+        }
 
         res.json({
             success: true,
@@ -783,6 +1098,28 @@ router.put('/:id/estado', authenticateToken, async (req, res) => {
             `UPDATE pedido SET estado_pedido = ? WHERE id_pedido = ?`,
             [estado, pedidoId]
         );
+
+        // Generar factura automáticamente cuando el pedido se confirma o se entrega
+        if (estado === 'confirmado' || estado === 'entregado') {
+            try {
+                const { generarFacturaAutomatica } = require('../controllers/facturaController');
+                // Usar setTimeout para generar la factura de forma asíncrona sin bloquear la respuesta
+                setTimeout(async () => {
+                    try {
+                        const connectionFactura = await pool.getConnection();
+                        console.log(`Generando factura automática para pedido ${pedidoId} (estado: ${estado})...`);
+                        await generarFacturaAutomatica(pedidoId, connectionFactura);
+                        connectionFactura.release();
+                        console.log(`Factura generada exitosamente para pedido ${pedidoId}`);
+                    } catch (facturaError) {
+                        console.error('Error al generar factura automática:', facturaError);
+                    }
+                }, 1000);
+            } catch (facturaError) {
+                console.error('Error al inicializar generación de factura:', facturaError);
+                // No fallar la actualización si hay error en la factura
+            }
+        }
 
         res.json({
             success: true,
@@ -940,6 +1277,35 @@ router.post('/guest', async (req, res) => {
         //Genera el número de pedido
         const numeroPedido = `PED-${pedidoId.toString().padStart(6, '0')}`;
 
+        // Generar factura automáticamente si el método de pago es efectivo o SINPE (pago confirmado)
+        // Normalizar el método de pago para comparación
+        const metodoPagoNormalizado = (payment.method || '').toLowerCase().trim();
+        const esPagoInmediato = metodoPagoNormalizado === 'efectivo' || 
+                                metodoPagoNormalizado === 'sinpe' || 
+                                metodoPagoNormalizado === 'sinpe móvil' ||
+                                metodoPagoNormalizado === 'pago en efectivo';
+        
+        if (esPagoInmediato) {
+            try {
+                const { generarFacturaAutomatica } = require('../controllers/facturaController');
+                // Usar setTimeout para generar la factura de forma asíncrona sin bloquear la respuesta
+                setTimeout(async () => {
+                    try {
+                        const connectionFactura = await pool.getConnection();
+                        console.log(`Generando factura automática para pedido de invitado ${pedidoId}...`);
+                        await generarFacturaAutomatica(pedidoId, connectionFactura);
+                        connectionFactura.release();
+                        console.log(`Factura generada exitosamente para pedido de invitado ${pedidoId}`);
+                    } catch (facturaError) {
+                        console.error('Error al generar factura automática para pedido de invitado:', facturaError);
+                    }
+                }, 1000);
+            } catch (facturaError) {
+                console.error('Error al inicializar generación de factura para pedido de invitado:', facturaError);
+                // No fallar el pedido si hay error en la factura
+            }
+        }
+
         res.json({
             success: true,
             message: 'Pedido creado exitosamente',
@@ -1027,5 +1393,7 @@ router.get('/empleados-disponibles/:area', authenticateToken, async (req, res) =
         });
     }
 });
+
+//Endpoint duplicado eliminado - movido antes de /:id para evitar conflictos de rutas
 
 module.exports = router;

@@ -40,8 +40,10 @@ const parseRecompensaPayload = (payload = {}) => {
     }
 
     const tipo = (payload.tipoRecompensa || payload.tipo || '').toLowerCase();
-    if (!['descuento', 'producto', 'experiencia'].includes(tipo)) {
-        throw new Error('Tipo de recompensa no válido');
+    // Aceptar los nuevos tipos y mantener compatibilidad con tipos antiguos
+    const tiposValidos = ['descuento_colones', 'descuento_porcentaje', 'descuento', 'producto', 'experiencia'];
+    if (!tiposValidos.includes(tipo)) {
+        throw new Error('Tipo de recompensa no válido. Debe ser "descuento_colones" o "descuento_porcentaje"');
     }
 
     const valorRaw = payload.valorRecompensa ?? payload.valor ?? '';
@@ -382,10 +384,23 @@ const getRecompensasCliente = async (req, res) => {
 
         const recompensas = rows.map(row => mapRecompensaRow(row, canjesMap.get(row.id_recompensa)));
 
+        // Calcular puntos disponibles: puntos_acumulados - puntos ya usados
+        const [puntosUsadosRows] = await pool.execute(
+            `SELECT COALESCE(SUM(puntos_utilizados), 0) as puntos_usados
+             FROM canje_puntos
+             WHERE id_cliente = ? AND estado_canje IN ('pendiente', 'aplicado', 'completado')`,
+            [cliente.id_cliente]
+        );
+        
+        const puntosUsados = Number(puntosUsadosRows[0]?.puntos_usados || 0);
+        const puntosAcumulados = Number(cliente.puntos_acumulados || 0);
+        const puntosDisponibles = Math.max(0, puntosAcumulados - puntosUsados);
+
         res.json({
             success: true,
             data: {
-                puntosActuales: cliente.puntos_acumulados || 0,
+                puntosActuales: puntosDisponibles, // Puntos disponibles para usar
+                puntosAcumulados: puntosAcumulados, // Puntos acumulados totales (para nivel)
                 recompensas
             }
         });
@@ -477,23 +492,35 @@ const canjearRecompensa = async (req, res) => {
             });
         }
 
-        if ((cliente.puntos_acumulados || 0) < recompensa.puntos_requeridos) {
+        // Calcular puntos disponibles: puntos_acumulados - puntos ya usados
+        // Los puntos_acumulados solo aumentan (nunca disminuyen) para mantener el nivel del cliente
+        const [puntosUsadosRows] = await connection.execute(
+            `SELECT COALESCE(SUM(puntos_utilizados), 0) as puntos_usados
+             FROM canje_puntos
+             WHERE id_cliente = ? AND estado_canje IN ('pendiente', 'aplicado', 'completado')`,
+            [cliente.id_cliente]
+        );
+        
+        const puntosUsados = Number(puntosUsadosRows[0]?.puntos_usados || 0);
+        const puntosAcumulados = Number(cliente.puntos_acumulados || 0);
+        const puntosDisponibles = Math.max(0, puntosAcumulados - puntosUsados);
+
+        // Validar que tenga suficientes puntos disponibles para canjear la recompensa
+        if (puntosDisponibles < recompensa.puntos_requeridos) {
             await connection.rollback();
             return res.status(400).json({
                 success: false,
-                message: 'No tienes suficientes puntos para canjear esta recompensa'
+                message: 'No tienes suficientes puntos disponibles para canjear esta recompensa'
             });
         }
 
-        const puntosRestantes = (cliente.puntos_acumulados || 0) - recompensa.puntos_requeridos;
+        // NO restamos los puntos de puntos_acumulados porque estos nunca deben disminuir
+        // ya que afectan el nivel del cliente (Bronce, Plata, Oro, Diamante)
+        // Los puntos acumulados solo aumentan con cada compra
 
-        await connection.execute(
-            `UPDATE cliente 
-             SET puntos_acumulados = ? 
-             WHERE id_cliente = ?`,
-            [puntosRestantes, cliente.id_cliente]
-        );
-
+        // Registrar el movimiento de puntos en programa_lealtad
+        // Nota: Los puntos acumulados NO se restan, solo se registra el uso en programa_lealtad
+        const nuevosPuntosDisponibles = puntosDisponibles - recompensa.puntos_requeridos;
         await connection.execute(
             `INSERT INTO programa_lealtad (
                 id_cliente,
@@ -506,7 +533,7 @@ const canjearRecompensa = async (req, res) => {
             [
                 cliente.id_cliente,
                 -Math.abs(recompensa.puntos_requeridos),
-                `Canje de puntos por ${recompensa.nombre_recompensa}`
+                `Canje de puntos por ${recompensa.nombre_recompensa} (puntos disponibles restantes: ${nuevosPuntosDisponibles})`
             ]
         );
 
@@ -525,7 +552,7 @@ const canjearRecompensa = async (req, res) => {
                 recompensa.puntos_requeridos,
                 recompensa.nombre_recompensa,
                 recompensa.valor_recompensa || 0,
-                recompensa.tipo_recompensa === 'descuento' ? 'pendiente' : 'completado',
+                (recompensa.tipo_recompensa === 'descuento' || recompensa.tipo_recompensa === 'descuento_colones' || recompensa.tipo_recompensa === 'descuento_porcentaje') ? 'pendiente' : 'completado',
                 recompensa.id_recompensa
             ]
         );
@@ -534,11 +561,11 @@ const canjearRecompensa = async (req, res) => {
 
         res.json({
             success: true,
-            message: recompensa.tipo_recompensa === 'descuento'
+            message: (recompensa.tipo_recompensa === 'descuento' || recompensa.tipo_recompensa === 'descuento_colones' || recompensa.tipo_recompensa === 'descuento_porcentaje')
                 ? '¡Descuento canjeado! Se aplicará automáticamente en tu próxima compra.'
                 : 'Canje realizado con éxito. Pronto recibirás más detalles en tu correo.',
             data: {
-                puntos_restantes: puntosRestantes,
+                puntos_restantes: nuevosPuntosDisponibles, // Puntos disponibles después del canje
                 recompensa: {
                     id_recompensa: recompensa.id_recompensa,
                     nombre_recompensa: recompensa.nombre_recompensa,

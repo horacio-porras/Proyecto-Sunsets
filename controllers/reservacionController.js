@@ -351,6 +351,105 @@ const getActiveReservations = async (req, res) => {
     }
 };
 
+const getAllReservations = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const [rows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        // Actualizar automáticamente las reservaciones que ya pasaron su fecha/hora a "completada"
+        const now = new Date();
+        const reservacionesToUpdate = [];
+
+        for (const reserva of rows) {
+            // Solo actualizar si no está cancelada, rechazada o ya completada
+            if (reserva.estado_reserva && 
+                !['cancelada', 'rechazada', 'completada'].includes(reserva.estado_reserva.toLowerCase())) {
+                
+                const reservaDateTime = new Date(`${reserva.fecha_reserva}T${reserva.hora_reserva}`);
+                
+                // Si la fecha/hora de la reserva ya pasó, actualizar a "completada"
+                if (reservaDateTime < now) {
+                    reservacionesToUpdate.push(reserva.id_reservacion);
+                }
+            }
+        }
+
+        // Actualizar en lote todas las reservaciones que deben cambiar a "completada"
+        if (reservacionesToUpdate.length > 0) {
+            try {
+                const placeholders = reservacionesToUpdate.map(() => '?').join(',');
+                await pool.execute(
+                    `UPDATE reservacion 
+                     SET estado_reserva = 'completada' 
+                     WHERE id_reservacion IN (${placeholders})`,
+                    reservacionesToUpdate
+                );
+                console.log(`[Reservaciones] Actualizadas ${reservacionesToUpdate.length} reservaciones a estado "completada"`);
+            } catch (updateError) {
+                console.error('Error al actualizar estados de reservaciones:', updateError);
+                // Continuar aunque falle la actualización
+            }
+        }
+
+        // Volver a consultar para obtener los estados actualizados
+        const [updatedRows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        const reservaciones = updatedRows.map(reserva => {
+            const { notas, preferenciaMesa } = parseNotas(reserva.notas_especiales);
+            return {
+                id_reservacion: reserva.id_reservacion,
+                fecha_reserva: reserva.fecha_reserva,
+                hora_reserva: reserva.hora_reserva,
+                cantidad_personas: reserva.cantidad_personas,
+                estado_reserva: reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                notas_especiales: notas,
+                preferencia_mesa: preferenciaMesa,
+                fecha_creacion: reserva.fecha_creacion
+            };
+        });
+
+        return res.json({
+            success: true,
+            reservaciones
+        });
+    } catch (error) {
+        console.error('Error al obtener todas las reservaciones:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
 const updateReservation = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -524,12 +623,123 @@ const cancelReservation = async (req, res) => {
     }
 };
 
+const getAllReservationsAdmin = async (req, res) => {
+    try {
+        const [reservaciones] = await pool.execute(`
+            SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion,
+                COALESCE(u.nombre, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.nombre'))) as nombre_cliente,
+                COALESCE(u.correo, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.correo'))) as correo_cliente,
+                COALESCE(u.telefono, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.telefono'))) as telefono_cliente
+            FROM reservacion r
+            LEFT JOIN cliente c ON r.id_cliente = c.id_cliente
+            LEFT JOIN usuario u ON c.id_usuario = u.id_usuario
+            ORDER BY r.fecha_creacion DESC
+        `);
+
+        const reservacionesFormateadas = reservaciones.map(reserva => {
+            const notasParsed = parseNotas(reserva.notas_especiales);
+            return {
+                id_reservacion: reserva.id_reservacion,
+                fecha_reserva: reserva.fecha_reserva,
+                hora_reserva: reserva.hora_reserva,
+                cantidad_personas: reserva.cantidad_personas,
+                estado_reserva: reserva.estado_reserva,
+                fecha_creacion: reserva.fecha_creacion,
+                nombre_cliente: reserva.nombre_cliente || 'Invitado',
+                correo_cliente: reserva.correo_cliente || 'No disponible',
+                telefono_cliente: reserva.telefono_cliente || 'No disponible',
+                notas_especiales: notasParsed.notas,
+                preferencia_mesa: notasParsed.preferenciaMesa
+            };
+        });
+
+        return res.json({
+            success: true,
+            data: {
+                reservaciones: reservacionesFormateadas
+            }
+        });
+    } catch (error) {
+        console.error('Error al obtener reservaciones (admin):', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+const cancelReservationAdmin = async (req, res) => {
+    try {
+        const reservacionId = req.params.id;
+
+        const [rows] = await pool.execute(
+            `SELECT id_reservacion, estado_reserva
+             FROM reservacion
+             WHERE id_reservacion = ?`,
+            [reservacionId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Reservación no encontrada'
+            });
+        }
+
+        const reservacionActual = rows[0];
+
+        if (reservacionActual.estado_reserva && ESTADOS_NO_MODIFICABLES.has(reservacionActual.estado_reserva)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Esta reservación no se puede cancelar en su estado actual'
+            });
+        }
+
+        await pool.execute(
+            `UPDATE reservacion
+             SET estado_reserva = ?
+             WHERE id_reservacion = ?`,
+            [
+                ESTADO_RESERVA_CANCELADA,
+                reservacionId
+            ]
+        );
+
+        return res.json({
+            success: true,
+            message: 'Reservación cancelada correctamente',
+            data: {
+                reservacion: {
+                    id_reservacion: Number(reservacionId),
+                    estado_reserva: ESTADO_RESERVA_CANCELADA
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al cancelar reservación (admin):', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
 module.exports = {
     createReservation,
     createPublicReservation,
     getActiveReservations,
+    getAllReservations,
     updateReservation,
     cancelReservation,
+    getAllReservationsAdmin,
+    cancelReservationAdmin,
     MAX_PERSONAS_RESERVA
 };
 

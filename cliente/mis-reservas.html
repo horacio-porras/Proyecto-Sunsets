@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <style>
+        .reservation-card {
+            transition: all 0.3s ease;
+        }
+        .reservation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            white-space: nowrap;
+        }
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmada { background-color: #dbeafe; color: #1e40af; }
+        .status-cancelada { background-color: #fecaca; color: #dc2626; }
+        .status-rechazada { background-color: #fee2e2; color: #991b1b; }
+        .status-completada { background-color: #dcfce7; color: #166534; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background-color: rgba(17, 24, 39, 0.55);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            max-width: 50rem;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .table-preference {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-preference span {
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .table-preference.active {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+
+        .table-preference.active span {
+            color: #ffffff;
+        }
+
+        .table-preference:not(.active):hover {
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+        }
+
+        .table-preference:not(.active):hover span {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Mis Reservas</h1>
+                    <p class="text-gray-600">Revisa todas tus reservaciones pasadas y futuras</p>
+                </div>
+                <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition inline-flex items-center gap-2">
+                    <i class="fas fa-calendar-plus"></i>
+                    Nueva Reservación
+                </a>
+            </div>
+        </div>
+
+        <!-- Reservaciones Container -->
+        <div id="reservaciones-container">
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-16">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                <p class="mt-4 text-gray-600">Cargando tus reservaciones...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-16 hidden">
+                <div class="bg-white rounded-lg shadow-md p-12">
+                    <i class="fas fa-calendar-times text-6xl text-gray-300 mb-6"></i>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">No tienes reservaciones</h2>
+                    <p class="text-gray-600 mb-8">¡Agenda tu primera reservación y aparecerá aquí!</p>
+                    <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center justify-center gap-2">
+                        <i class="fas fa-calendar-plus"></i>
+                        Nueva Reservación
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reservaciones List -->
+            <div id="reservaciones-list" class="space-y-6 hidden">
+                <!-- Las reservaciones se cargarán dinámicamente aquí -->
+            </div>
+
+            <div id="paginationControls" class="hidden mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div id="paginationSummary" class="text-sm text-gray-600">
+                    Mostrando 0 - 0 de 0 reservaciones
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <div id="paginationInfo" class="text-sm font-semibold text-gray-700">
+                        Página 1 de 1
+                    </div>
+                    <button id="nextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Container -->
+    <div id="footer-container" class="mt-auto"></div>
+
+    <!-- Reservation Management Modal -->
+    <div id="reservationModal" class="modal">
+        <div class="modal-content p-6 md:p-8">
+            <div class="modal-header mb-6">
+                <div>
+                    <h3 id="reservationModalTitle" class="text-2xl font-semibold text-gray-800">Gestionar reservación</h3>
+                    <p id="reservationModalSubtitle" class="text-sm text-gray-500 mt-1">Actualiza los detalles de tu reservación para mantenerlos al día.</p>
+                </div>
+                <button type="button" class="modal-close" onclick="closeReservationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="reservationModalForm" class="space-y-6">
+                <input type="hidden" id="reservationId">
+
+                <hr class="border-gray-200">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
+                        <input type="date" id="reservationDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="fecha"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Hora *</label>
+                        <select id="reservationTime" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Selecciona un horario</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                            <option value="21:00">9:00 PM</option>
+                        </select>
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="hora"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de personas *</label>
+                        <select id="reservationPeople" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Selecciona la cantidad de personas</option>
+                            <option value="1">1 persona</option>
+                            <option value="2">2 personas</option>
+                            <option value="3">3 personas</option>
+                            <option value="4">4 personas</option>
+                            <option value="5">5 personas</option>
+                            <option value="6">6 personas</option>
+                            <option value="7">7 personas</option>
+                            <option value="8">8 personas</option>
+                        </select>
+                        <p class="mt-1 text-sm text-red-600 hidden" data-reservation-error="personas"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado actual</label>
+                        <div id="reservationStatusBadge" class="status-badge status-pendiente">Pendiente</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Preferencia de mesa</label>
+                    <div id="reservationTablePreferences" class="flex flex-wrap gap-3">
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Interior" class="hidden">
+                            <span>Interior</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Terraza" class="hidden">
+                            <span>Terraza</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Ventana" class="hidden">
+                            <span>Ventana</span>
+                        </label>
+                        <label class="table-preference">
+                            <input type="radio" name="reservation-table" value="Cualquiera" class="hidden">
+                            <span>Cualquiera</span>
+                        </label>
+                    </div>
+                </div>
+                        
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="submit" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center gap-2">
+                        <i class="fas fa-edit"></i>
+                        Actualizar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allReservaciones = [];
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 5;
+        let currentReservationEditing = null;
+        const reservasCapacidadMaxima = 8;
+
+        let paginationControls;
+        let paginationSummary;
+        let paginationInfo;
+        let prevPageBtn;
+        let nextPageBtn;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPaginationControls();
+            setupReservationModal();
+            loadMisReservas();
+        });
+
+        function setupPaginationControls() {
+            paginationControls = document.getElementById('paginationControls');
+            paginationSummary = document.getElementById('paginationSummary');
+            paginationInfo = document.getElementById('paginationInfo');
+            prevPageBtn = document.getElementById('prevPageBtn');
+            nextPageBtn = document.getElementById('nextPageBtn');
+
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', () => changePage(-1));
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', () => changePage(1));
+            }
+        }
+
+        function getStatusInfo(estado) {
+            const estados = {
+                'pendiente': { text: 'Pendiente', class: 'status-pendiente' },
+                'confirmada': { text: 'Confirmada', class: 'status-confirmada' },
+                'cancelada': { text: 'Cancelada', class: 'status-cancelada' },
+                'rechazada': { text: 'Rechazada', class: 'status-rechazada' },
+                'completada': { text: 'Completada', class: 'status-completada' }
+            };
+            return estados[estado?.toLowerCase()] || estados['pendiente'];
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '';
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        function isPastReservation(fecha, hora) {
+            const now = new Date();
+            const reservaDate = new Date(`${fecha}T${hora}`);
+            return reservaDate < now;
+        }
+
+        async function loadMisReservas() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const reservacionesList = document.getElementById('reservaciones-list');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    loadingState.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                const response = await fetch('/api/reservaciones/todas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                loadingState.classList.add('hidden');
+
+                if (!data.success || !data.reservaciones || data.reservaciones.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    reservacionesList.classList.add('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                reservacionesList.classList.remove('hidden');
+
+                allReservaciones = data.reservaciones || [];
+                currentPage = 1;
+                displayReservaciones();
+            } catch (error) {
+                console.error('Error al cargar reservaciones:', error);
+                loadingState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        function displayReservaciones() {
+            const reservacionesList = document.getElementById('reservaciones-list');
+            if (!reservacionesList) return;
+
+            const totalPages = Math.ceil(allReservaciones.length / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allReservaciones.length);
+            const paginatedReservaciones = allReservaciones.slice(startIndex, endIndex);
+
+            reservacionesList.innerHTML = paginatedReservaciones.map(reservacion => {
+                    const statusInfo = getStatusInfo(reservacion.estado_reserva);
+                    const fecha = formatDate(reservacion.fecha_reserva);
+                    const hora = formatTime(reservacion.hora_reserva);
+                    const esPasada = isPastReservation(reservacion.fecha_reserva, reservacion.hora_reserva);
+                    const numeroReserva = `#${reservacion.id_reservacion.toString().padStart(5, '0')}`;
+
+                    return `
+                        <div class="reservation-card bg-white rounded-lg shadow-md p-6 relative">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-xl font-semibold text-gray-800">${numeroReserva}</h3>
+                                <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                            </div>
+                            <div class="space-y-2 text-gray-600">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-calendar-alt text-orange-500"></i>
+                                    <span>${fecha}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-clock text-orange-500"></i>
+                                    <span>${hora}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-users text-orange-500"></i>
+                                    <span>${reservacion.cantidad_personas} ${reservacion.cantidad_personas === 1 ? 'persona' : 'personas'}</span>
+                                </div>
+                                ${reservacion.preferencia_mesa ? `
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-chair text-orange-500"></i>
+                                            <span>Mesa: ${reservacion.preferencia_mesa}</span>
+                                        </div>
+                                        ${!esPasada && reservacion.estado_reserva !== 'cancelada' && reservacion.estado_reserva !== 'rechazada' && reservacion.estado_reserva !== 'completada' ? `
+                                            <div class="flex items-center gap-2">
+                                                <button onclick="openReservationModal(${reservacion.id_reservacion})" 
+                                                        class="text-orange-600 hover:text-orange-700 transition text-lg"
+                                                        title="Editar reservación">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="cancelarReservacion(${reservacion.id_reservacion})" 
+                                                        class="text-red-600 hover:text-red-700 transition text-lg"
+                                                        title="Cancelar reservación">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                ` : (!esPasada && reservacion.estado_reserva !== 'cancelada' && reservacion.estado_reserva !== 'rechazada' && reservacion.estado_reserva !== 'completada' ? `
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button onclick="openReservationModal(${reservacion.id_reservacion})" 
+                                                class="text-orange-600 hover:text-orange-700 transition text-lg"
+                                                title="Editar reservación">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="cancelarReservacion(${reservacion.id_reservacion})" 
+                                                class="text-red-600 hover:text-red-700 transition text-lg"
+                                                title="Cancelar reservación">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                ` : '')}
+                                ${reservacion.notas_especiales ? `
+                                    <div class="flex items-start gap-2 mt-2">
+                                        <i class="fas fa-sticky-note text-orange-500 mt-1"></i>
+                                        <span class="text-sm">${reservacion.notas_especiales}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+
+            renderPagination(totalPages, startIndex, endIndex);
+        }
+
+        function renderPagination(totalPages, startIndex, endIndex) {
+            if (!paginationControls || !paginationSummary || !paginationInfo || !prevPageBtn || !nextPageBtn) {
+                return;
+            }
+
+            if (allReservaciones.length === 0) {
+                paginationControls.classList.add('hidden');
+                return;
+            }
+
+            paginationControls.classList.remove('hidden');
+
+            const total = allReservaciones.length;
+            const start = startIndex + 1;
+            const end = endIndex;
+
+            paginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} reservaciones`;
+            paginationInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+
+            const isFirstPage = currentPage <= 1;
+            const isLastPage = currentPage >= totalPages;
+
+            prevPageBtn.disabled = isFirstPage;
+            nextPageBtn.disabled = isLastPage;
+        }
+
+        function changePage(offset) {
+            goToPage(currentPage + offset);
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(allReservaciones.length / ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+            currentPage = page;
+            displayReservaciones();
+        }
+
+        async function cancelarReservacion(idReservacion) {
+            const result = await Swal.fire({
+                title: '¿Cancelar esta reservación?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/reservaciones/${idReservacion}/cancel`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Reservación cancelada!',
+                        text: 'Tu reservación ha sido cancelada exitosamente',
+                        confirmButtonColor: '#f97316'
+                    });
+                    loadMisReservas(); // Esto recargará todo y volverá a la página 1
+                } else {
+                    throw new Error(data.message || 'Error al cancelar reservación');
+                }
+            } catch (error) {
+                console.error('Error al cancelar reservación:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo cancelar la reservación',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+
+        function setupReservationModal() {
+            const modal = document.getElementById('reservationModal');
+            if (!modal) {
+                return;
+            }
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeReservationModal();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    const modalElement = document.getElementById('reservationModal');
+                    if (modalElement && modalElement.classList.contains('show')) {
+                        closeReservationModal();
+                    }
+                }
+            });
+
+            const form = document.getElementById('reservationModalForm');
+            if (form) {
+                form.addEventListener('submit', handleReservationUpdate);
+            }
+
+            const preferenceLabels = document.querySelectorAll('#reservationTablePreferences .table-preference');
+            preferenceLabels.forEach(label => {
+                label.addEventListener('click', () => {
+                    const radio = label.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                    updateReservationPreferenceStyles();
+                });
+            });
+
+            updateReservationPreferenceStyles();
+            clearReservationErrors();
+        }
+
+        function openReservationModal(idReservacion) {
+            const reservacion = allReservaciones.find(r => r.id_reservacion === idReservacion);
+            if (!reservacion) {
+                return;
+            }
+
+            currentReservationEditing = reservacion;
+
+            const modal = document.getElementById('reservationModal');
+            if (!modal) {
+                return;
+            }
+
+            clearReservationErrors();
+
+            const title = document.getElementById('reservationModalTitle');
+            if (title) {
+                title.textContent = `Reservación #${reservacion.id_reservacion.toString().padStart(5, '0')}`;
+            }
+
+            const subtitle = document.getElementById('reservationModalSubtitle');
+            if (subtitle) {
+                subtitle.textContent = `${formatReservationDateLabel(reservacion.fecha_reserva)} • ${formatReservationTimeLabel(reservacion.hora_reserva)} • ${formatPeopleLabel(reservacion.cantidad_personas)}`;
+            }
+
+            const reservationIdInput = document.getElementById('reservationId');
+            if (reservationIdInput) {
+                reservationIdInput.value = reservacion.id_reservacion;
+            }
+
+            const dateInput = document.getElementById('reservationDate');
+            if (dateInput) {
+                dateInput.value = formatDateForInput(reservacion.fecha_reserva);
+            }
+
+            const timeSelect = document.getElementById('reservationTime');
+            if (timeSelect) {
+                timeSelect.value = formatTimeForInput(reservacion.hora_reserva);
+            }
+
+            const peopleSelect = document.getElementById('reservationPeople');
+            if (peopleSelect) {
+                peopleSelect.value = reservacion.cantidad_personas || '';
+            }
+
+            const statusBadge = document.getElementById('reservationStatusBadge');
+            if (statusBadge) {
+                const statusInfo = getStatusInfo(reservacion.estado_reserva);
+                statusBadge.textContent = statusInfo.text;
+                statusBadge.className = `status-badge ${statusInfo.class}`;
+            }
+
+            setSelectedTablePreference(reservacion.preferencia_mesa || null);
+            updateReservationPreferenceStyles();
+
+            modal.classList.add('show');
+        }
+
+        function closeReservationModal() {
+            const modal = document.getElementById('reservationModal');
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove('show');
+            currentReservationEditing = null;
+
+            const form = document.getElementById('reservationModalForm');
+            if (form) {
+                form.reset();
+            }
+
+            updateReservationPreferenceStyles();
+            clearReservationErrors();
+        }
+
+        function updateReservationPreferenceStyles() {
+            const preferenceLabels = document.querySelectorAll('#reservationTablePreferences .table-preference');
+            preferenceLabels.forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    label.classList.add('active');
+                } else {
+                    label.classList.remove('active');
+                }
+            });
+        }
+
+        function getSelectedTablePreference() {
+            const selected = document.querySelector('#reservationTablePreferences input[type="radio"]:checked');
+            return selected ? selected.value : null;
+        }
+
+        function setSelectedTablePreference(value) {
+            const radios = document.querySelectorAll('#reservationTablePreferences input[type="radio"]');
+            radios.forEach(radio => {
+                radio.checked = value ? radio.value === value : false;
+            });
+        }
+
+        function clearReservationErrors() {
+            const errorElements = document.querySelectorAll('[data-reservation-error]');
+            errorElements.forEach(element => {
+                element.textContent = '';
+                element.classList.add('hidden');
+            });
+        }
+
+        function showReservationError(fieldKey, message) {
+            const errorElement = document.querySelector(`[data-reservation-error="${fieldKey}"]`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+
+        function showReservationErrors(errors) {
+            if (!Array.isArray(errors)) {
+                return;
+            }
+
+            const messages = [];
+
+            errors.forEach(error => {
+                if (!error || !error.message) {
+                    return;
+                }
+
+                if (error.field) {
+                    showReservationError(error.field, error.message);
+                }
+                messages.push(error.message);
+            });
+
+            if (messages.length > 0) {
+                const uniqueMessages = [...new Set(messages)];
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Revisa tu reservación',
+                    html: `<ul class="text-left space-y-1">${uniqueMessages.map(msg => `<li>• ${msg}</li>`).join('')}</ul>`,
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+
+        function formatDateForInput(fecha) {
+            if (!fecha) {
+                return '';
+            }
+            if (fecha.includes('T')) {
+                return fecha.split('T')[0];
+            }
+            return fecha;
+        }
+
+        function formatTimeForInput(hora) {
+            if (!hora) {
+                return '';
+            }
+            if (hora.includes(':')) {
+                const segments = hora.split(':');
+                return `${segments[0].padStart(2, '0')}:${(segments[1] || '00').padStart(2, '0')}`;
+            }
+            return hora;
+        }
+
+        function formatReservationDateLabel(fechaISO) {
+            if (!fechaISO) {
+                return '-';
+            }
+            const [year, month, day] = fechaISO.split('-').map(Number);
+            const date = new Date(year, (month || 1) - 1, day || 1);
+            return date.toLocaleDateString('es-ES', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function formatReservationTimeLabel(hora) {
+            if (!hora) {
+                return '-';
+            }
+            const segments = hora.split(':');
+            const hour = Number(segments[0] || 0);
+            const minutes = (segments[1] || '00').padStart(2, '0');
+            const period = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = ((hour + 11) % 12) + 1;
+            return `${hour12}:${minutes} ${period}`;
+        }
+
+        function formatPeopleLabel(cantidad) {
+            if (!cantidad) {
+                return '0 personas';
+            }
+            const numero = Number(cantidad);
+            return `${numero} ${numero === 1 ? 'persona' : 'personas'}`;
+        }
+
+        function mapBackendFieldToErrorKey(field) {
+            switch (field) {
+                case 'fecha_reserva':
+                    return 'fecha';
+                case 'hora_reserva':
+                    return 'hora';
+                case 'cantidad_personas':
+                    return 'personas';
+                default:
+                    return null;
+            }
+        }
+
+        async function handleReservationUpdate(event) {
+            event.preventDefault();
+
+            if (!currentReservationEditing) {
+                return;
+            }
+
+            clearReservationErrors();
+
+            const dateValue = document.getElementById('reservationDate').value;
+            const timeValue = document.getElementById('reservationTime').value;
+            const peopleValue = document.getElementById('reservationPeople').value;
+            const preferenceValue = getSelectedTablePreference();
+
+            const errors = [];
+
+            if (!dateValue) {
+                errors.push({ field: 'fecha', message: 'Selecciona una fecha para la reservación.' });
+            }
+
+            if (!timeValue) {
+                errors.push({ field: 'hora', message: 'Selecciona un horario disponible.' });
+            }
+
+            const peopleNumber = Number(peopleValue);
+            if (!peopleValue) {
+                errors.push({ field: 'personas', message: 'Selecciona la cantidad de personas.' });
+            } else if (!Number.isInteger(peopleNumber) || peopleNumber <= 0) {
+                errors.push({ field: 'personas', message: 'La cantidad de personas debe ser un número válido.' });
+            } else if (peopleNumber > reservasCapacidadMaxima) {
+                errors.push({ field: 'personas', message: `La capacidad máxima por reservación es de ${reservasCapacidadMaxima} personas.` });
+            }
+
+            if (dateValue && timeValue) {
+                const nuevaFecha = new Date(`${dateValue}T${timeValue}:00`);
+                if (Number.isNaN(nuevaFecha.getTime())) {
+                    errors.push({ field: 'fecha', message: 'La combinación de fecha y hora no es válida.' });
+                } else {
+                    const ahora = new Date();
+                    if (nuevaFecha < ahora) {
+                        errors.push({ field: 'fecha', message: 'La reservación debe mantenerse en una fecha y hora futuras.' });
+                    }
+                }
+            }
+
+            if (errors.length > 0) {
+                showReservationErrors(errors);
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicia sesión',
+                    text: 'Debes iniciar sesión para modificar tus reservaciones.',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            const saveButton = document.querySelector('#reservationModalForm button[type="submit"]');
+            if (saveButton) {
+                saveButton.disabled = true;
+                saveButton.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+
+            try {
+                const response = await fetch(`/api/reservaciones/${currentReservationEditing.id_reservacion}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        fecha_reserva: dateValue,
+                        hora_reserva: timeValue,
+                        cantidad_personas: peopleNumber,
+                        preferencia_mesa: preferenceValue || undefined
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    if (Array.isArray(result.errors) && result.errors.length > 0) {
+                        const mappedErrors = result.errors.map(error => {
+                            const fieldKey = mapBackendFieldToErrorKey(error.field);
+                            return fieldKey ? { field: fieldKey, message: error.message } : null;
+                        }).filter(Boolean);
+
+                        if (mappedErrors.length > 0) {
+                            showReservationErrors(mappedErrors);
+                        }
+                    }
+
+                    const message = result.message || 'No se pudo actualizar la reservación.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo actualizar',
+                        text: message,
+                        confirmButtonText: 'Entendido'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reservación actualizada',
+                    text: 'Los cambios se guardaron correctamente.',
+                    confirmButtonText: 'Perfecto'
+                }).then(() => {
+                    closeReservationModal();
+                    loadMisReservas();
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error inesperado',
+                    text: 'Ocurrió un problema al actualizar tu reservación. Intenta nuevamente.',
+                    confirmButtonText: 'Entendido'
+                });
+            } finally {
+                if (saveButton) {
+                    saveButton.disabled = false;
+                    saveButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

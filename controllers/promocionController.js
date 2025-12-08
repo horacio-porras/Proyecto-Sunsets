@@ -130,6 +130,56 @@ const mapProductosPorPromocion = (productosRelacionados) => {
 
 const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => {
     try {
+        // Cargar detalles de la promoción para enriquecer el contenido
+        let promoDetalle = null;
+        let productosNombres = [];
+        try {
+            const [promoRows] = await pool.execute(
+                `SELECT 
+                    id_promocion, nombre_promocion, descripcion, valor_descuento, 
+                    fecha_inicio, fecha_fin, alcance
+                 FROM promocion
+                 WHERE id_promocion = ?`,
+                [idPromocion]
+            );
+            if (promoRows.length > 0) {
+                promoDetalle = promoRows[0];
+                if (promoDetalle.alcance === 'producto') {
+                    const [prodRows] = await pool.execute(
+                        `SELECT p.nombre AS nombre_producto
+                         FROM producto_promocion pp
+                         INNER JOIN producto p ON p.id_producto = pp.id_producto
+                         WHERE pp.id_promocion = ?`,
+                        [idPromocion]
+                    );
+                    productosNombres = prodRows.map(r => r.nombre_producto).filter(Boolean);
+                }
+            }
+        } catch (e) {
+            console.warn('No se pudieron cargar detalles de la promoción para la notificación:', e?.message || e);
+        }
+
+        // Construir contenido enriquecido
+        let contenidoDetallado = contenido || '';
+        if (promoDetalle) {
+            const inicio = promoDetalle.fecha_inicio ? new Date(promoDetalle.fecha_inicio) : null;
+            const fin = promoDetalle.fecha_fin ? new Date(promoDetalle.fecha_fin) : null;
+            const vigencia = buildVigenciaLabel(inicio, fin);
+            const porcentaje = Number(promoDetalle.valor_descuento) || 0;
+            const alcance = promoDetalle.alcance === 'producto' ? 'Productos específicos' : 'Aplicable a todo el menú';
+            const productosTexto = productosNombres.length > 0 ? `Productos: ${productosNombres.slice(0, 6).join(', ')}${productosNombres.length > 6 ? '…' : ''}` : '';
+
+            const detalleLineas = [
+                `Descuento: ${porcentaje}%`,
+                `Vigencia: ${vigencia}`,
+                `Alcance: ${alcance}`,
+                productosTexto
+            ].filter(Boolean);
+
+            const resumen = detalleLineas.join(' • ');
+            contenidoDetallado = resumen + (contenidoDetallado ? ` — ${contenidoDetallado}` : '');
+        }
+
         const [clientes] = await pool.execute(`
             SELECT u.id_usuario, u.correo, u.nombre
             FROM cliente c
@@ -161,7 +211,7 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                     id_usuario, titulo, contenido, tipo_notificacion,
                     leida, fecha_envio, canal_envio
                 ) VALUES (?, ?, ?, 'Promoción', FALSE, NOW(), 'Correo')`,
-                [cliente.id_usuario, titulo, contenido]
+                [cliente.id_usuario, titulo, contenidoDetallado]
             );
 
             if (emailQueue && cliente.correo) {
@@ -171,8 +221,8 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                         {
                             to: cliente.correo,
                             subject: `[Sunset's Tarbaca] ${titulo}`,
-                            text: contenido,
-                            html: `<p>${contenido}</p>`,
+                            text: contenidoDetallado,
+                            html: `<p>${contenidoDetallado}</p>`,
                             from: process.env.EMAIL_FROM || 'no-reply@sunsets.local'
                         },
                         { attempts: 3, backoff: 5000 }
@@ -189,8 +239,8 @@ const enviarNotificacionesPromocion = async (idPromocion, titulo, contenido) => 
                         from: process.env.EMAIL_FROM || 'no-reply@sunsets.local',
                         to: cliente.correo,
                         subject: `[Sunset's Tarbaca] ${titulo}`,
-                        text: contenido,
-                        html: `<p>${contenido}</p>`
+                        text: contenidoDetallado,
+                        html: `<p>${contenidoDetallado}</p>`
                     });
                 } catch (mailErr) {
                     console.error(`Error al enviar correo a ${cliente.correo}:`, mailErr.message || mailErr);
@@ -384,6 +434,21 @@ const createPromocion = async (req, res) => {
                  VALUES ?`,
                 [valores]
             );
+
+            // Sincronizar descuentos de promoción con productos
+            if (activa) {
+                for (const productoId of productosSeleccionados) {
+                    await connection.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoId]
+                    );
+                }
+            }
         }
 
         await connection.commit();
@@ -459,7 +524,27 @@ const updatePromocion = async (req, res) => {
             ]
         );
 
+        // Obtener productos actuales de la promoción antes de eliminar
+        const [productosActuales] = await connection.execute(
+            `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+        const idsProductosActuales = productosActuales.map(p => p.id_producto);
+
         await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
+
+        // Desactivar descuentos en productos que ya no están en la promoción
+        if (idsProductosActuales.length > 0) {
+            await connection.execute(
+                `UPDATE producto 
+                 SET descuento_activo = 0,
+                     porcentaje_descuento = NULL,
+                     fecha_inicio_descuento = NULL,
+                     fecha_fin_descuento = NULL
+                 WHERE id_producto IN (${idsProductosActuales.map(() => '?').join(',')})`,
+                idsProductosActuales
+            );
+        }
 
         if (alcance === 'producto' && productosSeleccionados.length > 0) {
             const valores = productosSeleccionados.map((productoId) => [productoId, promocionId, new Date()]);
@@ -468,6 +553,21 @@ const updatePromocion = async (req, res) => {
                  VALUES ?`,
                 [valores]
             );
+
+            // Sincronizar descuentos de promoción con productos
+            if (activa) {
+                for (const productoId of productosSeleccionados) {
+                    await connection.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoId]
+                    );
+                }
+            }
         }
 
         await connection.commit();
@@ -514,6 +614,54 @@ const actualizarEstadoPromocion = async (req, res) => {
 
         await pool.execute(`UPDATE promocion SET activa = ? WHERE id_promocion = ?`, [normalizeBoolean(activa) ? 1 : 0, promocionId]);
 
+        // Sincronizar estado con productos si la promoción es de alcance "producto"
+        const [promocion] = await pool.execute(
+            `SELECT alcance FROM promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+
+        if (promocion.length > 0 && promocion[0].alcance === 'producto') {
+            const [productosPromocion] = await pool.execute(
+                `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+                [promocionId]
+            );
+
+            const [promocionDetalle] = await pool.execute(
+                `SELECT valor_descuento, fecha_inicio, fecha_fin FROM promocion WHERE id_promocion = ?`,
+                [promocionId]
+            );
+
+            const estaActiva = normalizeBoolean(activa);
+            const porcentajeDescuento = promocionDetalle[0]?.valor_descuento || null;
+            const fechaInicio = promocionDetalle[0]?.fecha_inicio || null;
+            const fechaFin = promocionDetalle[0]?.fecha_fin || null;
+
+            // Sincronizar estado con productos
+            for (const productoPromo of productosPromocion) {
+                if (estaActiva) {
+                    await pool.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 1,
+                             porcentaje_descuento = ?,
+                             fecha_inicio_descuento = ?,
+                             fecha_fin_descuento = ?
+                         WHERE id_producto = ?`,
+                        [porcentajeDescuento, fechaInicio, fechaFin, productoPromo.id_producto]
+                    );
+                } else {
+                    await pool.execute(
+                        `UPDATE producto 
+                         SET descuento_activo = 0,
+                             porcentaje_descuento = NULL,
+                             fecha_inicio_descuento = NULL,
+                             fecha_fin_descuento = NULL
+                         WHERE id_producto = ?`,
+                        [productoPromo.id_producto]
+                    );
+                }
+            }
+        }
+
         res.json({
             success: true,
             message: `Promoción ${normalizeBoolean(activa) ? 'activada' : 'desactivada'} correctamente`
@@ -548,8 +696,28 @@ const deletePromocion = async (req, res) => {
             });
         }
 
+        // Obtener productos de la promoción antes de eliminar
+        const [productosPromocion] = await connection.execute(
+            `SELECT id_producto FROM producto_promocion WHERE id_promocion = ?`,
+            [promocionId]
+        );
+        const idsProductos = productosPromocion.map(p => p.id_producto);
+
         await connection.execute(`DELETE FROM producto_promocion WHERE id_promocion = ?`, [promocionId]);
         await connection.execute(`DELETE FROM promocion WHERE id_promocion = ?`, [promocionId]);
+
+        // Desactivar descuentos en productos que estaban en esta promoción
+        if (idsProductos.length > 0) {
+            await connection.execute(
+                `UPDATE producto 
+                 SET descuento_activo = 0,
+                     porcentaje_descuento = NULL,
+                     fecha_inicio_descuento = NULL,
+                     fecha_fin_descuento = NULL
+                 WHERE id_producto IN (${idsProductos.map(() => '?').join(',')})`,
+                idsProductos
+            );
+        }
 
         await connection.commit();
 

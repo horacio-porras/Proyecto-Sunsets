@@ -10,21 +10,135 @@
   <script src="/js/auth.js"></script>
   <script src="/js/navbar.js"></script>
   <script src="/js/footer.js"></script>
+  <script src="/js/routeProtection.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
   <div id="navbar-container"></div>
   <main class="flex-1 container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6">
-      <h1 class="text-2xl font-bold mb-4">Notificaciones</h1>
-      <p class="text-sm text-gray-600 mb-4">Aquí verás las promociones y mensajes que te hemos enviado.</p>
-      <div id="notificationsContainer" class="space-y-3">
-        <div id="loading" class="text-gray-500">Cargando notificaciones...</div>
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Notificaciones</h1>
+          <p class="text-gray-600">Promociones y mensajes especiales para ti</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notificationsContainer">
+      <!-- Loading State -->
+      <div id="loading-state" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+            <p class="mt-3 text-gray-600">Cargando notificaciones...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden">
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+          <div class="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <i class="fas fa-bell-slash text-gray-400 text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay notificaciones</h3>
+          <p class="text-gray-600">Cuando recibas promociones o mensajes especiales, aparecerán aquí.</p>
+        </div>
+      </div>
+
+      <!-- Notifications List -->
+      <div id="notifications-list" class="space-y-4 hidden">
+        <!-- Las notificaciones se cargarán dinámicamente aquí -->
+      </div>
+
+      <div id="paginationControls" class="hidden mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div id="paginationSummary" class="text-sm text-gray-600">
+          Mostrando 0 - 0 de 0 notificaciones
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="prevPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-left mr-1"></i> Anterior
+          </button>
+          <div id="paginationInfo" class="text-sm font-semibold text-gray-700">
+            Página 1 de 1
+          </div>
+          <button id="nextPageBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente <i class="fas fa-chevron-right ml-1"></i>
+          </button>
+        </div>
       </div>
     </div>
   </main>
   <div id="footer-container" class="mt-auto"></div>
 
   <script>
+    let allNotifications = [];
+    let currentPage = 1;
+    const ITEMS_PER_PAGE = 5;
+
+    let paginationControls;
+    let paginationSummary;
+    let paginationInfo;
+    let prevPageBtn;
+    let nextPageBtn;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setupPaginationControls();
+      loadNotifications();
+    });
+
+    function setupPaginationControls() {
+      paginationControls = document.getElementById('paginationControls');
+      paginationSummary = document.getElementById('paginationSummary');
+      paginationInfo = document.getElementById('paginationInfo');
+      prevPageBtn = document.getElementById('prevPageBtn');
+      nextPageBtn = document.getElementById('nextPageBtn');
+
+      if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => changePage(-1));
+      }
+
+      if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => changePage(1));
+      }
+    }
+
+    // Función para parsear el contenido de la notificación
+    function parseNotificationContent(contenido) {
+      if (!contenido) return { descuento: '', vigencia: '', alcance: '', productos: '' };
+      
+      // Separar el contenido antes del " — " (que es donde empieza la descripción)
+      const contenidoSinDescripcion = contenido.split(' — ')[0];
+      
+      // El formato es "Descuento: X%" donde X puede ser un número entero o decimal
+      const descuentoMatch = contenidoSinDescripcion.match(/Descuento:\s*(\d+(?:\.\d+)?)%/);
+      const vigenciaMatch = contenidoSinDescripcion.match(/Vigencia:\s*([^•]+?)(?:\s*•|$)/);
+      const alcanceMatch = contenidoSinDescripcion.match(/Alcance:\s*([^•]+?)(?:\s*•|$)/);
+      const productosMatch = contenidoSinDescripcion.match(/Productos:\s*([^•]+?)(?:\s*•|$)/);
+      
+      return {
+        descuento: descuentoMatch ? `${descuentoMatch[1]}%` : '',
+        vigencia: vigenciaMatch ? vigenciaMatch[1].trim() : '',
+        alcance: alcanceMatch ? alcanceMatch[1].trim() : '',
+        productos: productosMatch ? productosMatch[1].trim() : ''
+      };
+    }
+
+    // Función para formatear fecha
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
     async function loadNotifications() {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -32,8 +146,13 @@
         return;
       }
 
-      const container = document.getElementById('notificationsContainer');
-      container.innerHTML = '<div id="loading" class="text-gray-500">Cargando notificaciones...</div>';
+      const loadingState = document.getElementById('loading-state');
+      const emptyState = document.getElementById('empty-state');
+      const notificationsList = document.getElementById('notifications-list');
+
+      loadingState.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      notificationsList.classList.add('hidden');
 
       try {
         const res = await fetch('/api/cliente/notificaciones', {
@@ -41,65 +160,258 @@
         });
         const data = await res.json();
         if (!data.success) {
-          container.innerHTML = '<div class="text-red-500">No se pudieron cargar las notificaciones.</div>';
-          return;
-        }
-
-        const nots = data.notificaciones || [];
-        if (nots.length === 0) {
-          container.innerHTML = '<div class="text-gray-600">No hay notificaciones.</div>';
-          return;
-        }
-
-        container.innerHTML = '';
-        nots.forEach(n => {
-          const div = document.createElement('div');
-          div.className = 'p-4 bg-gray-50 rounded-lg flex items-start justify-between';
-          div.innerHTML = `
-            <div>
-              <div class="font-semibold">${n.titulo}</div>
-              <div class="text-sm text-gray-600">${n.contenido}</div>
-              <div class="text-xs text-gray-400 mt-2">${new Date(n.fecha_envio).toLocaleString('es-ES')}</div>
-            </div>
-            <div class="ml-4 flex flex-col items-end">
-              <button class="mark-read text-sm text-blue-600 hover:underline" data-id="${n.id_notificacion}">${n.leida ? 'Leída' : 'Marcar como leída'}</button>
+          loadingState.classList.add('hidden');
+          emptyState.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar notificaciones</h3>
+              <p class="text-gray-600 mb-4">No se pudieron cargar las notificaciones. Intenta nuevamente.</p>
+              <button onclick="loadNotifications()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-lg font-semibold transition inline-flex items-center gap-2">
+                <i class="fas fa-redo"></i>
+                Reintentar
+              </button>
             </div>
           `;
-          container.appendChild(div);
-        });
+          emptyState.classList.remove('hidden');
+          return;
+        }
 
-        // attach handlers
-        document.querySelectorAll('.mark-read').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = e.target.dataset.id;
-            try {
-              const res = await fetch(`/api/cliente/notificaciones/${id}/leida`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-              });
-              const r = await res.json();
-              if (r.success) {
-                // reload
-                await loadNotifications();
-              } else {
-                alert('No se pudo marcar como leída');
-              }
-            } catch (err) {
-              console.error(err);
-              alert('Error al marcar notificación');
-            }
-          });
-        });
+        allNotifications = data.notificaciones || [];
+        currentPage = 1;
+        displayNotifications();
 
       } catch (err) {
         console.error('Error al cargar notificaciones:', err);
-        container.innerHTML = '<div class="text-red-500">Error al cargar notificaciones.</div>';
+        loadingState.classList.add('hidden');
+        emptyState.innerHTML = `
+          <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar notificaciones</h3>
+            <p class="text-gray-600 mb-4">Ocurrió un problema al conectar con el servidor.</p>
+            <button onclick="loadNotifications()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-lg font-semibold transition inline-flex items-center gap-2">
+              <i class="fas fa-redo"></i>
+              Reintentar
+            </button>
+          </div>
+        `;
+        emptyState.classList.remove('hidden');
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadNotifications();
-    });
+    function displayNotifications() {
+      const loadingState = document.getElementById('loading-state');
+      const emptyState = document.getElementById('empty-state');
+      const notificationsList = document.getElementById('notifications-list');
+
+      loadingState.classList.add('hidden');
+
+      if (allNotifications.length === 0) {
+        showEmptyState();
+        return;
+      }
+
+      notificationsList.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+
+      const totalPages = Math.ceil(allNotifications.length / ITEMS_PER_PAGE) || 1;
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+      if (currentPage < 1) {
+        currentPage = 1;
+      }
+
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allNotifications.length);
+      const paginatedNotifications = allNotifications.slice(startIndex, endIndex);
+
+      notificationsList.innerHTML = paginatedNotifications.map(n => createNotificationCard(n)).join('');
+      renderPagination(totalPages, startIndex, endIndex);
+      attachMarkReadHandlers();
+    }
+
+    function renderPagination(totalPages, startIndex, endIndex) {
+      if (!paginationControls || !paginationSummary || !paginationInfo || !prevPageBtn || !nextPageBtn) {
+        return;
+      }
+
+      if (allNotifications.length === 0) {
+        paginationControls.classList.add('hidden');
+        return;
+      }
+
+      paginationControls.classList.remove('hidden');
+
+      const total = allNotifications.length;
+      const start = startIndex + 1;
+      const end = endIndex;
+
+      paginationSummary.textContent = `Mostrando ${start} - ${end} de ${total} notificaciones`;
+      paginationInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+
+      const isFirstPage = currentPage <= 1;
+      const isLastPage = currentPage >= totalPages;
+
+      prevPageBtn.disabled = isFirstPage;
+      nextPageBtn.disabled = isLastPage;
+    }
+
+    function changePage(offset) {
+      goToPage(currentPage + offset);
+    }
+
+    function goToPage(page) {
+      const totalPages = Math.ceil(allNotifications.length / ITEMS_PER_PAGE) || 1;
+      if (page < 1 || page > totalPages) {
+        return;
+      }
+      currentPage = page;
+      displayNotifications();
+    }
+
+    function createNotificationCard(n) {
+      const parsed = parseNotificationContent(n.contenido);
+      return `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg ${n.leida ? 'opacity-75' : 'border-l-4 border-orange-500'}">
+          <div class="p-6">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div class="flex items-start gap-4 flex-1">
+                <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-tag text-white"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h3 class="text-lg font-bold text-gray-800">${n.titulo || 'Notificación'}</h3>
+                    ${!n.leida ? '<span class="inline-flex h-2 w-2 rounded-full bg-red-500"></span>' : ''}
+                  </div>
+                  ${parsed.descuento ? `
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold mb-2">
+                      <i class="fas fa-percent"></i>
+                      <span>${parsed.descuento} de descuento</span>
+                    </div>
+                  ` : ''}
+                  ${parsed.vigencia ? `
+                    <div class="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                      <i class="fas fa-calendar-alt text-orange-500"></i>
+                      <span>${parsed.vigencia}</span>
+                    </div>
+                  ` : ''}
+                  ${parsed.alcance ? `
+                    <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                      <i class="fas fa-scope text-blue-500"></i>
+                      <span>${parsed.alcance}</span>
+                    </div>
+                  ` : ''}
+                  ${parsed.productos ? `
+                    <div class="mt-2 p-3 bg-blue-50 rounded-lg">
+                      <div class="text-xs font-semibold text-blue-700 mb-1">Productos incluidos:</div>
+                      <div class="text-sm text-gray-700">${parsed.productos}</div>
+                    </div>
+                  ` : ''}
+                  <div class="flex items-center gap-2 text-xs text-gray-400 mt-4">
+                    <i class="fas fa-clock"></i>
+                    <span>${formatDate(n.fecha_envio)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col items-end gap-2">
+                ${!n.leida ? `
+                  <button class="mark-read px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2" data-id="${n.id_notificacion}">
+                    <i class="fas fa-check"></i>
+                    Marcar como leída
+                  </button>
+                ` : `
+                  <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
+                    <i class="fas fa-check-circle mr-1"></i>Leída
+                  </span>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachMarkReadHandlers() {
+      document.querySelectorAll('.mark-read').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const id = e.target.closest('button').dataset.id;
+          const button = e.target.closest('button');
+          
+          button.disabled = true;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+          
+          try {
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`/api/cliente/notificaciones/${id}/leida`, {
+              method: 'PATCH',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const r = await res.json();
+            if (r.success) {
+              await Swal.fire({
+                icon: 'success',
+                title: 'Notificación marcada',
+                text: 'La notificación ha sido marcada como leída.',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              await loadNotifications();
+              // Actualizar badge en navbar si existe
+              if (typeof updateNotificationBadge === 'function') {
+                updateNotificationBadge();
+              }
+            } else {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo marcar como leída. Intenta nuevamente.'
+              });
+              button.disabled = false;
+              button.innerHTML = '<i class="fas fa-check"></i> Marcar como leída';
+            }
+          } catch (err) {
+            console.error(err);
+            await Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Ocurrió un error al procesar la solicitud.'
+            });
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-check"></i> Marcar como leída';
+          }
+        });
+      });
+    }
+
+    function showEmptyState() {
+      const loadingState = document.getElementById('loading-state');
+      const emptyState = document.getElementById('empty-state');
+      const notificationsList = document.getElementById('notifications-list');
+
+      loadingState.classList.add('hidden');
+      notificationsList.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+
+      emptyState.innerHTML = `
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+          <div class="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <i class="fas fa-bell-slash text-gray-400 text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay notificaciones</h3>
+          <p class="text-gray-600">Cuando recibas promociones o mensajes especiales, aparecerán aquí.</p>
+        </div>
+      `;
+
+      if (paginationControls) {
+        paginationControls.classList.add('hidden');
+      }
+    }
   </script>
 </body>
 </html>
