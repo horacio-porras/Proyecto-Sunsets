@@ -52,12 +52,28 @@ function groupProductsByCategory(products) {
     products.forEach(product => {
         let category = product.category.toLowerCase().trim();
         
+        // Normalizar nombres de categorías de la base de datos
         const categoryMapping = {
+            'arroces': 'arroces',
+            'bebidas calientes': 'bebidas calientes',
+            'bebidas frías': 'bebidas frías',
+            'cafés fríos': 'cafés fríos',
+            'casados': 'casados',
+            'cortes de carne': 'cortes de carne',
+            'cócteles': 'cócteles',
+            'desayunos': 'desayunos',
+            'entradas': 'entradas',
+            'hamburguesas': 'hamburguesas',
+            'licores': 'licores',
+            'menú de niños': 'menú de niños',
+            'paninis': 'paninis',
+            'para el café': 'para el café',
             'pizzas': 'pizzas',
-            'entradas': 'entradas', 
-            'principales': 'principales',
-            'bebidas': 'bebidas',
-            'postres': 'postres'
+            'platos fuertes': 'platos fuertes',
+            'postres': 'postres',
+            'quesadillas': 'quesadillas',
+            'sandwiches': 'sandwiches',
+            'vinos': 'vinos'
         };
         
         category = categoryMapping[category] || category;
@@ -106,11 +122,26 @@ async function createCategorySection(categoryName, products) {
 //Función para obtener nombre de categoría para mostrar
 function getCategoryDisplayName(categoryName) {
     const categoryNames = {
-        'pizzas': 'Pizzas Artesanales',
+        'arroces': 'Arroces',
+        'bebidas calientes': 'Bebidas Calientes',
+        'bebidas frías': 'Bebidas Frías',
+        'cafés fríos': 'Cafés Fríos',
+        'casados': 'Casados',
+        'cortes de carne': 'Cortes de Carne',
+        'cócteles': 'Cócteles',
+        'desayunos': 'Desayunos',
         'entradas': 'Entradas',
-        'principales': 'Platos Principales',
-        'bebidas': 'Bebidas',
-        'postres': 'Postres'
+        'hamburguesas': 'Hamburguesas',
+        'licores': 'Licores',
+        'menú de niños': 'Menú de Niños',
+        'paninis': 'Paninis',
+        'para el café': 'Para el Café',
+        'pizzas': 'Pizzas',
+        'platos fuertes': 'Platos Fuertes',
+        'postres': 'Postres',
+        'quesadillas': 'Quesadillas',
+        'sandwiches': 'Sandwiches',
+        'vinos': 'Vinos'
     };
     
     return categoryNames[categoryName] || categoryName.charAt(0).toUpperCase() + categoryName.slice(1);

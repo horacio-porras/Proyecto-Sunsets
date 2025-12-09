@@ -9,7 +9,6 @@ const PROTECTED_ROUTES = {
     '/cliente/mis-pedidos.html': 'Cliente',
     '/cliente/mis-opiniones.html': 'Cliente',
     '/cliente/mis-reservas.html': 'Cliente',
-    '/pedidos.html': 'Cliente', // Solo clientes pueden hacer pedidos
     
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',
@@ -36,6 +35,7 @@ const PUBLIC_ROUTES = [
     '/reservaciones.html',
     '/about.html',
     '/contacto.html'
+    // Nota: /pedidos.html se maneja de forma especial arriba para permitir invitados y bloquear admin/empleado
 ];
 
 //Función para obtener el usuario actual desde localStorage
@@ -69,12 +69,7 @@ function redirectToHome() {
 function checkRouteProtection() {
     const currentPath = window.location.pathname;
     
-    //Verifica si la ruta actual es pública
-    if (PUBLIC_ROUTES.includes(currentPath)) {
-        return;
-    }
-    
-    //Bloquear acceso de admin y empleado a pedidos.html
+    //Bloquear acceso de admin y empleado a pedidos.html (antes de verificar si es pública)
     if (currentPath === '/pedidos.html') {
         const user = getCurrentUser();
         if (user && (user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado')) {
@@ -82,6 +77,13 @@ function checkRouteProtection() {
             redirectToHome();
             return;
         }
+        // Si no es admin/empleado, permitir acceso (es ruta pública para clientes e invitados)
+        return;
+    }
+    
+    //Verifica si la ruta actual es pública
+    if (PUBLIC_ROUTES.includes(currentPath)) {
+        return;
     }
     
     //Verifica si la ruta actual requiere autenticación
