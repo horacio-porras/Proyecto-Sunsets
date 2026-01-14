@@ -240,7 +240,7 @@
                                         
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Número de Teléfono *</label>
-                                            <input type="tel" id="registerTelefono" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                            <input type="text" id="registerTelefono" required maxlength="8" pattern="[0-9]{8}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="88888888" inputmode="numeric">
                                         </div>
                                     </div>
                                 </div>
@@ -307,6 +307,66 @@
 </div>
 
 <!-- Modal Olvidé mi Contraseña -->
+<!-- Change Temporary Password Modal -->
+<div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" style="z-index: 9999;">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full modal-content">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Cambiar Contraseña</h2>
+                <!-- No permitir cerrar el modal -->
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Mensaje informativo -->
+                <div class="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded mb-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle mr-2 mt-1"></i>
+                        <div>
+                            <p class="font-semibold">Contraseña temporal detectada</p>
+                            <p class="text-sm mt-1">Debes cambiar tu contraseña antes de continuar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje de error -->
+                <div id="changePasswordErrorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <span id="changePasswordErrorText"></span>
+                </div>
+
+                <form id="changePasswordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña *</label>
+                        <div class="relative">
+                            <input type="password" id="newPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Mínimo 6 caracteres">
+                            <button type="button" onclick="toggleNewPassword()" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye" id="newPasswordIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nueva Contraseña *</label>
+                        <div class="relative">
+                            <input type="password" id="confirmNewPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Confirma tu nueva contraseña" oninput="validatePasswordMatch()">
+                            <button type="button" onclick="toggleConfirmNewPassword()" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye" id="confirmNewPasswordIcon"></i>
+                            </button>
+                        </div>
+                        <p id="passwordMatchError" class="text-red-600 text-sm mt-1 hidden">Las contraseñas no coinciden</p>
+                    </div>
+                    
+                    <button type="submit" id="changePasswordBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="changePasswordBtnText">Cambiar Contraseña</span>
+                        <i id="changePasswordBtnSpinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="forgotPasswordModalContent">
@@ -329,35 +389,7 @@
                             <input type="email" id="forgotPasswordEmail" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                                    placeholder="Ingresa tu correo electrónico">
-                        </div>
-                        
-                        <!-- Nueva Contraseña -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña</label>
-                            <div class="relative">
-                                <input type="password" id="forgotPasswordNewPassword" required
-                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                       placeholder="Nueva contraseña">
-                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordNewPassword', 'forgotPasswordNewPasswordIcon')"
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-eye" id="forgotPasswordNewPasswordIcon"></i>
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, incluir mayúsculas y números</p>
-                        </div>
-                        
-                        <!-- Confirmar Nueva Contraseña -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nueva Contraseña</label>
-                            <div class="relative">
-                                <input type="password" id="forgotPasswordConfirmPassword" required
-                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                       placeholder="Confirma tu nueva contraseña">
-                                <button type="button" onclick="toggleForgotPasswordVisibility('forgotPasswordConfirmPassword', 'forgotPasswordConfirmPasswordIcon')"
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-eye" id="forgotPasswordConfirmPasswordIcon"></i>
-                                </button>
-                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Te enviaremos un enlace para recuperar tu contraseña</p>
                         </div>
                     </div>
                     
@@ -365,10 +397,10 @@
                     <div class="mt-6">
                         <button type="submit" id="forgotPasswordBtn"
                                 class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span id="forgotPasswordBtnText">Cambiar Contraseña</span>
+                            <span id="forgotPasswordBtnText">Enviar Enlace</span>
                             <span id="forgotPasswordBtnSpinner" class="hidden">
                                 <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Cambiando...
+                                Enviando...
                             </span>
                         </button>
                     </div>

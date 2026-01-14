@@ -483,10 +483,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadNavbar();
             inicializarControlesPaginacionInventario();
-            cargarInventario();
-            cargarEstadisticas();
             setupEventListeners();
             inicializarModalHistorialMovimientos();
+            cargarInventario();
+            cargarEstadisticas();
         });
 
         //Configura los event listeners
@@ -707,13 +707,27 @@
         function renderizarInventario() {
             const tbody = document.getElementById('tablaInventario');
             const mensajeVacio = document.getElementById('mensajeVacio');
+            const busquedaInput = document.getElementById('buscarItem');
+            const filtroAreaElement = document.getElementById('filtroArea');
+            const filtroStockElement = document.getElementById('filtroStock');
+            
+            const busqueda = busquedaInput ? busquedaInput.value.trim() : '';
+            const filtroArea = filtroAreaElement ? filtroAreaElement.value : '';
+            const filtroStock = filtroStockElement ? filtroStockElement.value : '';
+            const hayFiltrosActivos = busqueda !== '' || filtroArea !== '' || filtroStock !== '';
  
             if (!inventarioFiltrado || inventarioFiltrado.length === 0) {
+                let mensaje = 'No hay items en el inventario';
+                if (hayFiltrosActivos && inventario.length > 0) {
+                    mensaje = 'No se encontraron items que coincidan con la búsqueda';
+                }
+                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center py-8 text-gray-500">
                             <i class="fas fa-box-open text-4xl mb-4"></i>
-                            <p>No hay items en el inventario</p>
+                            <p>${mensaje}</p>
+                            ${hayFiltrosActivos ? '<p class="text-sm mt-2">Intenta ajustar los filtros de búsqueda</p>' : ''}
                         </td>
                     </tr>
                 `;
@@ -809,14 +823,19 @@
 
         //Filtra el inventario
         function filtrarInventario() {
-            const filtroArea = document.getElementById('filtroArea').value;
-            const filtroStock = document.getElementById('filtroStock').value;
-            const busqueda = document.getElementById('buscarItem').value.toLowerCase();
+            const filtroAreaElement = document.getElementById('filtroArea');
+            const filtroStockElement = document.getElementById('filtroStock');
+            const busquedaInput = document.getElementById('buscarItem');
+            
+            const filtroArea = filtroAreaElement ? filtroAreaElement.value : '';
+            const filtroStock = filtroStockElement ? filtroStockElement.value : '';
+            const busqueda = busquedaInput ? busquedaInput.value.trim().toLowerCase() : '';
 
             inventarioFiltrado = inventario.filter(item => {
                 const cumpleArea = !filtroArea || item.area === filtroArea;
                 const cumpleStock = !filtroStock || item.estado_stock === filtroStock;
-                const cumpleBusqueda = !busqueda || item.nombre.toLowerCase().includes(busqueda);
+                const cumpleBusqueda = busqueda === '' || 
+                    (item.nombre && item.nombre.toLowerCase().startsWith(busqueda));
 
                 return cumpleArea && cumpleStock && cumpleBusqueda;
             });
@@ -1218,6 +1237,18 @@
                 .replace(/'/g, '&#39;');
         }
  
+        //Cierra el modal movimiento
+        function cerrarModalMovimiento() {
+            const modal = document.getElementById('modalMovimiento');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            const formMovimiento = document.getElementById('formMovimiento');
+            if (formMovimiento) {
+                formMovimiento.reset();
+            }
+        }
+
         //Registra movimiento
         function registrarMovimiento(id) {
             const item = inventario.find(i => i.id === id);

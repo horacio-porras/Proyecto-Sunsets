@@ -600,14 +600,26 @@
         //Renderiza los productos
         function renderizarProductos() {
             const tbody = document.getElementById('tablaProductos');
+            const busquedaInput = document.getElementById('buscarProducto');
+            const busqueda = busquedaInput ? busquedaInput.value.trim() : '';
+            const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const hayFiltrosActivos = busqueda !== '' || filtroCategoria !== '' || filtroEstado !== '';
  
             if (!productosFiltrados || productosFiltrados.length === 0) {
+                let mensaje = 'No hay productos';
+                let subMensaje = 'Comienza agregando un nuevo producto al menú';
+                if (hayFiltrosActivos && productos.length > 0) {
+                    mensaje = 'No se encontraron productos que coincidan con la búsqueda';
+                    subMensaje = 'Intenta ajustar los filtros de búsqueda';
+                }
+                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-8 text-gray-500">
                             <i class="fas fa-utensils text-4xl mb-4 text-gray-300"></i>
-                            <p class="text-lg font-medium">No hay productos</p>
-                            <p class="text-gray-500">Comienza agregando un nuevo producto al menú</p>
+                            <p class="text-lg font-medium">${mensaje}</p>
+                            <p class="text-gray-500">${subMensaje}</p>
                         </td>
                     </tr>
                 `;
@@ -968,16 +980,17 @@
         function filtrarProductos() {
             const filtroCategoria = document.getElementById('filtroCategoria').value;
             const filtroEstado = document.getElementById('filtroEstado').value;
-            const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
+            const busquedaInput = document.getElementById('buscarProducto');
+            const buscarProducto = busquedaInput ? busquedaInput.value.trim().toLowerCase() : '';
 
             productosFiltrados = productos.filter(producto => {
                 const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
                 const coincideEstado = !filtroEstado || 
                     (filtroEstado === 'disponible' && producto.disponible) ||
                     (filtroEstado === 'no_disponible' && !producto.disponible);
-                const coincideBusqueda = !buscarProducto || 
-                    producto.nombre.toLowerCase().includes(buscarProducto) ||
-                    (producto.descripcion && producto.descripcion.toLowerCase().includes(buscarProducto));
+                const coincideBusqueda = buscarProducto === '' || 
+                    (producto.nombre && producto.nombre.toLowerCase().startsWith(buscarProducto)) ||
+                    (producto.descripcion && producto.descripcion.toLowerCase().startsWith(buscarProducto));
 
                 return coincideCategoria && coincideEstado && coincideBusqueda;
             });

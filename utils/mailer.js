@@ -198,7 +198,127 @@ async function sendReservationEmail({ to, nombre, numeroReserva, fecha, hora, pe
   }
 }
 
+async function sendPasswordResetEmail({ to, nombre, resetLink }) {
+  const provider = await getMailProvider();
+  const { MAIL_BCC, REPLY_TO } = process.env;
+
+  const subject = `Recuperar Contraseña - Sunset's Tarbaca`;
+  
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #f97316; border-bottom: 2px solid #f97316; padding-bottom: 10px;">Recuperar Contraseña</h2>
+  
+  <p>Hola <strong>${nombre || 'Usuario'}</strong>,</p>
+  
+  <p>Recibimos una solicitud para recuperar tu contraseña en <strong>Sunset's Tarbaca</strong>.</p>
+  
+  <p>Para establecer una nueva contraseña, haz clic en el siguiente enlace:</p>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${resetLink}" style="background-color: #f97316; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Restablecer Contraseña</a>
+  </div>
+  
+  <p>O copia y pega este enlace en tu navegador:</p>
+  <p style="background-color: #f9f9f9; padding: 10px; border-left: 4px solid #f97316; word-break: break-all;">${resetLink}</p>
+  
+  <p><strong>Este enlace expirará en 1 hora.</strong></p>
+  
+  <p>Si no solicitaste recuperar tu contraseña, ignora este correo.</p>
+  
+  <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+  
+  <p style="font-size: 12px; color: #777;">Este es un correo automático. Por favor no respondas a este mensaje.</p>
+</body>
+</html>`;
+
+  const text = `Recuperar Contraseña\n\n` +
+    `Hola ${nombre || 'Usuario'},\n\n` +
+    `Recibimos una solicitud para recuperar tu contraseña en Sunset's Tarbaca.\n\n` +
+    `Para establecer una nueva contraseña, visita el siguiente enlace:\n\n` +
+    `${resetLink}\n\n` +
+    `Este enlace expirará en 1 hora.\n\n` +
+    `Si no solicitaste recuperar tu contraseña, ignora este correo.\n\n` +
+    `---\n` +
+    `Este es un correo automático.`;
+
+  try {
+    console.log(`[Mailer] Intentando enviar correo de recuperación de contraseña a: ${to}`);
+    console.log(`[Mailer] Proveedor: ${provider.type}`);
+    console.log(`[Mailer] Desde: ${provider.from}`);
+
+    let result;
+
+    // Enviar con Resend
+    if (provider.type === 'resend') {
+      const emailData = {
+        from: provider.from,
+        to: [to],
+        subject,
+        text,
+        html,
+        reply_to: REPLY_TO && REPLY_TO.trim().length > 0 ? REPLY_TO : undefined,
+      };
+
+      result = await provider.client.emails.send(emailData);
+      
+      if (MAIL_BCC && MAIL_BCC.trim().length > 0) {
+        await provider.client.emails.send({
+          ...emailData,
+          to: [MAIL_BCC],
+          subject: `[BCC] ${subject}`,
+        });
+      }
+
+      console.log(`[Mailer] ✓ Correo de recuperación enviado vía Resend. ID: ${result.data?.id || result.id}`);
+      return { info: result, previewUrl: undefined };
+    }
+
+    // Enviar con SMTP (Gmail u otro)
+    if (provider.type === 'smtp' || provider.type === 'smtp-test') {
+      const headers = {
+        'List-Unsubscribe': '<mailto:sunsettarb@gmail.com?subject=BAJA>',
+      };
+
+      const info = await provider.transporter.sendMail({
+        from: provider.from,
+        to,
+        bcc: MAIL_BCC && MAIL_BCC.trim().length > 0 ? MAIL_BCC : undefined,
+        replyTo: REPLY_TO && REPLY_TO.trim().length > 0 ? REPLY_TO : undefined,
+        subject,
+        text,
+        html,
+        headers
+      });
+
+      const accepted = Array.isArray(info.accepted) ? info.accepted.join(', ') : String(info.accepted);
+      const rejected = Array.isArray(info.rejected) ? info.rejected.join(', ') : String(info.rejected);
+      console.log(`[Mailer] ✓ Correo de recuperación enviado vía SMTP. Message-ID: ${info.messageId}`);
+      console.log(`[Mailer] SMTP response: ${info.response || '(sin response)'}`);
+      console.log(`[Mailer] accepted: ${accepted || '[]'} | rejected: ${rejected || '[]'}`);
+
+      const previewUrl = provider.type === 'smtp-test' ? nodemailer.getTestMessageUrl(info) : undefined;
+      if (previewUrl) {
+        console.log(`[Mailer] Preview URL: ${previewUrl}`);
+      }
+
+      return { info, previewUrl };
+    }
+
+    throw new Error(`Tipo de proveedor no soportado: ${provider.type}`);
+  } catch (error) {
+    console.error(`[Mailer] ✗ ERROR enviando correo de recuperación a ${to}:`, error.message);
+    console.error(`[Mailer] Detalles del error:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendReservationEmail,
+  sendPasswordResetEmail,
   getMailProvider
 };

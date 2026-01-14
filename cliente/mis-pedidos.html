@@ -856,7 +856,26 @@
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
-                    window.open(url, '_blank');
+                    
+                    // Intentar abrir en nueva ventana
+                    const newWindow = window.open(url, '_blank');
+                    
+                    // Si window.open fue bloqueado, usar elemento <a> como alternativa
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        // Como alternativa, abrir el PDF usando un elemento <a>
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.target = '_blank';
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                    
+                    // Limpiar la URL después de un tiempo para liberar memoria
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                    }, 10000);
                 } else {
                     const result = await response.json();
                     Swal.fire({
@@ -900,10 +919,18 @@
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `factura_${facturaId}.pdf`;
+                    a.style.display = 'none';
                     document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
+                    
+                    // Limpiar el elemento después de un breve delay
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        // Limpiar la URL después de un tiempo para permitir que la descarga se complete
+                        setTimeout(() => {
+                            window.URL.revokeObjectURL(url);
+                        }, 100);
+                    }, 100);
                     
                     Swal.fire({
                         icon: 'success',

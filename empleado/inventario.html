@@ -592,12 +592,14 @@
         function filtrarInventario() {
             const filtroArea = document.getElementById('filtroArea').value;
             const filtroStock = document.getElementById('filtroStock').value;
-            const busqueda = document.getElementById('buscarItem').value.toLowerCase();
+            const busquedaInput = document.getElementById('buscarItem');
+            const busqueda = busquedaInput ? busquedaInput.value.trim().toLowerCase() : '';
 
             inventarioFiltrado = inventario.filter(item => {
                 const cumpleArea = !filtroArea || item.area === filtroArea;
                 const cumpleStock = !filtroStock || item.estado_stock === filtroStock;
-                const cumpleBusqueda = !busqueda || item.nombre.toLowerCase().includes(busqueda);
+                const cumpleBusqueda = busqueda === '' || 
+                    (item.nombre && item.nombre.toLowerCase().startsWith(busqueda));
 
                 return cumpleArea && cumpleStock && cumpleBusqueda;
             });

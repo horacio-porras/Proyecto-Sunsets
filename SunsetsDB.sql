@@ -17,6 +17,7 @@ CREATE TABLE usuario (
     id_rol INT,
     fecha_registro DATETIME,
     activo BOOLEAN,
+    contrasena_temporal BOOLEAN DEFAULT 0,
     FOREIGN KEY (id_rol) REFERENCES rol(id_rol)
 );
 
