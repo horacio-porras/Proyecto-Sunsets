@@ -277,12 +277,12 @@
                             </div>
 
                             <!-- Empty State -->
-                            <div id="opinionesEmpty" class="text-center py-4 hidden">
-                                <i class="fas fa-star text-gray-300 text-2xl mb-2"></i>
-                                <p class="text-sm text-gray-500">Aún no has dejado opiniones</p>
-                                <a href="/cliente/mis-pedidos.html" class="text-xs text-orange-600 hover:text-orange-700 mt-2 inline-block">
-                                    Calificar pedidos
-                                </a>
+                            <div id="opinionesEmpty" class="text-center py-8 hidden">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-star text-gray-400 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Aún no has dejado opiniones</h3>
+                                <p class="text-gray-600">Deja tu primera opinión y aparecerá aquí.</p>
                             </div>
                         </div>
                     </div>
@@ -385,20 +385,10 @@
                             <i class="fas fa-gift text-gray-400 text-2xl"></i>
                         </div>
                         <h4 class="text-lg font-semibold text-gray-800 mb-2">No has canjeado recompensas aún</h4>
-                        <p class="text-sm text-gray-600 mb-4">Canjea puntos por descuentos y experiencias exclusivas.</p>
-                        <button type="button" onclick="openRewardsModal()"
-                            class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
-                            <i class="fas fa-gift"></i>
-                            Ver Catálogo
-                        </button>
+                        <p class="text-sm text-gray-600">Canjea puntos por descuentos y experiencias exclusivas.</p>
                     </div>
 
-                    <div id="myRewardsList" class="space-y-3 max-h-96 overflow-y-auto">
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-gift text-4xl mb-3 text-gray-300"></i>
-                            <p class="text-sm">Aún no has canjeado ninguna recompensa.</p>
-                            <p class="text-xs text-gray-400 mt-1">Tus recompensas canjeadas aparecerán aquí.</p>
-                        </div>
+                    <div id="myRewardsList" class="space-y-3 max-h-96 overflow-y-auto hidden">
                     </div>
                 </div>
 
@@ -1345,17 +1335,12 @@
 
             if (canjes.length === 0) {
                 emptyElement.classList.remove('hidden');
-                listElement.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-gift text-4xl mb-3 text-gray-300"></i>
-                        <p class="text-sm">Aún no has canjeado ninguna recompensa.</p>
-                        <p class="text-xs text-gray-400 mt-1">Tus recompensas canjeadas aparecerán aquí.</p>
-                    </div>
-                `;
+                listElement.classList.add('hidden');
                 return;
             }
 
             emptyElement.classList.add('hidden');
+            listElement.classList.remove('hidden');
             listElement.innerHTML = '';
 
             canjes.forEach(canje => {

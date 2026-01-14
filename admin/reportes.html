@@ -34,6 +34,17 @@
             display: flex;
             flex-direction: column;
         }
+
+        .accion-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .accion-create { background-color: #dcfce7; color: #166534; }
+        .accion-update { background-color: #dbeafe; color: #1e40af; }
+        .accion-delete { background-color: #fecaca; color: #dc2626; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -150,9 +161,29 @@
                         </label>
                     </div>
 
-                    <button onclick="generarReporte()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
-                        <i class="fas fa-download mr-2"></i>Generar y Descargar Reporte
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="generarReporte()" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
+                            <i class="fas fa-eye mr-2"></i>Generar Reporte
+                        </button>
+                        <button onclick="descargarReporte()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
+                            <i class="fas fa-download mr-2"></i>Descargar Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección para mostrar el reporte generado -->
+            <div id="reporteGeneradoSection" class="hidden bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-chart-bar mr-2"></i>Reporte Generado
+                    </h2>
+                    <button onclick="cerrarReporteGenerado()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
+                </div>
+                <div id="reporteContenido" class="overflow-x-auto">
+                    <!-- El contenido del reporte se mostrará aquí -->
                 </div>
             </div>
         </div>
@@ -162,6 +193,7 @@
 
     <script>
         let tipoReporteSeleccionado = null;
+        let datosReporteGenerado = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadNavbar();
@@ -252,6 +284,95 @@
                     throw new Error('No hay token de autenticación');
                 }
 
+                // Construir URL con parámetros para obtener datos en JSON
+                let url = `/api/reportes/${tipoReporteSeleccionado}?vista=web`;
+                const fechaDesde = document.getElementById('fechaDesde').value;
+                const fechaHasta = document.getElementById('fechaHasta').value;
+
+                if (fechaDesde) {
+                    url += `&fechaDesde=${encodeURIComponent(fechaDesde)}`;
+                }
+                if (fechaHasta) {
+                    url += `&fechaHasta=${encodeURIComponent(fechaHasta)}`;
+                }
+
+                if (tipoReporteSeleccionado === 'pedidos') {
+                    const estado = document.getElementById('estadoFilter').value;
+                    if (estado) {
+                        url += `&estado=${encodeURIComponent(estado)}`;
+                    }
+                }
+
+                if (tipoReporteSeleccionado === 'actividad') {
+                    const tabla = document.getElementById('tablaFilter').value;
+                    if (tabla) {
+                        url += `&tabla=${encodeURIComponent(tabla)}`;
+                    }
+                }
+
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Generando reporte...',
+                    html: 'Por favor espera mientras se obtienen los datos',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Obtener datos en JSON
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'Error al generar el reporte');
+                }
+
+                const data = await response.json();
+                datosReporteGenerado = data.data;
+
+                // Cerrar loading
+                Swal.close();
+
+                // Mostrar el reporte en la página
+                mostrarReporteEnPagina(data.data, tipoReporteSeleccionado);
+
+            } catch (error) {
+                console.error('Error al generar reporte:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo generar el reporte'
+                });
+            }
+        }
+
+        async function descargarReporte() {
+            if (!tipoReporteSeleccionado) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selecciona un reporte',
+                    text: 'Por favor selecciona un tipo de reporte antes de continuar'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
                 // Obtener formato seleccionado
                 const formato = document.querySelector('input[name="formato"]:checked').value;
 
@@ -283,7 +404,7 @@
 
                 // Mostrar loading
                 Swal.fire({
-                    title: 'Generando reporte...',
+                    title: 'Generando archivo...',
                     html: 'Por favor espera mientras se genera el archivo',
                     allowOutsideClick: false,
                     didOpen: () => {
@@ -335,20 +456,243 @@
 
                 Swal.fire({
                     icon: 'success',
-                    title: '¡Reporte generado!',
+                    title: '¡Reporte descargado!',
                     text: 'El archivo se ha descargado correctamente',
                     timer: 2000,
                     showConfirmButton: false
                 });
 
             } catch (error) {
-                console.error('Error al generar reporte:', error);
+                console.error('Error al descargar reporte:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: error.message || 'No se pudo generar el reporte'
+                    text: error.message || 'No se pudo descargar el reporte'
                 });
             }
+        }
+
+        function mostrarReporteEnPagina(datos, tipo) {
+            const seccion = document.getElementById('reporteGeneradoSection');
+            const contenido = document.getElementById('reporteContenido');
+
+            seccion.classList.remove('hidden');
+
+            let html = '';
+
+            switch(tipo) {
+                case 'ventas':
+                    html = generarHTMLVentas(datos);
+                    break;
+                case 'clientes':
+                    html = generarHTMLClientes(datos);
+                    break;
+                case 'pedidos':
+                    html = generarHTMLPedidos(datos);
+                    break;
+                case 'actividad':
+                    html = generarHTMLActividad(datos);
+                    break;
+                default:
+                    html = '<p class="text-gray-500">Tipo de reporte no reconocido</p>';
+            }
+
+            contenido.innerHTML = html;
+
+            // Scroll suave a la sección del reporte
+            seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function generarHTMLVentas(datos) {
+            const fechaDesde = datos.fechaDesde || 'Inicio';
+            const fechaHasta = datos.fechaHasta || 'Hoy';
+            
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Ventas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Total de Pedidos</p>
+                            <p class="text-2xl font-bold text-blue-600">${datos.totalPedidos || 0}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Total de Ventas</p>
+                            <p class="text-2xl font-bold text-green-600">₡${parseFloat(datos.totalVentas || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Promedio por Pedido</p>
+                            <p class="text-2xl font-bold text-purple-600">₡${parseFloat(datos.promedioPedido || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Período: ${fechaDesde} - ${fechaHasta}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Pedido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.pedidos || []).map(pedido => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.id_pedido}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(pedido.fecha_pedido).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente Invitado'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            ${pedido.estado_pedido}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLClientes(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Listado de Clientes</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de clientes: ${datos.totalClientes || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Pedidos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Gastado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.clientes || []).map(cliente => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id_cliente}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.nombre || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.total_pedidos || 0}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(cliente.total_gastado || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLPedidos(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalle de Pedidos</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de pedidos: ${datos.totalPedidos || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Pedido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.pedidos || []).map(pedido => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.id_pedido}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(pedido.fecha_pedido).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente Invitado'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            ${pedido.estado_pedido}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLActividad(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Registro de Actividad</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de registros: ${datos.totalRegistros || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tabla</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.registros || []).map(registro => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(registro.fecha_accion).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${registro.usuario_nombre || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.tabla_afectada || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="accion-badge ${getAccionBadgeClass(registro.accion)}">
+                                            ${formatAccion(registro.accion)}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getAccionBadgeClass(accion) {
+            switch(accion?.toUpperCase()) {
+                case 'CREATE':
+                    return 'accion-create';
+                case 'UPDATE':
+                    return 'accion-update';
+                case 'DELETE':
+                    return 'accion-delete';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function formatAccion(accion) {
+            switch(accion?.toUpperCase()) {
+                case 'CREATE':
+                    return 'Crear';
+                case 'UPDATE':
+                    return 'Actualizar';
+                case 'DELETE':
+                    return 'Eliminar';
+                default:
+                    return accion || 'N/A';
+            }
+        }
+
+        function cerrarReporteGenerado() {
+            document.getElementById('reporteGeneradoSection').classList.add('hidden');
+            datosReporteGenerado = null;
         }
     </script>
 </body>

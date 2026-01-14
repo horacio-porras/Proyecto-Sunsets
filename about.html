@@ -11,6 +11,7 @@
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
+    <script src="/js/chatbot.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -218,6 +219,120 @@
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
+
+    <!-- ChatBot -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button id="chatbotButton" onclick="toggleChatbot()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
+            <i class="fas fa-comments text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Modal del Chatbot -->
+    <div id="chatbotModal" class="fixed bottom-4 right-4 z-50 hidden w-full max-w-md h-[600px] flex flex-col">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full flex flex-col">
+            <!-- Header del Chatbot -->
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-robot text-xl"></i>
+                    <h3 class="font-semibold text-lg">Asistente Virtual</h3>
+                </div>
+                <button onclick="toggleChatbot()" class="text-white hover:text-gray-200 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Área de mensajes -->
+            <div id="chatbotMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div class="flex items-start gap-2">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-gray-800">¡Hola! 👋 Soy el asistente virtual de Sunset's Tarbaca. ¿En qué puedo ayudarte hoy?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input de mensaje -->
+            <div class="p-4 border-t bg-white rounded-b-lg">
+                <form id="chatbotForm" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="chatbotInput" 
+                        placeholder="Escribe tu mensaje..." 
+                        class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Efecto de pulse para el botón de chatbot */
+        #chatbotButton {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Animación para el modal del chatbot */
+        #chatbotModal {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        #chatbotModal.hidden {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+        
+        /* Responsive: en móviles el modal ocupa más espacio */
+        @media (max-width: 640px) {
+            #chatbotModal {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                max-width: 100%;
+                height: 80vh;
+                border-radius: 1rem 1rem 0 0;
+            }
+        }
+    </style>
 
     
     <script>

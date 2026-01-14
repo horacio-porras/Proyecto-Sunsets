@@ -469,16 +469,17 @@
         function filtrarProductos() {
             const filtroCategoria = document.getElementById('filtroCategoria').value;
             const filtroEstado = document.getElementById('filtroEstado').value;
-            const buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
+            const busquedaInput = document.getElementById('buscarProducto');
+            const buscarProducto = busquedaInput ? busquedaInput.value.trim().toLowerCase() : '';
 
             productosFiltrados = productos.filter(producto => {
                 const coincideCategoria = !filtroCategoria || producto.categoria_id == filtroCategoria;
                 const coincideEstado = !filtroEstado || 
                     (filtroEstado === 'disponible' && producto.disponible) ||
                     (filtroEstado === 'no_disponible' && !producto.disponible);
-                const coincideBusqueda = !buscarProducto || 
-                    producto.nombre.toLowerCase().includes(buscarProducto) ||
-                    (producto.descripcion && producto.descripcion.toLowerCase().includes(buscarProducto));
+                const coincideBusqueda = buscarProducto === '' || 
+                    (producto.nombre && producto.nombre.toLowerCase().startsWith(buscarProducto)) ||
+                    (producto.descripcion && producto.descripcion.toLowerCase().startsWith(buscarProducto));
 
                 return coincideCategoria && coincideEstado && coincideBusqueda;
             });

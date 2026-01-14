@@ -468,13 +468,23 @@
         //Renderiza empleados en la tabla
         function renderizarEmpleados() {
             const tbody = document.getElementById('tablaEmpleados');
+            const busquedaInput = document.getElementById('buscarEmpleado');
+            const busqueda = busquedaInput ? busquedaInput.value.trim() : '';
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const hayFiltrosActivos = busqueda !== '' || filtroEstado !== '';
  
             if (!empleadosFiltrados || empleadosFiltrados.length === 0) {
+                let mensaje = 'No hay empleados registrados';
+                if (hayFiltrosActivos && empleados.length > 0) {
+                    mensaje = 'No se encontraron empleados que coincidan con la búsqueda';
+                }
+                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-8 text-gray-500">
                             <i class="fas fa-users text-4xl mb-4"></i>
-                            <p>No hay empleados registrados</p>
+                            <p>${mensaje}</p>
+                            ${hayFiltrosActivos ? '<p class="text-sm mt-2">Intenta ajustar los filtros de búsqueda</p>' : ''}
                         </td>
                     </tr>
                 `;
@@ -543,16 +553,29 @@
                         </td>
                         <td class="px-6 py-4 text-center align-top">
                             <div class="flex justify-center space-x-3 text-lg">
+                                ${empleado.estado === 'activo' ? `
                                 <button onclick="editarEmpleado(${empleado.id})" 
-                                        class="text-orange-600 hover:text-orange-700 transition"
+                                        class="text-orange-600 hover:text-orange-700 transition cursor-pointer"
                                         title="Editar empleado">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button onclick="eliminarEmpleado(${empleado.id}, '${empleado.nombre}')" 
-                                        class="text-red-600 hover:text-red-700 transition"
-                                        title="Eliminar empleado">
-                                    <i class="fas fa-trash"></i>
+                                <button onclick="archivarEmpleado(${empleado.id}, '${empleado.nombre}')" 
+                                        class="text-red-600 hover:text-red-700 transition cursor-pointer"
+                                        title="Archivar empleado">
+                                    <i class="fas fa-archive"></i>
                                 </button>
+                                ` : `
+                                <button disabled
+                                        class="text-gray-400 cursor-not-allowed opacity-50"
+                                        title="No se pueden realizar acciones en empleados archivados">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button disabled
+                                        class="text-gray-400 cursor-not-allowed opacity-50"
+                                        title="No se pueden realizar acciones en empleados archivados">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                                `}
                             </div>
                         </td>
                     </tr>
@@ -564,12 +587,14 @@
 
         //Filtra empleados
         function filtrarEmpleados() {
-            const busqueda = document.getElementById('buscarEmpleado').value.toLowerCase();
+            const busquedaInput = document.getElementById('buscarEmpleado');
+            const busqueda = busquedaInput ? busquedaInput.value.trim().toLowerCase() : '';
             const filtroEstado = document.getElementById('filtroEstado').value;
  
             empleadosFiltrados = empleados.filter(empleado => {
-                const coincideBusqueda = empleado.nombre.toLowerCase().includes(busqueda) ||
-                                       empleado.correo.toLowerCase().includes(busqueda);
+                // Si hay búsqueda, el nombre debe incluirla
+                const coincideBusqueda = busqueda === '' || empleado.nombre.toLowerCase().includes(busqueda);
+                // Si hay filtro de estado, debe coincidir
                 const coincideEstado = !filtroEstado || empleado.estado === filtroEstado;
                 
                 return coincideBusqueda && coincideEstado;
@@ -626,6 +651,17 @@
             contrasenaHelp.classList.add('hidden');
             contrasenaField.placeholder = 'Contraseña temporal';
             
+            // Asegurar que el campo de tipo de usuario esté habilitado para nuevos empleados
+            const tipoUsuarioField = document.getElementById('tipoUsuario');
+            tipoUsuarioField.disabled = false;
+            tipoUsuarioField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            
+            // Remover mensaje informativo si existe
+            const infoMessage = tipoUsuarioField.parentElement.querySelector('.info-message');
+            if (infoMessage) {
+                infoMessage.remove();
+            }
+            
             document.getElementById('btnGuardarText').textContent = 'Agregar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
             
@@ -641,6 +677,10 @@
                 return;
             }
 
+            // Obtener usuario actual
+            const currentUser = getCurrentUser();
+            const esUsuarioActual = currentUser && currentUser.id === empleado.id;
+
             empleadoEditando = empleado;
             document.getElementById('modalTitulo').textContent = 'Editar Empleado';
             
@@ -648,17 +688,80 @@
             const contrasenaLabel = document.getElementById('contrasenaLabel');
             const contrasenaHelp = document.getElementById('contrasenaHelp');
             
-            contrasenaField.required = false;
-            contrasenaLabel.textContent = 'Nueva Contraseña (opcional)';
-            contrasenaHelp.classList.remove('hidden');
-            contrasenaField.placeholder = 'Contraseña temporal';
-            contrasenaField.value = '';
-            
             document.getElementById('nombre').value = empleado.nombre;
             document.getElementById('correo').value = empleado.correo;
             document.getElementById('telefono').value = empleado.telefono;
             document.getElementById('area_trabajo').value = empleado.area_trabajo;
-            document.getElementById('tipoUsuario').value = empleado.tipoUsuario;
+            
+            // Campo de Tipo de Usuario
+            const tipoUsuarioField = document.getElementById('tipoUsuario');
+            tipoUsuarioField.value = empleado.tipoUsuario;
+            
+            // Si es el usuario actual, deshabilitar el campo de tipo de usuario y contraseña
+            if (esUsuarioActual) {
+                // Deshabilitar tipo de usuario
+                tipoUsuarioField.disabled = true;
+                tipoUsuarioField.classList.add('bg-gray-100', 'cursor-not-allowed');
+                
+                // Agregar mensaje informativo para tipo de usuario
+                let infoMessage = tipoUsuarioField.parentElement.querySelector('.info-message');
+                if (!infoMessage) {
+                    infoMessage = document.createElement('p');
+                    infoMessage.className = 'info-message text-xs text-orange-600 mt-1';
+                    infoMessage.innerHTML = '<i class="fas fa-info-circle mr-1"></i>No puedes cambiar tu propio rol';
+                    tipoUsuarioField.parentElement.appendChild(infoMessage);
+                }
+                
+                // Deshabilitar campo de contraseña
+                contrasenaField.disabled = true;
+                contrasenaField.classList.add('bg-gray-100', 'cursor-not-allowed');
+                contrasenaField.required = false;
+                contrasenaField.value = '';
+                contrasenaField.placeholder = 'Contraseña temporal';
+                contrasenaLabel.textContent = 'Nueva Contraseña';
+                contrasenaHelp.classList.remove('hidden');
+                contrasenaHelp.textContent = '';
+                contrasenaHelp.classList.remove('text-gray-500');
+                contrasenaHelp.classList.add('text-orange-600');
+                
+                // Agregar mensaje informativo para contraseña
+                let contrasenaInfoMessage = contrasenaField.parentElement.querySelector('.contrasena-info-message');
+                if (!contrasenaInfoMessage) {
+                    contrasenaInfoMessage = document.createElement('p');
+                    contrasenaInfoMessage.className = 'contrasena-info-message text-xs text-orange-600 mt-1';
+                    contrasenaInfoMessage.innerHTML = '<i class="fas fa-info-circle mr-1"></i>No puedes asignarte una contraseña temporal';
+                    contrasenaField.parentElement.appendChild(contrasenaInfoMessage);
+                }
+            } else {
+                // Habilitar tipo de usuario
+                tipoUsuarioField.disabled = false;
+                tipoUsuarioField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                
+                // Remover mensaje informativo de tipo de usuario si existe
+                const infoMessage = tipoUsuarioField.parentElement.querySelector('.info-message');
+                if (infoMessage) {
+                    infoMessage.remove();
+                }
+                
+                // Habilitar campo de contraseña
+                contrasenaField.disabled = false;
+                contrasenaField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                contrasenaField.required = false;
+                contrasenaLabel.textContent = 'Nueva Contraseña (opcional)';
+                contrasenaHelp.classList.remove('hidden');
+                contrasenaHelp.textContent = 'Deja vacío para mantener la contraseña actual';
+                contrasenaHelp.classList.remove('text-orange-600');
+                contrasenaHelp.classList.add('text-gray-500');
+                contrasenaField.placeholder = 'Contraseña temporal';
+                contrasenaField.value = '';
+                
+                // Remover mensaje informativo de contraseña si existe
+                const contrasenaInfoMessage = contrasenaField.parentElement.querySelector('.contrasena-info-message');
+                if (contrasenaInfoMessage) {
+                    contrasenaInfoMessage.remove();
+                }
+            }
+            
             document.getElementById('contrasena').value = '';
             document.getElementById('contrasena').required = false;
 
@@ -675,7 +778,37 @@
             modal.classList.remove('show');
             empleadoEditando = null;
             document.getElementById('formEmpleado').reset();
-            document.getElementById('contrasena').required = true;
+            
+            // Restaurar estado del campo de contraseña
+            const contrasenaField = document.getElementById('contrasena');
+            const contrasenaLabel = document.getElementById('contrasenaLabel');
+            const contrasenaHelp = document.getElementById('contrasenaHelp');
+            
+            contrasenaField.disabled = false;
+            contrasenaField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            contrasenaField.required = true;
+            contrasenaLabel.textContent = 'Contraseña *';
+            contrasenaHelp.classList.add('hidden');
+            contrasenaHelp.classList.remove('text-orange-600');
+            contrasenaHelp.classList.add('text-gray-500');
+            contrasenaField.placeholder = 'Contraseña temporal';
+            
+            // Remover mensaje informativo de contraseña si existe
+            const contrasenaInfoMessage = contrasenaField.parentElement.querySelector('.contrasena-info-message');
+            if (contrasenaInfoMessage) {
+                contrasenaInfoMessage.remove();
+            }
+            
+            // Restaurar estado del campo de tipo de usuario
+            const tipoUsuarioField = document.getElementById('tipoUsuario');
+            tipoUsuarioField.disabled = false;
+            tipoUsuarioField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            
+            // Remover mensaje informativo si existe
+            const infoMessage = tipoUsuarioField.parentElement.querySelector('.info-message');
+            if (infoMessage) {
+                infoMessage.remove();
+            }
             
             document.getElementById('btnGuardarText').textContent = 'Agregar';
             document.getElementById('btnGuardarIcon').className = 'fas fa-plus';
@@ -695,15 +828,43 @@
             btnGuardarSpinner.classList.remove('hidden');
 
             try {
+                // Obtener usuario actual
+                const currentUser = getCurrentUser();
+                const esUsuarioActual = empleadoEditando && currentUser && currentUser.id === empleadoEditando.id;
+                
+                const tipoUsuarioField = document.getElementById('tipoUsuario');
+                
+                // Si es el usuario actual, usar el tipo de usuario original (no permitir cambio)
+                const tipoUsuario = esUsuarioActual ? empleadoEditando.tipoUsuario : tipoUsuarioField.value;
+                
                 const formData = {
                     nombre: document.getElementById('nombre').value,
                     correo: document.getElementById('correo').value,
                     telefono: document.getElementById('telefono').value,
                     area_trabajo: document.getElementById('area_trabajo').value,
-                    tipoUsuario: document.getElementById('tipoUsuario').value
+                    tipoUsuario: tipoUsuario
                 };
 
                 const contrasena = document.getElementById('contrasena').value;
+                const contrasenaField = document.getElementById('contrasena');
+                
+                // Si es el usuario actual, no permitir cambiar la contraseña (no puede asignarse temporal)
+                if (esUsuarioActual && contrasena.trim() !== '') {
+                    await Swal.fire({
+                        icon: 'warning',
+                        title: 'Acción no permitida',
+                        text: 'No puedes asignarte una contraseña temporal',
+                        confirmButtonColor: '#f97316'
+                    });
+                    
+                    // Restaurar botón
+                    btnGuardar.disabled = false;
+                    btnGuardarText.classList.remove('hidden');
+                    document.getElementById('btnGuardarIcon').classList.remove('hidden');
+                    btnGuardarSpinner.classList.add('hidden');
+                    return;
+                }
+                
                 if (!empleadoEditando || contrasena.trim() !== '') {
                     formData.contrasena = contrasena;
                 }
@@ -766,16 +927,16 @@
             }
         }
 
-        //Elimina empleado
-        async function eliminarEmpleado(id, nombre) {
+        //Archiva empleado
+        async function archivarEmpleado(id, nombre) {
             const result = await Swal.fire({
                 title: '¿Estás seguro?',
-                text: `¿Deseas eliminar al empleado "${nombre}"? Esta acción no se puede deshacer.`,
+                text: `¿Deseas archivar al empleado "${nombre}"? El empleado será marcado como inactivo.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
+                confirmButtonText: 'Sí, archivar',
                 cancelButtonText: 'Cancelar'
             });
 
@@ -799,22 +960,22 @@
                     if (data.success) {
                         await Swal.fire({
                             icon: 'success',
-                            title: '¡Eliminado!',
-                            text: 'Empleado eliminado correctamente',
+                            title: '¡Archivado!',
+                            text: 'Empleado archivado correctamente',
                             timer: 2000,
                             showConfirmButton: false
                         });
 
                         window.location.reload();
                     } else {
-                        throw new Error(data.message || 'Error al eliminar empleado');
+                        throw new Error(data.message || 'Error al archivar empleado');
                     }
                 } catch (error) {
-                    console.error('Error al eliminar empleado:', error);
+                    console.error('Error al archivar empleado:', error);
                     await Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: error.message || 'Error al eliminar empleado'
+                        text: error.message || 'Error al archivar empleado'
                     });
                 }
             }
@@ -849,6 +1010,15 @@
                 title: 'Error',
                 text: mensaje
             });
+        }
+
+        // Función para obtener usuario actual (debe estar definida en auth.js)
+        function getCurrentUser() {
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                return JSON.parse(userData);
+            }
+            return null;
         }
     </script>
 </body>

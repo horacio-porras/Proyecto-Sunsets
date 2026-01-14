@@ -29,6 +29,7 @@ router.get('/ventas', authenticateToken, async (req, res) => {
         }
 
         const formato = req.query.formato || 'pdf'; // pdf o excel
+        const vista = req.query.vista || null; // web para devolver JSON
         const fechaDesde = req.query.fechaDesde || null;
         const fechaHasta = req.query.fechaHasta || null;
 
@@ -76,6 +77,14 @@ router.get('/ventas', authenticateToken, async (req, res) => {
             fechaHasta
         };
 
+        // Si se solicita vista web, devolver JSON
+        if (vista === 'web') {
+            return res.json({
+                success: true,
+                data: datos
+            });
+        }
+
         // Generar archivo según formato
         if (formato === 'excel') {
             const buffer = await generarExcelVentas(datos);
@@ -119,16 +128,18 @@ router.get('/clientes', authenticateToken, async (req, res) => {
         }
 
         const formato = req.query.formato || 'pdf';
+        const vista = req.query.vista || null; // web para devolver JSON
 
         // Obtener datos de clientes
         const query = `
             SELECT 
                 c.id_cliente,
                 u.nombre,
-                u.correo,
+                u.correo as email,
                 u.telefono,
                 u.activo,
-                COUNT(DISTINCT p.id_pedido) as total_pedidos
+                COUNT(DISTINCT p.id_pedido) as total_pedidos,
+                COALESCE(SUM(p.total), 0) as total_gastado
             FROM cliente c
             INNER JOIN usuario u ON c.id_usuario = u.id_usuario
             LEFT JOIN pedido p ON c.id_cliente = p.id_cliente
@@ -145,6 +156,14 @@ router.get('/clientes', authenticateToken, async (req, res) => {
             totalClientes: clientes.length,
             clientesActivos
         };
+
+        // Si se solicita vista web, devolver JSON
+        if (vista === 'web') {
+            return res.json({
+                success: true,
+                data: datos
+            });
+        }
 
         // Generar archivo según formato
         if (formato === 'excel') {
@@ -189,6 +208,7 @@ router.get('/pedidos', authenticateToken, async (req, res) => {
         }
 
         const formato = req.query.formato || 'pdf';
+        const vista = req.query.vista || null; // web para devolver JSON
         const fechaDesde = req.query.fechaDesde || null;
         const fechaHasta = req.query.fechaHasta || null;
         const estado = req.query.estado || null;
@@ -243,6 +263,14 @@ router.get('/pedidos', authenticateToken, async (req, res) => {
             fechaHasta
         };
 
+        // Si se solicita vista web, devolver JSON
+        if (vista === 'web') {
+            return res.json({
+                success: true,
+                data: datos
+            });
+        }
+
         // Generar archivo según formato
         if (formato === 'excel') {
             const buffer = await generarExcelPedidos(datos);
@@ -286,6 +314,7 @@ router.get('/actividad', authenticateToken, async (req, res) => {
         }
 
         const formato = req.query.formato || 'pdf';
+        const vista = req.query.vista || null; // web para devolver JSON
         const fechaDesde = req.query.fechaDesde || null;
         const fechaHasta = req.query.fechaHasta || null;
         const tabla = req.query.tabla || null;
@@ -327,24 +356,47 @@ router.get('/actividad', authenticateToken, async (req, res) => {
         // Obtener tablas únicas afectadas
         const tablasAfectadas = [...new Set(cambios.map(c => c.tabla_afectada))].filter(t => t).length;
 
-        const datos = {
-            cambios,
+        // Para vista web, usar estructura con registros
+        const datosWeb = {
+            registros: cambios.map(c => ({
+                ...c,
+                fecha_accion: c.fecha_cambio,
+                accion: c.accion_realizada,
+                descripcion: null
+            })),
+            totalRegistros: cambios.length,
+            tablasAfectadas,
+            fechaDesde,
+            fechaHasta
+        };
+
+        // Para archivos (PDF/Excel), usar estructura con cambios
+        const datosArchivo = {
+            cambios: cambios,
             totalCambios: cambios.length,
             tablasAfectadas,
             fechaDesde,
             fechaHasta
         };
 
+        // Si se solicita vista web, devolver JSON
+        if (vista === 'web') {
+            return res.json({
+                success: true,
+                data: datosWeb
+            });
+        }
+
         // Generar archivo según formato
         if (formato === 'excel') {
-            const buffer = await generarExcelActividad(datos);
+            const buffer = await generarExcelActividad(datosArchivo);
             const filename = `reporte_actividad_${new Date().toISOString().split('T')[0]}.xlsx`;
             
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
             res.send(buffer);
         } else {
-            const pdfBuffer = await generarPDFActividad(datos);
+            const pdfBuffer = await generarPDFActividad(datosArchivo);
             const filename = `reporte_actividad_${new Date().toISOString().split('T')[0]}.pdf`;
             
             res.setHeader('Content-Type', 'application/pdf');

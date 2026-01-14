@@ -572,6 +572,20 @@ function addNavbarEventListeners() {
     } else {
         console.error('Register form not found');
     }
+    
+    // Validar campo de teléfono: solo números, máximo 8 dígitos, sin espacios
+    const registerTelefonoInput = document.getElementById('registerTelefono');
+    if (registerTelefonoInput) {
+        registerTelefonoInput.addEventListener('input', function(e) {
+            // Eliminar cualquier caracter que no sea número
+            let value = e.target.value.replace(/\D/g, '');
+            // Limitar a 8 dígitos
+            if (value.length > 8) {
+                value = value.slice(0, 8);
+            }
+            e.target.value = value;
+        });
+    }
 }
 
 //Función para mostrar/ocultar contraseña en login
@@ -697,10 +711,24 @@ async function handleLogin() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                correo: email,
+                correo: email.trim(),
                 contrasena: password
             })
         });
+
+        // Verificar el status de la respuesta antes de parsear JSON
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+            console.error('Error en login:', response.status, errorData);
+            showLoginMessage(errorData.message || 'Error al iniciar sesión');
+            const pwd = document.getElementById('loginPassword');
+            if (pwd) {
+                pwd.value = '';
+                pwd.focus();
+            }
+            toggleLoginLoading(false);
+            return;
+        }
 
         const data = await response.json();
 
@@ -713,13 +741,26 @@ async function handleLogin() {
                 handleUserChange();
             }
             
-            showLoginMessage('¡Login exitoso! Redirigiendo...', false);
+            // Verificar si requiere cambio de contraseña
+            console.log('Login exitoso. requiereCambioContrasena:', data.data.requiereCambioContrasena);
+            console.log('Datos completos:', JSON.stringify(data.data, null, 2));
             
-            setTimeout(() => {
+            if (data.data.requiereCambioContrasena === true || data.data.requiereCambioContrasena === 1) {
+                console.log('Mostrando modal de cambio de contraseña...');
                 closeLoginModal();
-                updateAuthState();
-                configureRoleSpecificMenus();
-            }, 1500);
+                // Esperar un momento para que el modal de login se cierre
+                setTimeout(() => {
+                    showChangePasswordModal();
+                }, 300);
+            } else {
+                showLoginMessage('¡Login exitoso! Redirigiendo...', false);
+                
+                setTimeout(() => {
+                    closeLoginModal();
+                    updateAuthState();
+                    configureRoleSpecificMenus();
+                }, 1500);
+            }
         } else {
             showLoginMessage(data.message || 'Error al iniciar sesión');
             const pwd = document.getElementById('loginPassword');
@@ -1076,11 +1117,20 @@ function switchToLogin() {
 
 //Función para deshabilitar botones de ChatBot y Carrito
 function disableChatAndCartButtons() {
-    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
-    if (chatButton) {
-        chatButton.disabled = true;
-        chatButton.classList.add('opacity-50', 'cursor-not-allowed');
-        chatButton.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    // Buscar botón de chatbot por onclick="toggleChat()" (para páginas con carrito)
+    const chatButton1 = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton1) {
+        chatButton1.disabled = true;
+        chatButton1.classList.add('opacity-50', 'cursor-not-allowed');
+        chatButton1.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    // Buscar botón de chatbot por id="chatbotButton" (para index.html, reservaciones.html, about.html, contacto.html)
+    const chatButton2 = document.getElementById('chatbotButton');
+    if (chatButton2) {
+        chatButton2.disabled = true;
+        chatButton2.classList.add('opacity-50', 'cursor-not-allowed');
+        chatButton2.classList.remove('hover:from-orange-600', 'hover:to-red-600');
     }
     
     const cartButton = document.querySelector('button[onclick="toggleCart()"]');
@@ -1093,11 +1143,20 @@ function disableChatAndCartButtons() {
 
 //Función para habilitar botones de ChatBot y Carrito
 function enableChatAndCartButtons() {
-    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
-    if (chatButton) {
-        chatButton.disabled = false;
-        chatButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        chatButton.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    // Buscar botón de chatbot por onclick="toggleChat()" (para páginas con carrito)
+    const chatButton1 = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton1) {
+        chatButton1.disabled = false;
+        chatButton1.classList.remove('opacity-50', 'cursor-not-allowed');
+        chatButton1.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    // Buscar botón de chatbot por id="chatbotButton" (para index.html, reservaciones.html, about.html, contacto.html)
+    const chatButton2 = document.getElementById('chatbotButton');
+    if (chatButton2) {
+        chatButton2.disabled = false;
+        chatButton2.classList.remove('opacity-50', 'cursor-not-allowed');
+        chatButton2.classList.add('hover:from-orange-600', 'hover:to-red-600');
     }
     
     const cartButton = document.querySelector('button[onclick="toggleCart()"]');
@@ -1255,8 +1314,8 @@ function toggleForgotPasswordVisibility(inputId, iconId) {
     }
 }
 
-//Función para procesar el cambio de contraseña
-async function processForgotPassword(email, newPassword) {
+//Función para procesar la solicitud de recuperación de contraseña
+async function processForgotPassword(email) {
     try {
         const btn = document.getElementById('forgotPasswordBtn');
         const btnText = document.getElementById('forgotPasswordBtnText');
@@ -1272,15 +1331,14 @@ async function processForgotPassword(email, newPassword) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                email: email,
-                newPassword: newPassword
+                email: email
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'Error al cambiar la contraseña');
+            throw new Error(data.message || 'Error al procesar la solicitud');
         }
         
         const modal = document.getElementById('forgotPasswordModal');
@@ -1295,14 +1353,14 @@ async function processForgotPassword(email, newPassword) {
         }, 300);
         
         await Swal.fire({
-            title: '¡Contraseña Cambiada!',
+            title: '¡Correo Enviado!',
             html: `
                 <div class="text-center py-4">
                     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
-                        <i class="fas fa-check text-white text-2xl"></i>
+                        <i class="fas fa-envelope text-white text-2xl"></i>
                     </div>
-                    <p class="text-gray-700 text-lg">Tu contraseña ha sido cambiada exitosamente</p>
-                    <p class="text-gray-600 text-sm mt-2">Ya puedes iniciar sesión con tu nueva contraseña</p>
+                    <p class="text-gray-700 text-lg">Si el correo existe, recibirás un enlace para recuperar tu contraseña</p>
+                    <p class="text-gray-600 text-sm mt-2">Revisa tu bandeja de entrada y sigue las instrucciones</p>
                 </div>
             `,
             confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
@@ -1314,7 +1372,7 @@ async function processForgotPassword(email, newPassword) {
         });
         
     } catch (error) {
-        console.error('Error al cambiar contraseña:', error);
+        console.error('Error al procesar solicitud:', error);
         
         await Swal.fire({
             title: 'Error',
@@ -1323,7 +1381,7 @@ async function processForgotPassword(email, newPassword) {
                     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
                         <i class="fas fa-times text-white text-2xl"></i>
                     </div>
-                    <p class="text-gray-700 text-lg">Error al cambiar la contraseña</p>
+                    <p class="text-gray-700 text-lg">Error al procesar la solicitud</p>
                     <p class="text-gray-600 text-sm mt-2">${error.message}</p>
                 </div>
             `,
@@ -1358,8 +1416,6 @@ function initializeForgotPasswordModal() {
             e.preventDefault();
             
             const email = document.getElementById('forgotPasswordEmail').value.trim();
-            const newPassword = document.getElementById('forgotPasswordNewPassword').value;
-            const confirmPassword = document.getElementById('forgotPasswordConfirmPassword').value;
             
             if (!email) {
                 Swal.fire({
@@ -1371,47 +1427,19 @@ function initializeForgotPasswordModal() {
                 return;
             }
             
-            if (!newPassword) {
+            // Validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
                 Swal.fire({
                     title: 'Error',
-                    text: 'Por favor ingresa una nueva contraseña.',
+                    text: 'Por favor ingresa un correo electrónico válido.',
                     icon: 'error',
                     confirmButtonColor: '#ef4444'
                 });
                 return;
             }
             
-            if (newPassword !== confirmPassword) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Las contraseñas no coinciden.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            if (newPassword.length < 8) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'La contraseña debe tener al menos 8 caracteres.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'La contraseña debe incluir al menos una mayúscula y un número.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            await processForgotPassword(email, newPassword);
+            await processForgotPassword(email);
         });
     }
     
@@ -1424,15 +1452,403 @@ function initializeForgotPasswordModal() {
     }
 }
 
+// Función para validar que las contraseñas coincidan en tiempo real
+function validatePasswordMatch() {
+    const newPassword = document.getElementById('newPassword')?.value || '';
+    const confirmPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const matchError = document.getElementById('passwordMatchError');
+    
+    if (confirmPassword.length > 0) {
+        if (newPassword !== confirmPassword) {
+            if (matchError) {
+                matchError.classList.remove('hidden');
+                matchError.textContent = 'Las contraseñas no coinciden';
+            }
+            if (document.getElementById('confirmNewPassword')) {
+                document.getElementById('confirmNewPassword').classList.add('border-red-500');
+                document.getElementById('confirmNewPassword').classList.remove('border-gray-300');
+            }
+            return false;
+        } else {
+            if (matchError) {
+                matchError.classList.add('hidden');
+            }
+            if (document.getElementById('confirmNewPassword')) {
+                document.getElementById('confirmNewPassword').classList.remove('border-red-500');
+                document.getElementById('confirmNewPassword').classList.add('border-gray-300');
+            }
+            return true;
+        }
+    }
+    return true;
+}
+
+// Función para mostrar el modal de cambio de contraseña temporal
+function showChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    console.log('showChangePasswordModal llamado. Modal encontrado:', !!modal);
+    if (modal) {
+        console.log('Mostrando modal de cambio de contraseña...');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        disableChatAndCartButtons();
+        
+        // Prevenir que se cierre el modal haciendo clic fuera
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        });
+        
+        // Limpiar formulario
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            form.reset();
+        }
+        
+        // Ocultar mensajes de error
+        const errorMessage = document.getElementById('changePasswordErrorMessage');
+        if (errorMessage) {
+            errorMessage.classList.add('hidden');
+        }
+        
+        const matchError = document.getElementById('passwordMatchError');
+        if (matchError) {
+            matchError.classList.add('hidden');
+        }
+        
+        // Agregar validación en tiempo real
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmNewPassword');
+        
+        if (newPasswordInput) {
+            // Remover listeners anteriores
+            const newInput = newPasswordInput.cloneNode(true);
+            newPasswordInput.parentNode.replaceChild(newInput, newPasswordInput);
+            document.getElementById('newPassword').addEventListener('input', validatePasswordMatch);
+        }
+        if (confirmPasswordInput) {
+            // Remover listeners anteriores
+            const newInput = confirmPasswordInput.cloneNode(true);
+            confirmPasswordInput.parentNode.replaceChild(newInput, confirmPasswordInput);
+            document.getElementById('confirmNewPassword').addEventListener('input', validatePasswordMatch);
+        }
+        
+        // Configurar el formulario y botón después de un pequeño delay para asegurar que el DOM esté listo
+        setTimeout(() => {
+            setupChangePasswordForm();
+        }, 100);
+    } else {
+        console.error('❌ Modal changePasswordModal no encontrado en el DOM');
+        // Si el modal no existe, mostrar un alert como fallback
+        alert('Debes cambiar tu contraseña temporal. Por favor, ve a tu perfil para cambiarla.');
+    }
+}
+
+// Función para cerrar el modal de cambio de contraseña
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        enableChatAndCartButtons();
+    }
+}
+
+// Función para alternar visibilidad de nueva contraseña
+function toggleNewPassword() {
+    const passwordInput = document.getElementById('newPassword');
+    const icon = document.getElementById('newPasswordIcon');
+    if (passwordInput && icon) {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
+
+// Función para alternar visibilidad de confirmar nueva contraseña
+function toggleConfirmNewPassword() {
+    const passwordInput = document.getElementById('confirmNewPassword');
+    const icon = document.getElementById('confirmNewPasswordIcon');
+    if (passwordInput && icon) {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
+
+// Función para manejar el cambio de contraseña
+async function handleChangePassword() {
+    console.log('handleChangePassword llamado');
+    
+    const newPassword = document.getElementById('newPassword')?.value || '';
+    const confirmNewPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const errorMessage = document.getElementById('changePasswordErrorMessage');
+    const errorText = document.getElementById('changePasswordErrorText');
+    const btn = document.getElementById('changePasswordBtn');
+    const btnText = document.getElementById('changePasswordBtnText');
+    const btnSpinner = document.getElementById('changePasswordBtnSpinner');
+    const matchError = document.getElementById('passwordMatchError');
+    
+    // Validaciones
+    if (!newPassword || newPassword.length < 6) {
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        }
+        return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = 'Las contraseñas no coinciden';
+        }
+        if (matchError) {
+            matchError.classList.remove('hidden');
+            matchError.textContent = 'Las contraseñas no coinciden';
+        }
+        return;
+    }
+    
+    // Ocultar errores
+    if (errorMessage) errorMessage.classList.add('hidden');
+    if (matchError) matchError.classList.add('hidden');
+    
+    // Deshabilitar botón y mostrar spinner
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.classList.add('hidden');
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            throw new Error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+        }
+        
+        console.log('=== INICIANDO CAMBIO DE CONTRASEÑA ===');
+        console.log('Nueva contraseña (longitud):', newPassword.length);
+        console.log('Nueva contraseña (primeros 3 chars):', newPassword.substring(0, 3) + '***');
+        console.log('Token presente:', !!token);
+        console.log('Token (primeros 30 chars):', token ? token.substring(0, 30) + '...' : 'N/A');
+        
+        const requestBody = {
+            nuevaContrasena: newPassword
+        };
+        
+        console.log('Enviando petición POST a /api/auth/change-temporary-password');
+        console.log('Body:', JSON.stringify({ nuevaContrasena: '***' }));
+        
+        const response = await fetch('/api/auth/change-temporary-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        console.log('Respuesta recibida');
+        console.log('  - Status:', response.status);
+        console.log('  - OK:', response.ok);
+        console.log('  - Status Text:', response.statusText);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error en respuesta:', errorText);
+            let errorMessage = 'Error al cambiar la contraseña';
+            try {
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData.message || errorMessage;
+            } catch (parseError) {
+                errorMessage = errorText || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+        
+        if (data.success) {
+            // Actualizar datos del usuario en localStorage
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            userData.contrasena_temporal = false;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            // Cerrar modal
+            closeChangePasswordModal();
+            
+            // Mostrar mensaje de éxito
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Contraseña cambiada!',
+                    text: 'Tu contraseña ha sido actualizada exitosamente. Serás redirigido...',
+                    confirmButtonColor: '#f97316',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            
+            // Actualizar estado de autenticación
+            if (typeof updateAuthState === 'function') {
+                updateAuthState();
+            }
+            if (typeof configureRoleSpecificMenus === 'function') {
+                configureRoleSpecificMenus();
+            }
+            
+            // Redirigir según el rol
+            if (userData.tipoUsuario === 'Administrador') {
+                window.location.href = '/admin/dashboard.html';
+            } else if (userData.tipoUsuario === 'Empleado') {
+                window.location.href = '/empleado/dashboard.html';
+            } else {
+                window.location.href = '/cliente/dashboard.html';
+            }
+        } else {
+            throw new Error(data.message || 'Error al cambiar la contraseña');
+        }
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = error.message || 'Error al cambiar la contraseña. Por favor, intenta de nuevo.';
+        }
+    } finally {
+        // Restaurar botón
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.classList.remove('hidden');
+        if (btnSpinner) btnSpinner.classList.add('hidden');
+    }
+}
+
+// Manejar el envío del formulario de cambio de contraseña
+function setupChangePasswordForm() {
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const btn = document.getElementById('changePasswordBtn');
+    
+    // Configurar listener del formulario
+    if (changePasswordForm) {
+        // Remover todos los listeners anteriores
+        const newForm = changePasswordForm.cloneNode(true);
+        changePasswordForm.parentNode.replaceChild(newForm, changePasswordForm);
+        
+        // Obtener el nuevo formulario
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            }, { once: false, capture: true });
+        }
+    }
+    
+    // Configurar listener directo del botón (más confiable)
+    if (btn) {
+        // Remover listeners anteriores
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Obtener el nuevo botón
+        const button = document.getElementById('changePasswordBtn');
+        if (button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            }, { once: false, capture: true });
+            
+            // También agregar como onclick como último recurso
+            button.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            };
+        }
+    }
+}
+
 //Funciones globales
 window.openForgotPasswordModal = openForgotPasswordModal;
 window.closeForgotPasswordModal = closeForgotPasswordModal;
 window.toggleForgotPasswordVisibility = toggleForgotPasswordVisibility;
+window.showChangePasswordModal = showChangePasswordModal;
+window.closeChangePasswordModal = closeChangePasswordModal;
+window.toggleNewPassword = toggleNewPassword;
+window.toggleConfirmNewPassword = toggleConfirmNewPassword;
+
+// Función para verificar si el usuario tiene contraseña temporal al cargar la página
+async function checkTemporaryPasswordOnLoad() {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (!token || !userData) {
+        return; // No hay sesión activa
+    }
+    
+    try {
+        const user = JSON.parse(userData);
+        
+        // Verificar si tiene contraseña temporal en los datos guardados
+        if (user.contrasena_temporal === true || user.contrasena_temporal === 1) {
+            console.log('Usuario tiene contraseña temporal, mostrando modal...');
+            showChangePasswordModal();
+            return;
+        }
+        
+        // Si no está en los datos guardados, verificar con el servidor
+        const response = await fetch('/api/auth/verify', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data && data.data.user) {
+                const updatedUser = data.data.user;
+                // Actualizar datos del usuario
+                localStorage.setItem('userData', JSON.stringify(updatedUser));
+                
+                // Verificar si tiene contraseña temporal
+                if (updatedUser.contrasena_temporal === true || updatedUser.contrasena_temporal === 1) {
+                    console.log('Usuario tiene contraseña temporal (verificado con servidor), mostrando modal...');
+                    showChangePasswordModal();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error al verificar contraseña temporal:', error);
+    }
+}
 
 //Carga el navbar automáticamente cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
+    setupChangePasswordForm();
     const currentPath = window.location.pathname;
     const currentPage = currentPath === '/' ? '/index.html' : currentPath;
     
     loadNavbar(currentPage);
+    
+    // Verificar contraseña temporal después de un pequeño delay para asegurar que el DOM esté listo
+    setTimeout(checkTemporaryPasswordOnLoad, 1000);
 });

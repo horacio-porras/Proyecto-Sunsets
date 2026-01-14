@@ -153,8 +153,21 @@ const crearEmpleado = async (req, res) => {
             });
         }
 
+        // Validar que la contraseña no esté vacía
+        if (!contrasena || contrasena.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña no puede estar vacía'
+            });
+        }
+
         const saltRounds = 12;
-        const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+        const hashedPassword = await bcrypt.hash(contrasena.trim(), saltRounds);
+        
+        // Verificar que el hash se generó correctamente
+        if (!hashedPassword || !hashedPassword.startsWith('$2')) {
+            throw new Error('Error al generar hash de contraseña');
+        }
 
         const [roleResult] = await pool.execute(
             'SELECT id_rol FROM rol WHERE nombre_rol = ?',
@@ -170,27 +183,105 @@ const crearEmpleado = async (req, res) => {
 
         const roleId = roleResult[0].id_rol;
 
-        const insertQuery = `
-            INSERT INTO usuario (
-                nombre, 
-                correo, 
-                telefono, 
-                contrasena, 
-                id_rol, 
-                fecha_registro,
-                activo
-            ) VALUES (?, ?, ?, ?, ?, NOW(), 1)
-        `;
+        // Intentar insertar con contrasena_temporal, si falla, intentar sin ella
+        let result;
+        try {
+            const insertQuery = `
+                INSERT INTO usuario (
+                    nombre, 
+                    correo, 
+                    telefono, 
+                    contrasena, 
+                    id_rol, 
+                    fecha_registro,
+                    activo,
+                    contrasena_temporal
+                ) VALUES (?, ?, ?, ?, ?, NOW(), 1, 1)
+            `;
 
-        const [result] = await pool.execute(insertQuery, [
-            nombre,
-            correo,
-            telefono,
-            hashedPassword,
-            roleId
-        ]);
+            [result] = await pool.execute(insertQuery, [
+                nombre,
+                correo,
+                telefono,
+                hashedPassword,
+                roleId
+            ]);
+            
+            // Verificar que se insertó correctamente
+            if (!result || !result.insertId) {
+                throw new Error('Error al insertar usuario en la base de datos');
+            }
+        } catch (insertError) {
+            // Si la columna contrasena_temporal no existe, intentar sin ella
+            if (insertError.code === 'ER_BAD_FIELD_ERROR' && insertError.message.includes('contrasena_temporal')) {
+                console.warn('Columna contrasena_temporal no existe, creando empleado sin marcar contraseña como temporal');
+                const insertQueryWithoutTemporal = `
+                    INSERT INTO usuario (
+                        nombre, 
+                        correo, 
+                        telefono, 
+                        contrasena, 
+                        id_rol, 
+                        fecha_registro,
+                        activo
+                    ) VALUES (?, ?, ?, ?, ?, NOW(), 1)
+                `;
+
+                [result] = await pool.execute(insertQueryWithoutTemporal, [
+                    nombre,
+                    correo,
+                    telefono,
+                    hashedPassword,
+                    roleId
+                ]);
+                
+                // Verificar que se insertó correctamente
+                if (!result || !result.insertId) {
+                    throw new Error('Error al insertar usuario en la base de datos');
+                }
+            } else {
+                throw insertError;
+            }
+        }
 
         const newUserId = result.insertId;
+        
+        // Verificar que el usuario se creó correctamente
+        const [verifyUser] = await pool.execute(
+            'SELECT id_usuario, correo, activo, contrasena, LENGTH(contrasena) as longitud_contrasena FROM usuario WHERE id_usuario = ?',
+            [newUserId]
+        );
+
+        if (verifyUser.length === 0) {
+            throw new Error('Error: Usuario creado pero no encontrado en la base de datos');
+        }
+
+        if (verifyUser[0].activo !== 1) {
+            console.warn('Usuario creado pero no está activo:', verifyUser[0]);
+        }
+        
+        if (!verifyUser[0].contrasena || verifyUser[0].longitud_contrasena === 0) {
+            console.error('Usuario creado pero sin contraseña en la base de datos');
+            throw new Error('Error: Usuario creado sin contraseña');
+        }
+        
+        // Verificar que la contraseña tiene formato bcrypt
+        if (!verifyUser[0].contrasena.startsWith('$2')) {
+            console.error('Contraseña guardada no tiene formato bcrypt válido');
+            console.error('Longitud:', verifyUser[0].longitud_contrasena);
+            console.error('Primeros caracteres:', verifyUser[0].contrasena.substring(0, 10));
+            throw new Error('Error: Contraseña no tiene formato bcrypt válido');
+        }
+        
+        // Log de éxito (solo en desarrollo)
+        if (process.env.NODE_ENV === 'development') {
+            console.log('✓ Usuario creado exitosamente:', {
+                id: newUserId,
+                correo: verifyUser[0].correo,
+                activo: verifyUser[0].activo,
+                longitud_hash: verifyUser[0].longitud_contrasena
+            });
+        }
 
         if (tipoUsuario === 'Empleado') {
             await pool.execute(
@@ -230,9 +321,21 @@ const crearEmpleado = async (req, res) => {
 
     } catch (error) {
         console.error('Error en crearEmpleado:', error);
+        
+        // Mensaje de error más descriptivo
+        let errorMessage = 'Error interno del servidor al crear empleado';
+        if (error.code === 'ER_BAD_FIELD_ERROR' && error.message.includes('contrasena_temporal')) {
+            errorMessage = 'La columna contrasena_temporal no existe en la base de datos. Por favor, ejecuta el script ALTER TABLE para agregarla.';
+        } else if (error.code === 'ER_DUP_ENTRY') {
+            errorMessage = 'El correo electrónico ya está registrado';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor al crear empleado'
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -242,7 +345,7 @@ const actualizarEmpleado = async (req, res) => {
     try {
         const userId = req.user.id;
         const { empleadoId } = req.params;
-        const { nombre, correo, telefono, area_trabajo, tipoUsuario, estado } = req.body;
+        const { nombre, correo, telefono, area_trabajo, tipoUsuario, estado, contrasena } = req.body;
 
         const userQuery = `
             SELECT u.id_usuario, r.nombre_rol 
@@ -337,6 +440,48 @@ const actualizarEmpleado = async (req, res) => {
 
         const updateFields = [];
         const updateValues = [];
+        
+        // Manejar actualización de contraseña
+        let hashedPassword = null;
+        if (contrasena && contrasena.trim().length > 0) {
+            const saltRounds = 12;
+            hashedPassword = await bcrypt.hash(contrasena.trim(), saltRounds);
+            
+            // Verificar que el hash se generó correctamente
+            if (!hashedPassword || !hashedPassword.startsWith('$2')) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al generar hash de contraseña'
+                });
+            }
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Hash generado (primeros 50 chars):', hashedPassword.substring(0, 50));
+                console.log('Longitud hash generado:', hashedPassword.length);
+            }
+            
+            // Agregar contraseña
+            updateFields.push('contrasena = ?');
+            updateValues.push(hashedPassword);
+            
+            // Intentar agregar contrasena_temporal si la columna existe
+            try {
+                // Verificar si la columna existe intentando una consulta
+                await pool.execute('SELECT contrasena_temporal FROM usuario LIMIT 1');
+                updateFields.push('contrasena_temporal = 1');
+                
+                // Log de éxito (solo en desarrollo)
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('✓ Contraseña temporal agregada a updateFields para empleado:', empleadoId);
+                    console.log('updateFields completo:', updateFields);
+                }
+            } catch (colError) {
+                // Si la columna no existe, simplemente no la actualizamos
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn('Columna contrasena_temporal no existe, no se marcará como temporal');
+                }
+            }
+        }
 
         if (nombre) {
             updateFields.push('nombre = ?');
@@ -372,7 +517,117 @@ const actualizarEmpleado = async (req, res) => {
                 SET ${updateFields.join(', ')}
                 WHERE id_usuario = ?
             `;
-            await pool.execute(updateQuery, updateValues);
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Actualizando empleado:', empleadoId);
+                console.log('Campos a actualizar:', updateFields);
+                console.log('Query completa:', updateQuery);
+            }
+            
+            const [updateResult] = await pool.execute(updateQuery, updateValues);
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Resultado de actualización - Filas afectadas:', updateResult.affectedRows);
+                console.log('Query ejecutada:', updateQuery);
+                console.log('Valores:', updateValues);
+            }
+            
+            // Verificar directamente el valor de contrasena_temporal después de actualizar
+            if (hashedPassword) {
+                // Verificar inmediatamente después de la actualización
+                try {
+                    const [checkTemporal] = await pool.execute(
+                        'SELECT contrasena_temporal FROM usuario WHERE id_usuario = ?',
+                        [empleadoId]
+                    );
+                    if (checkTemporal.length > 0 && process.env.NODE_ENV === 'development') {
+                        console.log('✓ Valor de contrasena_temporal DESPUÉS de UPDATE:', checkTemporal[0].contrasena_temporal);
+                        console.log('Tipo:', typeof checkTemporal[0].contrasena_temporal);
+                    }
+                } catch (err) {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('No se pudo verificar contrasena_temporal:', err.message);
+                    }
+                }
+            }
+            
+            // Verificar que la contraseña se actualizó correctamente (solo si se actualizó)
+            if (hashedPassword) {
+                // Esperar un momento para que la actualización se complete
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                let verifyUpdate;
+                try {
+                    // Intentar con contrasena_temporal - leer tanto directo como COALESCE
+                    [verifyUpdate] = await pool.execute(
+                        `SELECT contrasena, LENGTH(contrasena) as longitud_contrasena, 
+                                contrasena_temporal,
+                                COALESCE(contrasena_temporal, 0) as contrasena_temporal_coalesce
+                         FROM usuario WHERE id_usuario = ?`,
+                        [empleadoId]
+                    );
+                } catch (colError) {
+                    // Si la columna no existe, consultar sin ella
+                    if (colError.code === 'ER_BAD_FIELD_ERROR' && colError.message.includes('contrasena_temporal')) {
+                        [verifyUpdate] = await pool.execute(
+                            `SELECT contrasena, LENGTH(contrasena) as longitud_contrasena
+                             FROM usuario WHERE id_usuario = ?`,
+                            [empleadoId]
+                        );
+                    } else {
+                        throw colError;
+                    }
+                }
+                
+                if (verifyUpdate && verifyUpdate.length > 0) {
+                    const savedHash = verifyUpdate[0].contrasena;
+                    
+                    if (!savedHash || !savedHash.startsWith('$2')) {
+                        console.error('Error: Contraseña actualizada pero no tiene formato bcrypt válido');
+                        throw new Error('Error al actualizar contraseña');
+                    }
+                    
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log('\n=== VERIFICACIÓN DE CONTRASEÑA ACTUALIZADA ===');
+                        console.log('Empleado ID:', empleadoId);
+                        console.log('Hash generado (primeros 50):', hashedPassword.substring(0, 50));
+                        console.log('Hash guardado (primeros 50):', savedHash.substring(0, 50));
+                        console.log('¿Hashes son idénticos?', hashedPassword === savedHash);
+                        console.log('Longitud hash guardado:', verifyUpdate[0].longitud_contrasena);
+                        if (verifyUpdate[0].contrasena_temporal !== undefined) {
+                            console.log('contrasena_temporal (directo):', verifyUpdate[0].contrasena_temporal);
+                            console.log('contrasena_temporal (COALESCE):', verifyUpdate[0].contrasena_temporal_coalesce);
+                            console.log('Tipo (directo):', typeof verifyUpdate[0].contrasena_temporal);
+                            console.log('Tipo (COALESCE):', typeof verifyUpdate[0].contrasena_temporal_coalesce);
+                        }
+                        
+                        // Probar la contraseña inmediatamente con diferentes variantes
+                        const originalPassword = contrasena;
+                        const trimmedPassword = contrasena.trim();
+                        
+                        console.log('\nProbando comparaciones:');
+                        console.log('  Contraseña original (longitud):', originalPassword.length);
+                        console.log('  Contraseña trim (longitud):', trimmedPassword.length);
+                        
+                        const test1 = await bcrypt.compare(originalPassword, savedHash);
+                        const test2 = await bcrypt.compare(trimmedPassword, savedHash);
+                        
+                        console.log('  Test con original:', test1 ? '✓ COINCIDE' : '✗ NO COINCIDE');
+                        console.log('  Test con trim:', test2 ? '✓ COINCIDE' : '✗ NO COINCIDE');
+                        
+                        if (!test1 && !test2) {
+                            console.error('\n⚠️ ADVERTENCIA CRÍTICA: La contraseña NO coincide después de actualizarla!');
+                            console.error('  Hash generado (completo, primeros 100):', hashedPassword.substring(0, 100));
+                            console.error('  Hash guardado (completo, primeros 100):', savedHash.substring(0, 100));
+                            console.error('  ¿Son idénticos?', hashedPassword === savedHash);
+                        } else {
+                            console.log('\n✓ La contraseña se actualizó correctamente y es verificable');
+                        }
+                    }
+                } else {
+                    console.error('Error: No se pudo verificar la actualización de la contraseña');
+                }
+            }
         }
 
         if (area_trabajo) {
@@ -424,9 +679,26 @@ const actualizarEmpleado = async (req, res) => {
 
     } catch (error) {
         console.error('Error en actualizarEmpleado:', error);
+        console.error('Stack trace:', error.stack);
+        
+        // Mensaje de error más descriptivo
+        let errorMessage = 'Error interno del servidor al actualizar empleado';
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+            errorMessage = `Error de base de datos: ${error.sqlMessage || error.message}`;
+        } else if (error.code === 'ER_DUP_ENTRY') {
+            errorMessage = 'El correo electrónico ya está registrado';
+        }
+        
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor al actualizar empleado'
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                code: error.code,
+                sqlMessage: error.sqlMessage
+            } : undefined
         });
     }
 };
