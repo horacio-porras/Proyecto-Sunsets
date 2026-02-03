@@ -135,13 +135,6 @@ const login = async (req, res) => {
 
         const { correo, contrasena } = req.body;
 
-        // Log inicial (solo en desarrollo)
-        if (process.env.NODE_ENV === 'development') {
-            console.log('\n=== INICIO DE LOGIN ===');
-            console.log('Correo recibido:', correo);
-            console.log('Contraseña recibida (longitud):', contrasena ? contrasena.length : 0);
-        }
-
         // Función helper para normalizar correo de Gmail (remover puntos de la parte local)
         const normalizeGmail = (email) => {
             const [localPart, domain] = email.split('@');
@@ -175,24 +168,8 @@ const login = async (req, res) => {
                     [searchEmail]
                 );
                 
-                if (process.env.NODE_ENV === 'development' && users.length > 0) {
-                    console.log(`✓ Usuario encontrado con correo: ${searchEmail}`);
-                    // Verificar directamente el valor en la BD
-                    const [dbCheck] = await pool.execute(
-                        'SELECT contrasena_temporal, COALESCE(contrasena_temporal, 0) as temp_coalesce FROM usuario WHERE correo = ?',
-                        [searchEmail]
-                    );
-                    if (dbCheck.length > 0) {
-                        console.log('Valor directo de BD (contrasena_temporal):', dbCheck[0].contrasena_temporal);
-                        console.log('Tipo del valor:', typeof dbCheck[0].contrasena_temporal);
-                        console.log('Valor con COALESCE:', dbCheck[0].temp_coalesce);
-                    }
-                }
             }
             
-            if (process.env.NODE_ENV === 'development') {
-                console.log('Usuarios encontrados con contrasena_temporal:', users.length);
-            }
         } catch (error) {
             // Si la columna contrasena_temporal no existe, intentar sin ella
             if (error.code === 'ER_BAD_FIELD_ERROR' && error.message.includes('contrasena_temporal')) {
@@ -245,15 +222,6 @@ const login = async (req, res) => {
 
         const user = users[0];
 
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Usuario encontrado:', user.correo);
-            console.log('Usuario activo:', user.activo);
-            console.log('Usuario tiene contraseña:', !!user.contrasena);
-            if (user.contrasena) {
-                console.log('Longitud contraseña en BD:', user.contrasena.length);
-                console.log('Formato bcrypt:', user.contrasena.startsWith('$2'));
-            }
-        }
 
         //Verifica la contraseña
         if (!user.contrasena) {
@@ -274,18 +242,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Log para debugging (solo en desarrollo)
-        if (process.env.NODE_ENV === 'development') {
-            console.log('=== INTENTO DE LOGIN ===');
-            console.log('Usuario:', user.correo);
-            console.log('ID Usuario:', user.id_usuario);
-            console.log('Contraseña ingresada (longitud):', contrasena.length);
-            console.log('Contraseña ingresada (primeros 3 chars):', contrasena.substring(0, 3));
-            console.log('Hash en BD (longitud):', user.contrasena.length);
-            console.log('Hash en BD (primeros 30 chars):', user.contrasena.substring(0, 30));
-            console.log('Hash en BD (últimos 10 chars):', user.contrasena.substring(user.contrasena.length - 10));
-        }
-        
         // Comparar contraseña - probar diferentes variantes
         let isValidPassword = false;
         let matchedVariant = null;
@@ -303,9 +259,6 @@ const login = async (req, res) => {
                 if (testResult) {
                     isValidPassword = true;
                     matchedVariant = variant.name;
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log(`✓ Contraseña válida (variante: ${variant.name})`);
-                    }
                     break;
                 }
             } catch (compareError) {
@@ -338,11 +291,6 @@ const login = async (req, res) => {
             });
         }
         
-        // Log de éxito (solo en desarrollo)
-        if (process.env.NODE_ENV === 'development') {
-            console.log('✓ Login exitoso para:', user.correo);
-        }
-
         //Genera el token
         const token = generateToken(user.id_usuario, user.nombre_rol);
 
@@ -358,19 +306,6 @@ const login = async (req, res) => {
             // Convertir a número y comparar (maneja 1, '1', true, etc.)
             const temporalNumber = Number(temporalValue);
             contrasenaTemporal = temporalNumber === 1 || temporalValue === true || temporalValue === '1';
-        }
-        
-        // Log para debugging (solo en desarrollo)
-        if (process.env.NODE_ENV === 'development') {
-            console.log('=== INFORMACIÓN DE CONTRASEÑA TEMPORAL ===');
-            console.log('hasTemporalPasswordColumn:', hasTemporalPasswordColumn);
-            console.log('user.contrasena_temporal (directo):', user.contrasena_temporal);
-            console.log('user.contrasena_temporal_coalesce:', user.contrasena_temporal_coalesce);
-            console.log('Tipo (directo):', typeof user.contrasena_temporal);
-            console.log('Tipo (coalesce):', typeof user.contrasena_temporal_coalesce);
-            console.log('Número (directo):', Number(user.contrasena_temporal));
-            console.log('Número (coalesce):', Number(user.contrasena_temporal_coalesce));
-            console.log('contrasenaTemporal (calculated):', contrasenaTemporal);
         }
         
         //Respuesta exitosa
