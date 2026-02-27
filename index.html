@@ -715,13 +715,16 @@
                             </div>
                         `;
                     
-                    const imagenUrl = producto.image || 'https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400';
+                    const imageHtml = producto.image && producto.image.trim() !== ''
+                        ? `<img src="${producto.image}" alt="${producto.name}" class="w-full h-48 object-cover">`
+                        : `<div class="w-full h-48 bg-gray-300 flex items-center justify-center">
+                             <i class="fas fa-image text-gray-500 text-3xl"></i>
+                           </div>`;
                     const descripcion = producto.description || 'Delicioso producto de nuestro menú';
                     
                     return `
                         <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="window.location.href='/menu.html'">
-                            <img src="${imagenUrl}" alt="${producto.name}"
-                                class="w-full h-48 object-cover">
+                            ${imageHtml}
                             <div class="p-4">
                                 <div class="flex justify-between items-start mb-2">
                                     <h4 class="font-semibold text-lg">${producto.name}</h4>

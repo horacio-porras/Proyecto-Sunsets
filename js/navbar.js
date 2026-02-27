@@ -586,6 +586,27 @@ function addNavbarEventListeners() {
             e.target.value = value;
         });
     }
+
+    const registerEmailInput = document.getElementById('registerEmail');
+    if (registerEmailInput) {
+        registerEmailInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerPasswordInput = document.getElementById('registerPassword');
+    if (registerPasswordInput) {
+        registerPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
+    if (registerConfirmPasswordInput) {
+        registerConfirmPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
 }
 
 //Función para mostrar/ocultar contraseña en login
@@ -803,11 +824,11 @@ function validateRegisterPasswords() {
 //Función para manejar el registro
 async function handleRegister() {
     console.log('handleRegister called');
-    const nombre = document.getElementById('registerNombre').value;
-    const email = document.getElementById('registerEmail').value;
-    const telefono = document.getElementById('registerTelefono').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const nombre = document.getElementById('registerNombre').value.trim();
+    const email = document.getElementById('registerEmail').value.replace(/\s/g, '');
+    const telefono = document.getElementById('registerTelefono').value.replace(/\s/g, '');
+    const password = document.getElementById('registerPassword').value.replace(/\s/g, '');
+    const confirmPassword = document.getElementById('registerConfirmPassword').value.replace(/\s/g, '');
     const notificacionesActivas = document.getElementById('registerNotificacionesActivas').checked;
 
     if (!nombre || !email || !telefono || !password || !confirmPassword) {
@@ -823,6 +844,11 @@ async function handleRegister() {
     if (!validateRegisterPasswords()) {
         return;
     }
+
+    document.getElementById('registerEmail').value = email;
+    document.getElementById('registerTelefono').value = telefono;
+    document.getElementById('registerPassword').value = password;
+    document.getElementById('registerConfirmPassword').value = confirmPassword;
 
     toggleRegisterLoading(true);
 

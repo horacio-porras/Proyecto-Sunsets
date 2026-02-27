@@ -546,7 +546,13 @@
             if (selectedPaymentMethod === 'sinpe') {
                 const sinpeReference = document.getElementById('sinpeReference').value.trim();
                 if (!sinpeReference) {
-                    alert('Por favor ingresa el número de comprobante del SINPE.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Comprobante requerido',
+                        text: 'Por favor ingresa el número de comprobante del SINPE.',
+                        confirmButtonColor: '#f97316',
+                        confirmButtonText: 'Entendido'
+                    });
                     return false;
                 }
             }

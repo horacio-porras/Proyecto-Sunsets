@@ -317,6 +317,36 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 //Endpoint para que invitados vean detalles de su pedido (sin autenticación)
+router.get('/guest/email-exists', async (req, res) => {
+    try {
+        const email = (req.query.email || '').trim().toLowerCase();
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'El correo electrónico es requerido'
+            });
+        }
+
+        const [rows] = await pool.execute(
+            'SELECT id_usuario FROM usuario WHERE LOWER(correo) = ? LIMIT 1',
+            [email]
+        );
+
+        return res.json({
+            success: true,
+            exists: rows.length > 0
+        });
+    } catch (error) {
+        console.error('Error al validar correo de invitado:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+//Endpoint para que invitados vean detalles de su pedido (sin autenticación)
 router.get('/guest/:id', async (req, res) => {
     try {
         const pedidoId = req.params.id;
@@ -1176,6 +1206,27 @@ router.post('/guest', async (req, res) => {
             });
         }
 
+        const emailInvitado = (customer.email || '').trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInvitado || !emailRegex.test(emailInvitado)) {
+            return res.status(400).json({
+                success: false,
+                message: 'El correo electrónico del invitado es requerido y debe ser válido'
+            });
+        }
+
+        const [emailExistenteRows] = await connection.execute(
+            'SELECT id_usuario FROM usuario WHERE LOWER(correo) = ? LIMIT 1',
+            [emailInvitado.toLowerCase()]
+        );
+
+        if (emailExistenteRows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Este correo ya está registrado. Inicia sesión para continuar con tu pedido.'
+            });
+        }
+
         //Validar dirección de entrega (puede venir en diferentes formatos)
         let addressText = '';
         if (delivery.addressText) {
@@ -1236,7 +1287,7 @@ router.post('/guest', async (req, res) => {
                 null,
                 customer.name,
                 customer.phone,
-                customer.email || null,
+                emailInvitado,
                 direccionId,
                 empleadoAsignado,
                 areaAsignacion,
