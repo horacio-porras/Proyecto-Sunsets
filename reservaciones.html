@@ -691,8 +691,21 @@
             });
         }
 
+        function bloquearCamposCliente() {
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+
+            [fullNameInput, emailInput, phoneInput].forEach((input) => {
+                if (!input) return;
+                input.readOnly = true;
+                input.disabled = true;
+                input.classList.add('bg-gray-100', 'text-gray-600', 'cursor-not-allowed');
+            });
+        }
+
         async function loadClientProfile() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 return;
             }
@@ -714,17 +727,39 @@
                     return;
                 }
 
-                if (user.nombre) {
-                    document.getElementById('fullName').value = user.nombre;
+                const fullNameInput = document.getElementById('fullName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+
+                if (fullNameInput && user.nombre) {
+                    fullNameInput.value = user.nombre;
                 }
-                if (user.correo) {
-                    document.getElementById('email').value = user.correo;
+                if (emailInput && user.correo) {
+                    emailInput.value = user.correo;
                 }
-                if (user.telefono) {
-                    document.getElementById('phone').value = user.telefono;
+                if (phoneInput && user.telefono) {
+                    phoneInput.value = user.telefono;
                 }
+
+                bloquearCamposCliente();
             } catch (error) {
-                // Silenciar errores de carga de perfil
+                try {
+                    const rawUserData = localStorage.getItem('userData');
+                    const userData = rawUserData ? JSON.parse(rawUserData) : null;
+                    if (!userData) return;
+
+                    const fullNameInput = document.getElementById('fullName');
+                    const emailInput = document.getElementById('email');
+                    const phoneInput = document.getElementById('phone');
+
+                    if (fullNameInput && userData.nombre) fullNameInput.value = userData.nombre;
+                    if (emailInput && userData.correo) emailInput.value = userData.correo;
+                    if (phoneInput && userData.telefono) phoneInput.value = userData.telefono;
+
+                    bloquearCamposCliente();
+                } catch (_) {
+                    // Silenciar errores de fallback
+                }
             }
         }
 
@@ -757,7 +792,7 @@
                 return;
             }
 
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 Swal.fire({
                     icon: 'info',
@@ -858,6 +893,7 @@
                     generateCalendar();
                     clearValidationFeedback();
                     updateSummary();
+                    loadClientProfile();
                 });
             } catch (error) {
                 Swal.fire({
@@ -889,7 +925,7 @@
             updateTablePreferenceStyles();
             updateSummary();
 
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
                 loadClientProfile();
             }

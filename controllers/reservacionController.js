@@ -7,6 +7,26 @@ const ESTADO_RESERVA_PENDIENTE = 'pendiente';
 const ESTADO_RESERVA_CANCELADA = 'cancelada';
 const ESTADOS_NO_MODIFICABLES = new Set(['cancelada', 'rechazada', 'completada']);
 
+const enviarCorreoReservacionEnSegundoPlano = ({ to, nombre, numeroReserva, fecha, hora, personas, contexto }) => {
+    setTimeout(async () => {
+        try {
+            console.log(`[Reservación] (${contexto}) Enviando correo de confirmación a: ${to}`);
+            await sendReservationEmail({
+                to,
+                nombre,
+                numeroReserva,
+                fecha,
+                hora,
+                personas
+            });
+            console.log(`[Reservación] (${contexto}) ✓ Correo de confirmación enviado exitosamente`);
+        } catch (mailErr) {
+            console.error(`[Reservación] (${contexto}) ✗ ERROR al enviar correo de confirmación:`, mailErr.message);
+            console.error(`[Reservación] (${contexto}) Detalles completos del error:`, mailErr);
+        }
+    }, 0);
+};
+
 const buildValidationError = (field, message) => ({ field, message });
 
 const validateReservaPayload = ({ fecha_reserva, hora_reserva, cantidad_personas }) => {
@@ -142,23 +162,15 @@ const createReservation = async (req, res) => {
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] (Auth) Enviando correo de confirmación a: ${userCorreo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: userCorreo,
-                nombre: userNombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] (Auth) ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] (Auth) ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] (Auth) Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: userCorreo,
+            nombre: userNombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Auth'
+        });
 
         return res.status(201).json({
             success: true,
@@ -173,7 +185,7 @@ const createReservation = async (req, res) => {
                 },
                 max_capacidad: MAX_PERSONAS_RESERVA,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
@@ -234,23 +246,15 @@ const createPublicReservation = async (req, res) => {
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] Enviando correo de confirmación a: ${correo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: correo,
-                nombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: correo,
+            nombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Pública'
+        });
 
         return res.status(201).json({
             success: true,
@@ -258,7 +262,7 @@ const createPublicReservation = async (req, res) => {
             data: {
                 id_reservacion: idReserva,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
