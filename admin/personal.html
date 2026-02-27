@@ -360,6 +360,13 @@
                 });
             }
 
+            const contrasenaInput = document.getElementById('contrasena');
+            if (contrasenaInput) {
+                contrasenaInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                });
+            }
+
             document.getElementById('buscarEmpleado').addEventListener('input', filtrarEmpleados);
             document.getElementById('filtroEstado').addEventListener('change', filtrarEmpleados);
 
@@ -851,8 +858,9 @@
                     throw new Error('El número de teléfono debe tener exactamente 8 dígitos, sin espacios');
                 }
 
-                const contrasena = document.getElementById('contrasena').value;
                 const contrasenaField = document.getElementById('contrasena');
+                const contrasena = contrasenaField.value.replace(/\s+/g, '');
+                contrasenaField.value = contrasena;
                 
                 // Si es el usuario actual, no permitir cambiar la contraseña (no puede asignarse temporal)
                 if (esUsuarioActual && contrasena.trim() !== '') {

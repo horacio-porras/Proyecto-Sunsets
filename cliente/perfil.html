@@ -500,7 +500,10 @@
             securityFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) {
-                    field.addEventListener('input', updateButtonAppearance);
+                    field.addEventListener('input', function(e) {
+                        e.target.value = e.target.value.replace(/\s+/g, '');
+                        updateButtonAppearance();
+                    });
                     field.addEventListener('change', updateButtonAppearance);
                 }
             });
@@ -567,9 +570,17 @@
                 return hasChanges;
                 
             } else if (currentSection && currentSection.id === 'security-section') {
-                const contrasenaActual = document.getElementById('contrasenaActual').value;
-                const nuevaContrasena = document.getElementById('nuevaContrasena').value;
-                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value;
+                const contrasenaActualInput = document.getElementById('contrasenaActual');
+                const nuevaContrasenaInput = document.getElementById('nuevaContrasena');
+                const confirmarNuevaContrasenaInput = document.getElementById('confirmarNuevaContrasena');
+
+                const contrasenaActual = (contrasenaActualInput.value || '').replace(/\s+/g, '');
+                const nuevaContrasena = (nuevaContrasenaInput.value || '').replace(/\s+/g, '');
+                const confirmarNuevaContrasena = (confirmarNuevaContrasenaInput.value || '').replace(/\s+/g, '');
+
+                contrasenaActualInput.value = contrasenaActual;
+                nuevaContrasenaInput.value = nuevaContrasena;
+                confirmarNuevaContrasenaInput.value = confirmarNuevaContrasena;
                 
                 const hasChanges = 
                     contrasenaActual !== '' ||

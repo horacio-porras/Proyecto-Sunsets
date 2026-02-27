@@ -1391,19 +1391,16 @@ async function processForgotPassword(email) {
             title: '¡Correo Enviado!',
             html: `
                 <div class="text-center py-4">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
                         <i class="fas fa-envelope text-white text-2xl"></i>
                     </div>
                     <p class="text-gray-700 text-lg">Si el correo existe, recibirás un enlace para recuperar tu contraseña</p>
                     <p class="text-gray-600 text-sm mt-2">Revisa tu bandeja de entrada y sigue las instrucciones</p>
                 </div>
             `,
-            confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
-            confirmButtonColor: '#10b981',
-            buttonsStyling: false,
-            customClass: {
-                confirmButton: 'bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition'
-            }
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true
         });
         
     } catch (error) {
@@ -1489,9 +1486,19 @@ function initializeForgotPasswordModal() {
 
 // Función para validar que las contraseñas coincidan en tiempo real
 function validatePasswordMatch() {
-    const newPassword = document.getElementById('newPassword')?.value || '';
-    const confirmPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmPassword = (confirmPasswordInput?.value || '').replace(/\s+/g, '');
     const matchError = document.getElementById('passwordMatchError');
+
+    // No permitir espacios en ningún campo de contraseña del modal temporal
+    if (newPasswordInput && newPasswordInput.value !== newPassword) {
+        newPasswordInput.value = newPassword;
+    }
+    if (confirmPasswordInput && confirmPasswordInput.value !== confirmPassword) {
+        confirmPasswordInput.value = confirmPassword;
+    }
     
     if (confirmPassword.length > 0) {
         if (newPassword !== confirmPassword) {
@@ -1561,13 +1568,21 @@ function showChangePasswordModal() {
             // Remover listeners anteriores
             const newInput = newPasswordInput.cloneNode(true);
             newPasswordInput.parentNode.replaceChild(newInput, newPasswordInput);
-            document.getElementById('newPassword').addEventListener('input', validatePasswordMatch);
+            const sanitizedNewPasswordInput = document.getElementById('newPassword');
+            sanitizedNewPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
         }
         if (confirmPasswordInput) {
             // Remover listeners anteriores
             const newInput = confirmPasswordInput.cloneNode(true);
             confirmPasswordInput.parentNode.replaceChild(newInput, confirmPasswordInput);
-            document.getElementById('confirmNewPassword').addEventListener('input', validatePasswordMatch);
+            const sanitizedConfirmPasswordInput = document.getElementById('confirmNewPassword');
+            sanitizedConfirmPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
         }
         
         // Configurar el formulario y botón después de un pequeño delay para asegurar que el DOM esté listo
@@ -1629,8 +1644,12 @@ function toggleConfirmNewPassword() {
 async function handleChangePassword() {
     console.log('handleChangePassword llamado');
     
-    const newPassword = document.getElementById('newPassword')?.value || '';
-    const confirmNewPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmNewPassword = (confirmNewPasswordInput?.value || '').replace(/\s+/g, '');
+    if (newPasswordInput) newPasswordInput.value = newPassword;
+    if (confirmNewPasswordInput) confirmNewPasswordInput.value = confirmNewPassword;
     const errorMessage = document.getElementById('changePasswordErrorMessage');
     const errorText = document.getElementById('changePasswordErrorText');
     const btn = document.getElementById('changePasswordBtn');
@@ -1785,6 +1804,24 @@ function setupChangePasswordForm() {
         // Obtener el nuevo formulario
         const form = document.getElementById('changePasswordForm');
         if (form) {
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmNewPassword');
+
+            // Reaplicar sanitización después de reconstruir el formulario
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
