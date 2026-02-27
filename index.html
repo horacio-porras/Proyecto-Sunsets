@@ -660,29 +660,11 @@
                 }
                 
                 const productos = data.data;
-                
-                // Obtener calificaciones para cada producto
-                const productosConCalificaciones = await Promise.all(
-                    productos.map(async (producto) => {
-                        try {
-                            const ratingResponse = await fetch(`/api/opiniones/producto/${producto.id}/promedio`);
-                            const ratingData = await ratingResponse.json();
-                            
-                            return {
-                                ...producto,
-                                promedio: ratingData.success && ratingData.promedio > 0 ? ratingData.promedio : 0,
-                                totalOpiniones: ratingData.success ? (ratingData.total || 0) : 0
-                            };
-                        } catch (error) {
-                            console.error(`Error al cargar calificación para producto ${producto.id}:`, error);
-                            return {
-                                ...producto,
-                                promedio: 0,
-                                totalOpiniones: 0
-                            };
-                        }
-                    })
-                );
+                const productosConCalificaciones = productos.map(producto => ({
+                    ...producto,
+                    promedio: Number(producto.ratingAverage || 0),
+                    totalOpiniones: Number(producto.ratingTotal || 0)
+                }));
                 
                 // Filtrar solo productos con calificaciones (promedio > 0) y ordenar por calificación descendente
                 const productosCalificados = productosConCalificaciones
