@@ -22,6 +22,7 @@ const opinionesRoutes = require('./routes/opinionesRoutes');
 const facturaRoutes = require('./routes/facturaRoutes');
 const auditoriaRoutes = require('./routes/auditoriaRoutes');
 const reportesRoutes = require('./routes/reportesRoutes');
+const contactoRoutes = require('./routes/contactoRoutes');
 
 //Importa las rutas del chatbot
 const chatbotRoutes = require('./routes/chatbotRoutes');
@@ -132,6 +133,7 @@ app.use('/api/facturas', facturaRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/contacto', contactoRoutes);
 
 //Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

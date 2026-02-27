@@ -505,13 +505,6 @@
             if (btnCerrarModal) {
                 btnCerrarModal.addEventListener('click', cerrarModalItem);
             }
-            if (modalItem) {
-                modalItem.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('modal')) {
-                        cerrarModalItem();
-                    }
-                });
-            }
             if (formItem) {
                 formItem.addEventListener('submit', handleSubmitItem);
             }

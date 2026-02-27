@@ -602,7 +602,7 @@
                                 <span class="text-sm text-gray-500 italic">Factura en proceso...</span>
                             ` : '')}
                             
-                            ${order.estado_pedido === 'entregado' ? `
+                            ${order.puede_calificar ? `
                                 <button onclick="calificarPedido(${order.id_pedido})" class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2">
                                     <i class="fas fa-star"></i>
                                     Calificar
@@ -1618,7 +1618,9 @@
                         icon: 'success',
                         title: '¡Calificaciones enviadas!',
                         text: 'Tus opiniones serán revisadas antes de ser publicadas',
-                        confirmButtonColor: '#f97316'
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
                     });
                 }
                 

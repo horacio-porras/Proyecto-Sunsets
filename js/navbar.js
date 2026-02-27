@@ -456,7 +456,7 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-comments mr-2 text-gray-700"></i>Moderación
+                    <i class="fas fa-shield-alt mr-2 text-gray-700"></i>Moderación
                 </a>
                 <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
@@ -491,7 +491,7 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-calendar-alt mr-2"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-comments mr-2"></i>Moderación
+                    <i class="fas fa-shield-alt mr-2"></i>Moderación
                 </a>
                 <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes
@@ -607,6 +607,13 @@ function addNavbarEventListeners() {
             e.target.value = e.target.value.replace(/\s/g, '');
         });
     }
+
+    const loginPasswordInput = document.getElementById('loginPassword');
+    if (loginPasswordInput) {
+        loginPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
 }
 
 //Función para mostrar/ocultar contraseña en login
@@ -716,7 +723,9 @@ function toggleRegisterLoading(show) {
 //Función para manejar el login
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const passwordInput = document.getElementById('loginPassword');
+    const password = passwordInput.value.replace(/\s/g, '');
+    passwordInput.value = password;
 
     if (!email || !password) {
         showLoginMessage('Por favor, completa todos los campos requeridos');

@@ -257,9 +257,27 @@
         //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             loadUserData();
+            setupPasswordNoSpaces();
             
             document.getElementById('saveSecurityBtn').addEventListener('click', handleSecurityUpdate);
         });
+
+        //Evita espacios en los campos de contraseña (incluye escritura y pegado)
+        function setupPasswordNoSpaces() {
+            const passwordFields = ['contrasenaActual', 'nuevaContrasena', 'confirmarNuevaContrasena'];
+
+            passwordFields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (!input) return;
+
+                input.addEventListener('input', function() {
+                    const cleanValue = this.value.replace(/\s+/g, '');
+                    if (this.value !== cleanValue) {
+                        this.value = cleanValue;
+                    }
+                });
+            });
+        }
 
         //Función para mostrar secciones
         function showSection(sectionName) {
@@ -326,9 +344,9 @@
             saveBtnSpinner.classList.remove('hidden');
             
             try {
-                const contrasenaActual = document.getElementById('contrasenaActual').value;
-                const nuevaContrasena = document.getElementById('nuevaContrasena').value;
-                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value;
+                const contrasenaActual = document.getElementById('contrasenaActual').value.replace(/\s+/g, '');
+                const nuevaContrasena = document.getElementById('nuevaContrasena').value.replace(/\s+/g, '');
+                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value.replace(/\s+/g, '');
 
                 if (!nuevaContrasena || !confirmarNuevaContrasena) {
                     throw new Error('Debes completar todos los campos de contraseña');

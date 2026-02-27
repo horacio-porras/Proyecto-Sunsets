@@ -1,5 +1,32 @@
 const { pool } = require('../config/database');
 
+// Permite opinar una vez por cada pedido entregado que incluya el producto.
+async function obtenerCupoOpinionesProducto(idCliente, idProducto) {
+    const [[pedidosEntregadosRow]] = await pool.query(
+        `SELECT COUNT(DISTINCT p.id_pedido) AS total
+         FROM pedido p
+         JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+         WHERE p.id_cliente = ? AND dp.id_producto = ? AND p.estado_pedido = 'entregado'`,
+        [idCliente, idProducto]
+    );
+
+    const [[opinionesRow]] = await pool.query(
+        `SELECT COUNT(*) AS total
+         FROM opinion
+         WHERE id_cliente = ? AND id_producto = ?`,
+        [idCliente, idProducto]
+    );
+
+    const pedidosEntregados = Number(pedidosEntregadosRow?.total || 0);
+    const opinionesRealizadas = Number(opinionesRow?.total || 0);
+
+    return {
+        pedidosEntregados,
+        opinionesRealizadas,
+        puedeOpinar: pedidosEntregados > opinionesRealizadas
+    };
+}
+
 // Obtener opiniones por producto
 exports.obtenerOpinionesPorProducto = async (req, res) => {
     const { id_producto } = req.params;
@@ -144,31 +171,16 @@ exports.verificarPuedeOpinar = async (req, res) => {
 
         const id_cliente = clienteRows[0].id_cliente;
 
-        // Verificar si el cliente ha realizado un pedido con este producto que esté "entregado"
-        const [pedidos] = await pool.query(
-            `SELECT DISTINCT p.id_pedido
-            FROM pedido p
-            JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
-            WHERE p.id_cliente = ? AND dp.id_producto = ? AND p.estado_pedido = 'entregado'`,
-            [id_cliente, id_producto]
-        );
-
-        // Verificar si ya opinó sobre este producto
-        const [opinionExistente] = await pool.query(
-            `SELECT id_opinion FROM opinion 
-            WHERE id_cliente = ? AND id_producto = ?`,
-            [id_cliente, id_producto]
-        );
-
-        const puedeOpinar = pedidos.length > 0 && opinionExistente.length === 0;
+        const cupo = await obtenerCupoOpinionesProducto(id_cliente, id_producto);
+        const puedeOpinar = cupo.puedeOpinar;
 
         return res.json({
             success: true,
             puedeOpinar,
             razon: !puedeOpinar 
-                ? (pedidos.length === 0 
+                ? (cupo.pedidosEntregados === 0
                     ? 'Debes realizar un pedido con este producto y que esté entregado antes de opinar'
-                    : 'Ya has opinado sobre este producto')
+                    : 'Ya usaste tus opiniones disponibles para este producto. Vuelve a comprarlo para opinar de nuevo.')
                 : 'Puedes opinar'
         });
     } catch (error) {
@@ -272,32 +284,19 @@ exports.crearOpinion = async (req, res) => {
 
         // Verificar si es opinión de producto y si puede opinar
         if (tipo === 'producto' && id_producto) {
-            const [pedidos] = await pool.query(
-                `SELECT DISTINCT p.id_pedido
-                FROM pedido p
-                JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
-                WHERE p.id_cliente = ? AND dp.id_producto = ? AND p.estado_pedido = 'entregado'`,
-                [id_cliente, id_producto]
-            );
+            const cupo = await obtenerCupoOpinionesProducto(id_cliente, id_producto);
 
-            if (pedidos.length === 0) {
+            if (cupo.pedidosEntregados === 0) {
                 return res.status(403).json({
                     success: false,
                     mensaje: 'Debes realizar un pedido con este producto y que esté entregado antes de opinar'
                 });
             }
 
-            // Verificar si ya opinó
-            const [opinionExistente] = await pool.query(
-                `SELECT id_opinion FROM opinion 
-                WHERE id_cliente = ? AND id_producto = ?`,
-                [id_cliente, id_producto]
-            );
-
-            if (opinionExistente.length > 0) {
+            if (!cupo.puedeOpinar) {
                 return res.status(403).json({
                     success: false,
-                    mensaje: 'Ya has opinado sobre este producto'
+                    mensaje: 'Ya usaste tus opiniones disponibles para este producto. Vuelve a comprarlo para opinar de nuevo.'
                 });
             }
         } else if (tipo === 'restaurante') {

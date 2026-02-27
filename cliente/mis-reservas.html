@@ -566,7 +566,9 @@
                         icon: 'success',
                         title: '¡Reservación cancelada!',
                         text: 'Tu reservación ha sido cancelada exitosamente',
-                        confirmButtonColor: '#f97316'
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
                     });
                     loadMisReservas(); // Esto recargará todo y volverá a la página 1
                 } else {
@@ -947,7 +949,9 @@
                     icon: 'success',
                     title: 'Reservación actualizada',
                     text: 'Los cambios se guardaron correctamente.',
-                    confirmButtonText: 'Perfecto'
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
                 }).then(() => {
                     closeReservationModal();
                     loadMisReservas();

@@ -438,13 +438,6 @@
             if (btnCerrarModal) {
                 btnCerrarModal.addEventListener('click', cerrarModalProducto);
             }
-            if (modalProducto) {
-                modalProducto.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('modal')) {
-                        cerrarModalProducto();
-                    }
-                });
-            }
             if (formProducto) {
                 formProducto.addEventListener('submit', handleSubmitProducto);
             }
@@ -931,7 +924,7 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
             });

@@ -444,7 +444,9 @@
                     icon: 'success',
                     title: '¡Opinión actualizada!',
                     text: data.mensaje || 'Tu opinión ha sido actualizada y será revisada nuevamente.',
-                    confirmButtonColor: '#f97316'
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
                 });
 
                 cerrarModalEditar();
