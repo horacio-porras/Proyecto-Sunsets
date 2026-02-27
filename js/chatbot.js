@@ -5,6 +5,8 @@ let chatbotConversation = [];
 document.addEventListener('DOMContentLoaded', function() {
     const chatbotForm = document.getElementById('chatbotForm');
     const chatbotInput = document.getElementById('chatbotInput');
+    const chatbotModal = document.getElementById('chatbotModal');
+    const chatbotButton = document.getElementById('chatbotButton');
     
     if (chatbotForm) {
         chatbotForm.addEventListener('submit', async function(e) {
@@ -85,6 +87,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Cerrar chatbot al hacer clic fuera del panel
+    document.addEventListener('click', function(e) {
+        if (!chatbotModal || chatbotModal.classList.contains('hidden')) return;
+
+        const clickDentroDelModal = chatbotModal.contains(e.target);
+        const clickEnBoton = chatbotButton && chatbotButton.contains(e.target);
+
+        if (!clickDentroDelModal && !clickEnBoton) {
+            window.toggleChatbot();
+        }
+    });
 });
 
 // Agregar mensaje al chat
