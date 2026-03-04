@@ -11,6 +11,7 @@
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
+    <script src="/js/chatbot.js"></script>
     <style>
         /* Footer fijo */
         html, body {
@@ -41,31 +42,31 @@
                     <!-- Contact Form -->
                     <div>
                         <h2 class="text-3xl font-bold mb-8">Envíanos un Mensaje</h2>
-                        <form class="space-y-6">
+                        <form id="contactForm" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
-                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre">
+                                    <input type="text" id="contactNombre" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu nombre">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Apellido *</label>
-                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu apellido">
+                                    <input type="text" id="contactApellido" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu apellido">
                                 </div>
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
-                                <input type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
+                                <input type="email" id="contactCorreo" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="tu@email.com">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                                <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="+506 8888-8888">
+                                <input type="tel" id="contactTelefono" maxlength="8" inputmode="numeric" pattern="[0-9]{8}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="88881234">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Asunto *</label>
-                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <select id="contactAsunto" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
                                     <option value="">Selecciona un asunto</option>
                                     <option value="reservacion">Reservación</option>
                                     <option value="pedido">Pedido a Domicilio</option>
@@ -78,10 +79,10 @@
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Mensaje *</label>
-                                <textarea required rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Escribe tu mensaje aquí..."></textarea>
+                                <textarea id="contactMensaje" required rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Escribe tu mensaje aquí..."></textarea>
                             </div>
                             
-                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
+                            <button id="contactSubmitBtn" type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition font-semibold flex items-center justify-center gap-2">
                                 <i class="fas fa-envelope"></i>
                                 Enviar Mensaje
                             </button>
@@ -248,6 +249,120 @@
     <!-- Footer Container -->
     <div id="footer-container"></div>
 
+    <!-- ChatBot -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button id="chatbotButton" onclick="toggleChatbot()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
+            <i class="fas fa-comments text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Modal del Chatbot -->
+    <div id="chatbotModal" class="fixed bottom-4 right-4 z-50 hidden w-full max-w-md h-[600px] flex flex-col">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full flex flex-col">
+            <!-- Header del Chatbot -->
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-robot text-xl"></i>
+                    <h3 class="font-semibold text-lg">Asistente Virtual</h3>
+                </div>
+                <button onclick="toggleChatbot()" class="text-white hover:text-gray-200 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Área de mensajes -->
+            <div id="chatbotMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div class="flex items-start gap-2">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-gray-800">¡Hola! 👋 Soy el asistente virtual de Sunset's Tarbaca. ¿En qué puedo ayudarte hoy?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input de mensaje -->
+            <div class="p-4 border-t bg-white rounded-b-lg">
+                <form id="chatbotForm" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="chatbotInput" 
+                        placeholder="Escribe tu mensaje..." 
+                        class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Efecto de pulse para el botón de chatbot */
+        #chatbotButton {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Animación para el modal del chatbot */
+        #chatbotModal {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        #chatbotModal.hidden {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+        
+        /* Responsive: en móviles el modal ocupa más espacio */
+        @media (max-width: 640px) {
+            #chatbotModal {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                max-width: 100%;
+                height: 80vh;
+                border-radius: 1rem 1rem 0 0;
+            }
+        }
+    </style>
+
     <script>
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
@@ -269,10 +384,105 @@
             }
         }
 
+        // Función para verificar si el usuario es admin o empleado
+        function isAdminOrEmployee() {
+            const userData = localStorage.getItem('userData');
+            if (!userData) return false;
+            
+            try {
+                const user = JSON.parse(userData);
+                return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        const contactForm = document.getElementById('contactForm');
+        const contactTelefono = document.getElementById('contactTelefono');
+
+        if (contactTelefono) {
+            contactTelefono.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
+            });
+        }
+
         //Maneja el envío del formulario
-        document.querySelector('form').addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.');
+            
+            // Verificar si el usuario es admin o empleado
+            if (isAdminOrEmployee()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso restringido',
+                    text: 'Los administradores y empleados no pueden enviar mensajes de contacto.',
+                    confirmButtonColor: '#f97316',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+            
+            const nombre = document.getElementById('contactNombre').value.trim();
+            const apellido = document.getElementById('contactApellido').value.trim();
+            const correo = document.getElementById('contactCorreo').value.trim();
+            const telefono = document.getElementById('contactTelefono').value.replace(/\D/g, '');
+            const asunto = document.getElementById('contactAsunto').value;
+            const mensaje = document.getElementById('contactMensaje').value.trim();
+
+            if (telefono && !/^\d{8}$/.test(telefono)) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Teléfono inválido',
+                    text: 'El teléfono debe tener exactamente 8 dígitos.',
+                    confirmButtonColor: '#f97316'
+                });
+                return;
+            }
+
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/contacto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        apellido,
+                        correo,
+                        telefono,
+                        asunto,
+                        mensaje
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo enviar el mensaje.');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Mensaje enviado!',
+                    text: 'Nos pondremos en contacto contigo pronto.',
+                    confirmButtonColor: '#f97316',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                e.target.reset();
+            } catch (error) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo enviar el mensaje.',
+                    confirmButtonColor: '#f97316'
+                });
+            } finally {
+                submitBtn.disabled = false;
+            }
         });
     </script>
 </body>

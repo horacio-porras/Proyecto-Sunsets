@@ -478,6 +478,117 @@ Editar `js/navbar.js` en la función `configureRoleSpecificMenus()` para cada ro
 
 ---
 
+## 🚀 Deployment en Railway
+
+Este proyecto está configurado para desplegarse fácilmente en **Railway**.
+
+### 📖 Guía Completa
+
+Para instrucciones detalladas de deployment, consulta: **[RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md)**
+
+### ⚡ Inicio Rápido
+
+1. **Crear cuenta en Railway:** [railway.app](https://railway.app)
+2. **Conectar repositorio de GitHub**
+3. **Agregar servicio MySQL**
+4. **Configurar variables de entorno** (ver `RAILWAY_DEPLOY.md`)
+5. **Importar base de datos** (`SunsetsDB.sql`)
+6. **Deploy automático** ✅
+
+### 🔑 Variables de Entorno Requeridas
+
+Ver sección "Paso 4" en `RAILWAY_DEPLOY.md` para la lista completa de variables.
+
+#### Variables de Base de Datos
+```
+DB_HOST = ${{MySQL.MYSQLHOST}}
+DB_USER = ${{MySQL.MYSQLUSER}}
+DB_PASSWORD = ${{MySQL.MYSQLPASSWORD}}
+DB_NAME = ${{MySQL.MYSQLDATABASE}}
+```
+
+#### Variables del Servidor
+```
+PORT = ${{PORT}}
+NODE_ENV = production
+```
+
+#### Variables de JWT
+```
+JWT_SECRET = sunsets_tarbaca_secret_key_2025_production
+```
+
+#### Variables de CORS
+```
+CORS_ORIGIN = https://tu-proyecto.up.railway.app
+```
+
+#### Variables de Correo
+```
+MAIL_PROVIDER = smtp
+SMTP_HOST = smtp.gmail.com
+SMTP_PORT = 587
+SMTP_SECURE = false
+SMTP_USER = sunsettarb@gmail.com
+SMTP_PASS = oivlmxzjfgnhsijq
+MAIL_FROM = Sunsets Tarbaca <sunsettarb@gmail.com>
+REPLY_TO = sunsettarb@gmail.com
+```
+
+### 🛠️ Desarrollo Local
+
+#### Requisitos
+
+- Node.js >= 14.0.0
+- MySQL 8.0+
+- npm >= 6.0.0
+
+#### Instalación
+
+```bash
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+# Edita config.env con tus credenciales de MySQL
+
+# Importar base de datos
+mysql -u root -p SunsetsDB < SunsetsDB.sql
+
+# Iniciar servidor
+npm start
+
+# O en modo desarrollo (con nodemon)
+npm run dev
+```
+
+#### Estructura del Proyecto
+
+```
+Proyecto-Sunsets/
+├── config/           # Configuración de base de datos
+├── controllers/      # Lógica de negocio
+├── routes/           # Rutas de API
+├── middleware/       # Middlewares (auth, etc.)
+├── utils/            # Utilidades (mailer, etc.)
+├── validators/       # Validadores de datos
+├── js/              # JavaScript del frontend
+├── admin/           # Páginas de administrador
+├── cliente/         # Páginas de cliente
+├── empleado/        # Páginas de empleado
+└── server.js        # Servidor principal
+```
+
+### 📝 Notas de Deployment
+
+- El archivo `config.env` no debe subirse a GitHub (está en `.gitignore`)
+- Para producción, usa variables de entorno en Railway
+- La base de datos debe importarse antes de iniciar el servidor
+- Railway asigna el puerto automáticamente (el código ya usa `process.env.PORT`)
+- Los archivos estáticos se sirven desde el directorio raíz
+
+---
+
 ## 📞 Soporte
 
 Para soporte técnico o reportar bugs, contacta al equipo de desarrollo de Sunset's Tarbaca.

@@ -135,24 +135,69 @@
     <section class="py-8 bg-white border-b">
         <div class="container mx-auto px-4">
             <!-- Category Tabs -->
-            <div class="flex flex-wrap justify-center gap-4 mb-8">
-                <button onclick="filterCategory('all')" class="category-btn active bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-full hover:from-orange-600 hover:to-red-600 transition">
+            <div class="flex flex-wrap justify-center gap-3 mb-8">
+                <button onclick="filterCategory('all')" class="category-btn active bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-2 rounded-full hover:from-orange-600 hover:to-red-600 transition text-sm">
                     Todos
                 </button>
-                <button onclick="filterCategory('pizzas')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition">
-                    <i class="fas fa-pizza-slice mr-2"></i>Pizzas
+                <button onclick="filterCategory('arroces')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-utensils mr-2"></i>Arroces
                 </button>
-                <button onclick="filterCategory('entradas')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition">
+                <button onclick="filterCategory('bebidas calientes')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-coffee mr-2"></i>Bebidas Calientes
+                </button>
+                <button onclick="filterCategory('bebidas frías')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-wine-glass mr-2"></i>Bebidas Frías
+                </button>
+                <button onclick="filterCategory('cafés fríos')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-ice-cream mr-2"></i>Cafés Fríos
+                </button>
+                <button onclick="filterCategory('casados')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-utensils mr-2"></i>Casados
+                </button>
+                <button onclick="filterCategory('cortes de carne')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-drumstick-bite mr-2"></i>Cortes de Carne
+                </button>
+                <button onclick="filterCategory('cócteles')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-cocktail mr-2"></i>Cócteles
+                </button>
+                <button onclick="filterCategory('desayunos')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-sun mr-2"></i>Desayunos
+                </button>
+                <button onclick="filterCategory('entradas')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
                     <i class="fas fa-utensils mr-2"></i>Entradas
                 </button>
-                <button onclick="filterCategory('principales')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition">
-                    <i class="fas fa-drumstick-bite mr-2"></i>Platos Principales
+                <button onclick="filterCategory('hamburguesas')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-hamburger mr-2"></i>Hamburguesas
                 </button>
-                <button onclick="filterCategory('bebidas')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition">
-                    <i class="fas fa-wine-glass mr-2"></i>Bebidas
+                <button onclick="filterCategory('licores')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-wine-bottle mr-2"></i>Licores
                 </button>
-                <button onclick="filterCategory('postres')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition">
-                    <i class="fas fa-ice-cream mr-2"></i>Postres
+                <button onclick="filterCategory('menú de niños')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-child mr-2"></i>Menú de Niños
+                </button>
+                <button onclick="filterCategory('paninis')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-bread-slice mr-2"></i>Paninis
+                </button>
+                <button onclick="filterCategory('para el café')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-cookie mr-2"></i>Para el Café
+                </button>
+                <button onclick="filterCategory('pizzas')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-pizza-slice mr-2"></i>Pizzas
+                </button>
+                <button onclick="filterCategory('platos fuertes')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-fish mr-2"></i>Platos Fuertes
+                </button>
+                <button onclick="filterCategory('postres')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-birthday-cake mr-2"></i>Postres
+                </button>
+                <button onclick="filterCategory('quesadillas')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-cheese mr-2"></i>Quesadillas
+                </button>
+                <button onclick="filterCategory('sandwiches')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-bread-slice mr-2"></i>Sandwiches
+                </button>
+                <button onclick="filterCategory('vinos')" class="category-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-300 transition text-sm">
+                    <i class="fas fa-wine-glass mr-2"></i>Vinos
                 </button>
             </div>
 
@@ -219,21 +264,21 @@
     </section>
 
     <!-- Shopping Cart -->
-    <div id="cart" class="fixed top-36 right-4 bg-white rounded-lg shadow-lg p-4 w-80 hidden" style="z-index: 9998;">
+    <div id="cart" class="fixed top-36 right-4 bg-white rounded-lg shadow-lg p-4 w-96 hidden" style="z-index: 9998;">
         <h3 class="text-lg font-semibold mb-4">Carrito de Compras</h3>
         <hr class="border-gray-200 mb-4">
-        <div id="cartItems" class="mb-4" style="display: flex; flex-direction: column; gap: 8px;">
+        <div id="cartItems" class="mb-4" style="display: flex; flex-direction: column; gap: 8px; min-height: 60px;">
             <!-- Cart items will be added here -->
         </div>
-        <div class="pt-4">
+        <div id="cartFooter" class="pt-4 hidden">
             <div class="flex justify-between font-semibold mb-4">
                 <span>Total:</span>
                 <span id="cartTotal">₡0</span>
             </div>
-                <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center justify-center gap-2">
-                    <i class="fas fa-shopping-cart"></i>
-                    Ver Pedido
-                        </button>
+            <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-md hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center justify-center gap-2">
+                <i class="fas fa-shopping-cart"></i>
+                Ver Pedido
+            </button>
         </div>
     </div>
 
@@ -246,7 +291,6 @@
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
-
 
 </body>
 </html> 

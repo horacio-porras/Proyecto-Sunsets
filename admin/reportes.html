@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Reportes - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .accion-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .accion-create { background-color: #dcfce7; color: #166534; }
+        .accion-update { background-color: #dbeafe; color: #1e40af; }
+        .accion-delete { background-color: #fecaca; color: #dc2626; }
+
+        .icon-gradient-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to right, #f97316, #ef4444);
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-file-export mr-3"></i>Generar Reportes
+                        </h1>
+                        <p class="text-gray-300">Exporta reportes de ventas, clientes, pedidos y actividad en PDF o Excel</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selección de Reporte -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">
+                    <i class="fas fa-chart-line mr-2"></i>Seleccionar Tipo de Reporte
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <button onclick="seleccionarReporte('ventas')" id="btnVentas" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="icon-gradient-circle">
+                                <i class="fas fa-dollar-sign"></i>
+                            </span>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Ventas</h3>
+                        <p class="text-gray-600 text-sm">Ingresos totales, pedidos realizados y promedios</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('clientes')" id="btnClientes" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="icon-gradient-circle">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Clientes</h3>
+                        <p class="text-gray-600 text-sm">Listado completo de clientes y su actividad</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('pedidos')" id="btnPedidos" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="icon-gradient-circle">
+                                <i class="fas fa-shopping-cart"></i>
+                            </span>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Pedidos</h3>
+                        <p class="text-gray-600 text-sm">Detalle completo de todos los pedidos</p>
+                    </button>
+
+                    <button onclick="seleccionarReporte('actividad')" id="btnActividad" class="reporte-card p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition text-left">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="icon-gradient-circle">
+                                <i class="fas fa-history"></i>
+                            </span>
+                            <span class="reporte-badge hidden bg-orange-500 text-white px-3 py-1 rounded-full text-sm">Seleccionado</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Reporte de Actividad</h3>
+                        <p class="text-gray-600 text-sm">Registro de cambios en el sistema</p>
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div id="filtrosSection" class="hidden border-t pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Desde</label>
+                            <input type="date" id="fechaDesde" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Hasta</label>
+                            <input type="date" id="fechaHasta" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div id="estadoFilterContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                            <select id="estadoFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Todos los estados</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="preparando">Preparando</option>
+                                <option value="listo">Listo</option>
+                                <option value="en_camino">En Camino</option>
+                                <option value="entregado">Entregado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div id="tablaFilterContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tabla</label>
+                            <select id="tablaFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Todas las tablas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formato y Generar -->
+                <div id="formatoSection" class="hidden border-t pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Formato de Exportación</h3>
+                    
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="formato" value="pdf" checked class="mr-2 text-orange-500 focus:ring-orange-500">
+                            <span class="text-gray-700">
+                                <i class="fas fa-file-pdf mr-2 text-red-600"></i>PDF
+                            </span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="formato" value="excel" class="mr-2 text-orange-500 focus:ring-orange-500">
+                            <span class="text-gray-700">
+                                <i class="fas fa-file-excel mr-2 text-green-600"></i>Excel
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="generarReporte()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
+                            <i class="fas fa-eye mr-2"></i>Generar Reporte
+                        </button>
+                        <button onclick="descargarReporte()" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow-lg">
+                            <i class="fas fa-download mr-2"></i>Descargar Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección para mostrar el reporte generado -->
+            <div id="reporteGeneradoSection" class="hidden bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-chart-bar mr-2"></i>Reporte Generado
+                    </h2>
+                    <button onclick="cerrarReporteGenerado()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="reporteContenido" class="overflow-x-auto">
+                    <!-- El contenido del reporte se mostrará aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script>
+        let tipoReporteSeleccionado = null;
+        let datosReporteGenerado = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+        });
+
+        function seleccionarReporte(tipo) {
+            tipoReporteSeleccionado = tipo;
+
+            // Remover selección de todos los botones
+            document.querySelectorAll('.reporte-card').forEach(card => {
+                card.classList.remove('border-orange-500', 'bg-orange-50');
+                card.classList.add('border-gray-200');
+                card.querySelector('.reporte-badge').classList.add('hidden');
+            });
+
+            // Marcar el seleccionado
+            const btn = document.getElementById(`btn${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            btn.classList.remove('border-gray-200');
+            btn.classList.add('border-orange-500', 'bg-orange-50');
+            btn.querySelector('.reporte-badge').classList.remove('hidden');
+
+            // Mostrar filtros y formato
+            document.getElementById('filtrosSection').classList.remove('hidden');
+            document.getElementById('formatoSection').classList.remove('hidden');
+
+            // Configurar filtros específicos por tipo
+            document.getElementById('estadoFilterContainer').classList.add('hidden');
+            document.getElementById('tablaFilterContainer').classList.add('hidden');
+
+            if (tipo === 'pedidos') {
+                document.getElementById('estadoFilterContainer').classList.remove('hidden');
+            }
+
+            if (tipo === 'actividad') {
+                document.getElementById('tablaFilterContainer').classList.remove('hidden');
+                cargarTablas();
+            }
+
+            // Limpiar filtros
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            document.getElementById('estadoFilter').value = '';
+            document.getElementById('tablaFilter').value = '';
+        }
+
+        async function cargarTablas() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                const response = await fetch('/api/auditoria/tablas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.tablas) {
+                        const select = document.getElementById('tablaFilter');
+                        select.innerHTML = '<option value="">Todas las tablas</option>';
+                        data.data.tablas.forEach(tabla => {
+                            const option = document.createElement('option');
+                            option.value = tabla;
+                            option.textContent = tabla;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar tablas:', error);
+            }
+        }
+
+        async function generarReporte() {
+            if (!tipoReporteSeleccionado) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selecciona un reporte',
+                    text: 'Por favor selecciona un tipo de reporte antes de continuar'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                // Construir URL con parámetros para obtener datos en JSON
+                let url = `/api/reportes/${tipoReporteSeleccionado}?vista=web`;
+                const fechaDesde = document.getElementById('fechaDesde').value;
+                const fechaHasta = document.getElementById('fechaHasta').value;
+
+                if (fechaDesde) {
+                    url += `&fechaDesde=${encodeURIComponent(fechaDesde)}`;
+                }
+                if (fechaHasta) {
+                    url += `&fechaHasta=${encodeURIComponent(fechaHasta)}`;
+                }
+
+                if (tipoReporteSeleccionado === 'pedidos') {
+                    const estado = document.getElementById('estadoFilter').value;
+                    if (estado) {
+                        url += `&estado=${encodeURIComponent(estado)}`;
+                    }
+                }
+
+                if (tipoReporteSeleccionado === 'actividad') {
+                    const tabla = document.getElementById('tablaFilter').value;
+                    if (tabla) {
+                        url += `&tabla=${encodeURIComponent(tabla)}`;
+                    }
+                }
+
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Generando reporte...',
+                    html: 'Por favor espera mientras se obtienen los datos',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Obtener datos en JSON
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'Error al generar el reporte');
+                }
+
+                const data = await response.json();
+                datosReporteGenerado = data.data;
+
+                // Cerrar loading
+                Swal.close();
+
+                // Mostrar el reporte en la página
+                mostrarReporteEnPagina(data.data, tipoReporteSeleccionado);
+
+            } catch (error) {
+                console.error('Error al generar reporte:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo generar el reporte'
+                });
+            }
+        }
+
+        async function descargarReporte() {
+            if (!tipoReporteSeleccionado) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selecciona un reporte',
+                    text: 'Por favor selecciona un tipo de reporte antes de continuar'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                // Obtener formato seleccionado
+                const formato = document.querySelector('input[name="formato"]:checked').value;
+
+                // Construir URL con parámetros
+                let url = `/api/reportes/${tipoReporteSeleccionado}?formato=${formato}`;
+                const fechaDesde = document.getElementById('fechaDesde').value;
+                const fechaHasta = document.getElementById('fechaHasta').value;
+
+                if (fechaDesde) {
+                    url += `&fechaDesde=${encodeURIComponent(fechaDesde)}`;
+                }
+                if (fechaHasta) {
+                    url += `&fechaHasta=${encodeURIComponent(fechaHasta)}`;
+                }
+
+                if (tipoReporteSeleccionado === 'pedidos') {
+                    const estado = document.getElementById('estadoFilter').value;
+                    if (estado) {
+                        url += `&estado=${encodeURIComponent(estado)}`;
+                    }
+                }
+
+                if (tipoReporteSeleccionado === 'actividad') {
+                    const tabla = document.getElementById('tablaFilter').value;
+                    if (tabla) {
+                        url += `&tabla=${encodeURIComponent(tabla)}`;
+                    }
+                }
+
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Generando archivo...',
+                    html: 'Por favor espera mientras se genera el archivo',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Descargar archivo
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'Error al generar el reporte');
+                }
+
+                // Obtener el blob del archivo
+                const blob = await response.blob();
+                
+                // Crear URL temporal y descargar
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                // Obtener nombre del archivo del header Content-Disposition o generar uno
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `reporte_${tipoReporteSeleccionado}_${new Date().toISOString().split('T')[0]}.${formato}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reporte descargado!',
+                    text: 'El archivo se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error al descargar reporte:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo descargar el reporte'
+                });
+            }
+        }
+
+        function mostrarReporteEnPagina(datos, tipo) {
+            const seccion = document.getElementById('reporteGeneradoSection');
+            const contenido = document.getElementById('reporteContenido');
+
+            seccion.classList.remove('hidden');
+
+            let html = '';
+
+            switch(tipo) {
+                case 'ventas':
+                    html = generarHTMLVentas(datos);
+                    break;
+                case 'clientes':
+                    html = generarHTMLClientes(datos);
+                    break;
+                case 'pedidos':
+                    html = generarHTMLPedidos(datos);
+                    break;
+                case 'actividad':
+                    html = generarHTMLActividad(datos);
+                    break;
+                default:
+                    html = '<p class="text-gray-500">Tipo de reporte no reconocido</p>';
+            }
+
+            contenido.innerHTML = html;
+
+            // Scroll suave a la sección del reporte
+            seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function generarHTMLVentas(datos) {
+            const fechaDesde = datos.fechaDesde || 'Inicio';
+            const fechaHasta = datos.fechaHasta || 'Hoy';
+            
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Ventas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Total de Pedidos</p>
+                            <p class="text-2xl font-bold text-blue-600">${datos.totalPedidos || 0}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Total de Ventas</p>
+                            <p class="text-2xl font-bold text-green-600">₡${parseFloat(datos.totalVentas || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Promedio por Pedido</p>
+                            <p class="text-2xl font-bold text-purple-600">₡${parseFloat(datos.promedioPedido || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Período: ${fechaDesde} - ${fechaHasta}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Pedido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.pedidos || []).map(pedido => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.id_pedido}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(pedido.fecha_pedido).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente Invitado'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            ${pedido.estado_pedido}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLClientes(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Listado de Clientes</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de clientes: ${datos.totalClientes || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Pedidos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Gastado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.clientes || []).map(cliente => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id_cliente}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.nombre || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.total_pedidos || 0}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(cliente.total_gastado || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLPedidos(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalle de Pedidos</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de pedidos: ${datos.totalPedidos || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Pedido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.pedidos || []).map(pedido => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.id_pedido}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(pedido.fecha_pedido).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente Invitado'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            ${pedido.estado_pedido}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generarHTMLActividad(datos) {
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Registro de Actividad</h3>
+                    <p class="text-sm text-gray-500 mb-4">Total de registros: ${datos.totalRegistros || 0}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tabla</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${(datos.registros || []).map(registro => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(registro.fecha_accion).toLocaleString('es-CR')}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${registro.usuario_nombre || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.tabla_afectada || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="accion-badge ${getAccionBadgeClass(registro.accion)}">
+                                            ${formatAccion(registro.accion)}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getAccionBadgeClass(accion) {
+            switch(accion?.toUpperCase()) {
+                case 'CREATE':
+                    return 'accion-create';
+                case 'UPDATE':
+                    return 'accion-update';
+                case 'DELETE':
+                    return 'accion-delete';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function formatAccion(accion) {
+            switch(accion?.toUpperCase()) {
+                case 'CREATE':
+                    return 'Crear';
+                case 'UPDATE':
+                    return 'Actualizar';
+                case 'DELETE':
+                    return 'Eliminar';
+                default:
+                    return accion || 'N/A';
+            }
+        }
+
+        function cerrarReporteGenerado() {
+            document.getElementById('reporteGeneradoSection').classList.add('hidden');
+            datosReporteGenerado = null;
+        }
+    </script>
+</body>
+</html>
+

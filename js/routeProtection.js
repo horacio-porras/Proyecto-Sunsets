@@ -6,6 +6,9 @@ const PROTECTED_ROUTES = {
     '/cliente/dashboard.html': 'Cliente',
     '/cliente/perfil.html': 'Cliente',
     '/cliente/pedidos.html': 'Cliente',
+    '/cliente/mis-pedidos.html': 'Cliente',
+    '/cliente/mis-opiniones.html': 'Cliente',
+    '/cliente/mis-reservas.html': 'Cliente',
     
     '/empleado/dashboard.html': 'Empleado',
     '/empleado/perfil.html': 'Empleado',
@@ -16,7 +19,12 @@ const PROTECTED_ROUTES = {
     '/admin/perfil.html': 'Administrador',
     '/admin/productos.html': 'Administrador',
     '/admin/inventario.html': 'Administrador',
-    '/admin/personal.html': 'Administrador'
+    '/admin/personal.html': 'Administrador',
+    '/admin/pedidos.html': 'Administrador',
+    '/admin/reservaciones.html': 'Administrador',
+    '/admin/auditoria.html': 'Administrador',
+    '/admin/reportes.html': 'Administrador',
+    '/admin/moderacion-opiniones.html': 'Administrador'
 };
 
 //Rutas que son públicas (no requieren autenticación)
@@ -26,8 +34,8 @@ const PUBLIC_ROUTES = [
     '/menu.html',
     '/reservaciones.html',
     '/about.html',
-    '/contacto.html',
-    '/pedidos.html'
+    '/contacto.html'
+    // Nota: /pedidos.html se maneja de forma especial arriba para permitir invitados y bloquear admin/empleado
 ];
 
 //Función para obtener el usuario actual desde localStorage
@@ -60,6 +68,18 @@ function redirectToHome() {
 //Función para verificar la protección de la ruta
 function checkRouteProtection() {
     const currentPath = window.location.pathname;
+    
+    //Bloquear acceso de admin y empleado a pedidos.html (antes de verificar si es pública)
+    if (currentPath === '/pedidos.html') {
+        const user = getCurrentUser();
+        if (user && (user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado')) {
+            console.log('Admin/Empleado cannot access pedidos.html, redirecting to home');
+            redirectToHome();
+            return;
+        }
+        // Si no es admin/empleado, permitir acceso (es ruta pública para clientes e invitados)
+        return;
+    }
     
     //Verifica si la ruta actual es pública
     if (PUBLIC_ROUTES.includes(currentPath)) {

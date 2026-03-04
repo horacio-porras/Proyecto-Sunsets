@@ -95,6 +95,39 @@ function updateAuthState() {
         displayUserInfo();
         configureRoleSpecificMenus();
         
+        // Mostrar notificaciones solo para Clientes
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        if (notificationsContainer) {
+            if (user && user.tipoUsuario === 'Cliente') {
+                notificationsContainer.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    const currentPath = window.location.pathname;
+                    const currentPage = currentPath === '/' ? '/index.html' : currentPath;
+                    highlightCurrentPage(currentPage);
+                    // Cargar panel y badge de notificaciones
+                    loadLatestNotifications();
+                    if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                }, 100);
+
+                // Actualizar badge de notificaciones no leídas y establecer polling
+                if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                // limpiar intervalos previos
+                if (window._notifPollInterval) clearInterval(window._notifPollInterval);
+                window._notifPollInterval = setInterval(() => {
+                    if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                    loadLatestNotifications(true);
+                }, 60000); // cada 60s
+            } else {
+                notificationsContainer.classList.add('hidden');
+                // Limpiar intervalos si no es cliente
+                if (window._notifPollInterval) {
+                    clearInterval(window._notifPollInterval);
+                    window._notifPollInterval = null;
+                }
+            }
+        }
+        
         setTimeout(() => {
             const currentPath = window.location.pathname;
             const currentPage = currentPath === '/' ? '/index.html' : currentPath;
@@ -112,6 +145,172 @@ function updateAuthState() {
             dropdown.classList.add('hidden');
             dropdown.classList.remove('dropdown-show', 'dropdown-hide');
         }
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.add('hidden');
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        if (notificationsContainer) notificationsContainer.classList.add('hidden');
+    }
+}
+
+// Obtener y mostrar contador de notificaciones no leídas
+async function updateNotificationBadge() {
+    try {
+        const user = getCurrentUser();
+        if (!user || user.tipoUsuario !== 'Cliente') return;
+        
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const res = await fetch('/api/cliente/notificaciones/count', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const count = data.no_leidas || 0;
+        const badge = document.getElementById('notifBadge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.classList.remove('hidden');
+            badge.textContent = count > 99 ? '99+' : count;
+        } else {
+            badge.classList.add('hidden');
+        }
+    } catch (err) {
+        console.error('Error al obtener contador de notificaciones:', err);
+    }
+}
+
+// Cargar últimas notificaciones en el panel
+async function loadLatestNotifications(silent = false) {
+    try {
+        const user = getCurrentUser();
+        if (!user || user.tipoUsuario !== 'Cliente') return;
+        
+        const token = localStorage.getItem('authToken');
+        const body = document.getElementById('notifPanelBody');
+        if (!token || !body) return;
+        if (!silent) body.innerHTML = '<div class="p-4 text-sm text-gray-500">Cargando notificaciones...</div>';
+
+        const res = await fetch('/api/cliente/notificaciones', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            body.innerHTML = '<div class="p-4 text-sm text-red-600">No se pudieron cargar las notificaciones.</div>';
+            return;
+        }
+        // Solo mostrar no leídas en el panel del navbar
+        const list = (data.notificaciones || []).filter(n => !n.leida).slice(0, 6);
+        if (list.length === 0) {
+            body.innerHTML = '<div class="p-4 text-sm text-gray-600">No tienes notificaciones pendientes.</div>';
+            return;
+        }
+        
+        // Función para extraer descuento, vigencia y alcance del contenido
+        const parseNotificationContent = (contenido) => {
+            if (!contenido) return { descuento: '', vigencia: '', alcance: '' };
+            
+            // Separar el contenido antes del " — " (que es donde empieza la descripción)
+            const contenidoSinDescripcion = contenido.split(' — ')[0];
+            
+            // El formato es "Descuento: X%" donde X puede ser un número entero o decimal
+            const descuentoMatch = contenidoSinDescripcion.match(/Descuento:\s*(\d+(?:\.\d+)?)%/);
+            const vigenciaMatch = contenidoSinDescripcion.match(/Vigencia:\s*([^•]+?)(?:\s*•|$)/);
+            const alcanceMatch = contenidoSinDescripcion.match(/Alcance:\s*([^•]+?)(?:\s*•|$)/);
+            
+            return {
+                descuento: descuentoMatch ? `${descuentoMatch[1]}%` : '',
+                vigencia: vigenciaMatch ? vigenciaMatch[1].trim() : '',
+                alcance: alcanceMatch ? alcanceMatch[1].trim() : ''
+            };
+        };
+        
+        body.innerHTML = list.map(n => {
+            const parsed = parseNotificationContent(n.contenido);
+            return `
+                <div class="p-3 border-b hover:bg-gray-50" data-notif-id="${n.id_notificacion}">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-gray-800">${n.titulo || 'Notificación'}</div>
+                            ${parsed.descuento ? `<div class="text-sm text-orange-600 font-medium mt-1">${parsed.descuento}</div>` : ''}
+                            ${parsed.vigencia ? `<div class="text-xs text-gray-500 mt-1">${parsed.vigencia}</div>` : ''}
+                            ${parsed.alcance ? `<div class="text-xs text-gray-500 mt-1">${parsed.alcance}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${n.leida ? '' : `<button class="notif-mark-read text-xs text-blue-600 hover:underline" data-id="${n.id_notificacion}">Marcar como leída</button>`}
+                            ${n.leida ? '' : '<span class="mt-1 inline-flex h-2 w-2 rounded-full bg-red-500"></span>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Attach mark-as-read handlers
+        body.querySelectorAll('.notif-mark-read').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                await markNotificationAsRead(id, btn);
+            });
+        });
+    } catch (e) {
+        const body = document.getElementById('notifPanelBody');
+        if (body) body.innerHTML = '<div class="p-4 text-sm text-red-600">Error al cargar notificaciones.</div>';
+    }
+}
+
+// Toggle panel
+function toggleNotificationsPanel() {
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+    document.querySelectorAll('#notifPanel').forEach(p => p.classList.add('hidden'));
+    if (isHidden) {
+        panel.classList.remove('hidden');
+        loadLatestNotifications();
+    } else {
+        panel.classList.add('hidden');
+    }
+}
+
+function goToAllNotifications() {
+    window.location.href = '/cliente/notificaciones.html';
+}
+
+// Marcar notificación como leída (y remover del panel)
+async function markNotificationAsRead(id, btnEl) {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token || !id) return;
+        const res = await fetch(`/api/cliente/notificaciones/${id}/leida`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            return;
+        }
+        // Remove item from panel
+        const item = btnEl.closest('[data-notif-id]');
+        if (item && item.parentElement) {
+            item.parentElement.removeChild(item);
+        }
+        // Refresh badge count
+        if (typeof updateNotificationBadge === 'function') {
+            updateNotificationBadge();
+        }
+        // If no items left, show vacío
+        const body = document.getElementById('notifPanelBody');
+        if (body && body.children.length === 0) {
+            body.innerHTML = '<div class="p-4 text-sm text-gray-600">No hay notificaciones.</div>';
+        }
+    } catch (err) {
+        // Silencioso para no interrumpir UX del panel
+        console.error('Error al marcar notificación como leída:', err);
     }
 }
 
@@ -178,6 +377,12 @@ function configureRoleSpecificMenus() {
                 <a href="/cliente/mis-pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-shopping-bag mr-2 text-gray-700"></i>Mis Pedidos
                 </a>
+                <a href="/cliente/mis-reservas.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Mis Reservaciones
+                </a>
+                <a href="/cliente/mis-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-star mr-2 text-gray-700"></i>Mis Opiniones
+                </a>
             `;
             mobileRoleMenuItems = `
                 <a href="/cliente/perfil.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
@@ -185,6 +390,12 @@ function configureRoleSpecificMenus() {
                 </a>
                 <a href="/cliente/mis-pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
+                </a>
+                <a href="/cliente/mis-reservas.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Mis Reservaciones
+                </a>
+                <a href="/cliente/mis-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-star mr-2"></i>Mis Opiniones
                 </a>
             `;
             break;
@@ -238,11 +449,20 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/recompensas.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-gift mr-2 text-gray-700"></i>Recompensas
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                <a href="/admin/pedidos.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-clipboard-list mr-2 text-gray-700"></i>Pedidos
+                </a>
+                <a href="/admin/reservaciones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Reservaciones
+                </a>
+                <a href="/admin/moderacion-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-shield-alt mr-2 text-gray-700"></i>Moderación
+                </a>
+                <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
                 </a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-cog mr-2 text-gray-700"></i>Configuración
+                <a href="/admin/auditoria.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
+                    <i class="fas fa-history mr-2 text-gray-700"></i>Auditoría
                 </a>
             `;
             mobileRoleMenuItems = `
@@ -264,11 +484,20 @@ function configureRoleSpecificMenus() {
                 <a href="/admin/recompensas.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-gift mr-2"></i>Recompensas
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                <a href="/admin/pedidos.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-clipboard-list mr-2"></i>Pedidos
+                </a>
+                <a href="/admin/reservaciones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Reservaciones
+                </a>
+                <a href="/admin/moderacion-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-shield-alt mr-2"></i>Moderación
+                </a>
+                <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes
                 </a>
-                <a href="#" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-cog mr-2"></i>Configuración
+                <a href="/admin/auditoria.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
+                    <i class="fas fa-history mr-2"></i>Auditoría
                 </a>
             `;
             break;
@@ -292,6 +521,8 @@ function addNavbarEventListeners() {
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('userDropdown');
         const dropdownBtn = document.getElementById('userDropdownBtn');
+        const notifPanel = document.getElementById('notifPanel');
+        const notifBtn = document.getElementById('notifBellBtn');
         
         if (dropdown && dropdownBtn) {
             if (!dropdownBtn.contains(event.target) && !dropdown.contains(event.target)) {
@@ -311,29 +542,16 @@ function addNavbarEventListeners() {
                 }
             }
         }
-        
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
-        
-        if (loginModal && !loginModal.classList.contains('hidden')) {
-            const isClickOnModalBackground = event.target === loginModal || 
-                (event.target.closest('#loginModal') === loginModal && 
-                 !event.target.closest('.bg-white'));
-            
-            if (isClickOnModalBackground) {
-                closeLoginModal();
+
+        if (notifPanel && notifBtn) {
+            const clickInside = notifPanel.contains(event.target) || notifBtn.contains(event.target);
+            if (!clickInside) {
+                notifPanel.classList.add('hidden');
             }
         }
         
-        if (registerModal && !registerModal.classList.contains('hidden')) {
-            const isClickOnModalBackground = event.target === registerModal || 
-                (event.target.closest('#registerModal') === registerModal && 
-                 !event.target.closest('.bg-white'));
-            
-            if (isClickOnModalBackground) {
-                closeRegisterModal();
-            }
-        }
+        // Los modales de login y registro NO se cierran al hacer clic fuera
+        // Solo se pueden cerrar con el botón de cerrar (X) o después de completar la acción
     });
     
     const loginForm = document.getElementById('loginForm');
@@ -353,6 +571,48 @@ function addNavbarEventListeners() {
         });
     } else {
         console.error('Register form not found');
+    }
+    
+    // Validar campo de teléfono: solo números, máximo 8 dígitos, sin espacios
+    const registerTelefonoInput = document.getElementById('registerTelefono');
+    if (registerTelefonoInput) {
+        registerTelefonoInput.addEventListener('input', function(e) {
+            // Eliminar cualquier caracter que no sea número
+            let value = e.target.value.replace(/\D/g, '');
+            // Limitar a 8 dígitos
+            if (value.length > 8) {
+                value = value.slice(0, 8);
+            }
+            e.target.value = value;
+        });
+    }
+
+    const registerEmailInput = document.getElementById('registerEmail');
+    if (registerEmailInput) {
+        registerEmailInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerPasswordInput = document.getElementById('registerPassword');
+    if (registerPasswordInput) {
+        registerPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
+    if (registerConfirmPasswordInput) {
+        registerConfirmPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const loginPasswordInput = document.getElementById('loginPassword');
+    if (loginPasswordInput) {
+        loginPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
     }
 }
 
@@ -463,7 +723,9 @@ function toggleRegisterLoading(show) {
 //Función para manejar el login
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const passwordInput = document.getElementById('loginPassword');
+    const password = passwordInput.value.replace(/\s/g, '');
+    passwordInput.value = password;
 
     if (!email || !password) {
         showLoginMessage('Por favor, completa todos los campos requeridos');
@@ -479,10 +741,24 @@ async function handleLogin() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                correo: email,
+                correo: email.trim(),
                 contrasena: password
             })
         });
+
+        // Verificar el status de la respuesta antes de parsear JSON
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+            console.error('Error en login:', response.status, errorData);
+            showLoginMessage(errorData.message || 'Error al iniciar sesión');
+            const pwd = document.getElementById('loginPassword');
+            if (pwd) {
+                pwd.value = '';
+                pwd.focus();
+            }
+            toggleLoginLoading(false);
+            return;
+        }
 
         const data = await response.json();
 
@@ -495,15 +771,33 @@ async function handleLogin() {
                 handleUserChange();
             }
             
-            showLoginMessage('¡Login exitoso! Redirigiendo...', false);
+            // Verificar si requiere cambio de contraseña
+            console.log('Login exitoso. requiereCambioContrasena:', data.data.requiereCambioContrasena);
+            console.log('Datos completos:', JSON.stringify(data.data, null, 2));
             
-            setTimeout(() => {
+            if (data.data.requiereCambioContrasena === true || data.data.requiereCambioContrasena === 1) {
+                console.log('Mostrando modal de cambio de contraseña...');
                 closeLoginModal();
-                updateAuthState();
-                configureRoleSpecificMenus();
-            }, 1500);
+                // Esperar un momento para que el modal de login se cierre
+                setTimeout(() => {
+                    showChangePasswordModal();
+                }, 300);
+            } else {
+                showLoginMessage('¡Login exitoso! Redirigiendo...', false);
+                
+                setTimeout(() => {
+                    closeLoginModal();
+                    updateAuthState();
+                    configureRoleSpecificMenus();
+                }, 1500);
+            }
         } else {
             showLoginMessage(data.message || 'Error al iniciar sesión');
+            const pwd = document.getElementById('loginPassword');
+            if (pwd) {
+                pwd.value = '';
+                pwd.focus();
+            }
         }
     } catch (error) {
         console.error('Error:', error);
@@ -539,11 +833,11 @@ function validateRegisterPasswords() {
 //Función para manejar el registro
 async function handleRegister() {
     console.log('handleRegister called');
-    const nombre = document.getElementById('registerNombre').value;
-    const email = document.getElementById('registerEmail').value;
-    const telefono = document.getElementById('registerTelefono').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const nombre = document.getElementById('registerNombre').value.trim();
+    const email = document.getElementById('registerEmail').value.replace(/\s/g, '');
+    const telefono = document.getElementById('registerTelefono').value.replace(/\s/g, '');
+    const password = document.getElementById('registerPassword').value.replace(/\s/g, '');
+    const confirmPassword = document.getElementById('registerConfirmPassword').value.replace(/\s/g, '');
     const notificacionesActivas = document.getElementById('registerNotificacionesActivas').checked;
 
     if (!nombre || !email || !telefono || !password || !confirmPassword) {
@@ -559,6 +853,11 @@ async function handleRegister() {
     if (!validateRegisterPasswords()) {
         return;
     }
+
+    document.getElementById('registerEmail').value = email;
+    document.getElementById('registerTelefono').value = telefono;
+    document.getElementById('registerPassword').value = password;
+    document.getElementById('registerConfirmPassword').value = confirmPassword;
 
     toggleRegisterLoading(true);
 
@@ -853,11 +1152,20 @@ function switchToLogin() {
 
 //Función para deshabilitar botones de ChatBot y Carrito
 function disableChatAndCartButtons() {
-    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
-    if (chatButton) {
-        chatButton.disabled = true;
-        chatButton.classList.add('opacity-50', 'cursor-not-allowed');
-        chatButton.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    // Buscar botón de chatbot por onclick="toggleChat()" (para páginas con carrito)
+    const chatButton1 = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton1) {
+        chatButton1.disabled = true;
+        chatButton1.classList.add('opacity-50', 'cursor-not-allowed');
+        chatButton1.classList.remove('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    // Buscar botón de chatbot por id="chatbotButton" (para index.html, reservaciones.html, about.html, contacto.html)
+    const chatButton2 = document.getElementById('chatbotButton');
+    if (chatButton2) {
+        chatButton2.disabled = true;
+        chatButton2.classList.add('opacity-50', 'cursor-not-allowed');
+        chatButton2.classList.remove('hover:from-orange-600', 'hover:to-red-600');
     }
     
     const cartButton = document.querySelector('button[onclick="toggleCart()"]');
@@ -870,11 +1178,20 @@ function disableChatAndCartButtons() {
 
 //Función para habilitar botones de ChatBot y Carrito
 function enableChatAndCartButtons() {
-    const chatButton = document.querySelector('button[onclick="toggleChat()"]');
-    if (chatButton) {
-        chatButton.disabled = false;
-        chatButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        chatButton.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    // Buscar botón de chatbot por onclick="toggleChat()" (para páginas con carrito)
+    const chatButton1 = document.querySelector('button[onclick="toggleChat()"]');
+    if (chatButton1) {
+        chatButton1.disabled = false;
+        chatButton1.classList.remove('opacity-50', 'cursor-not-allowed');
+        chatButton1.classList.add('hover:from-orange-600', 'hover:to-red-600');
+    }
+    
+    // Buscar botón de chatbot por id="chatbotButton" (para index.html, reservaciones.html, about.html, contacto.html)
+    const chatButton2 = document.getElementById('chatbotButton');
+    if (chatButton2) {
+        chatButton2.disabled = false;
+        chatButton2.classList.remove('opacity-50', 'cursor-not-allowed');
+        chatButton2.classList.add('hover:from-orange-600', 'hover:to-red-600');
     }
     
     const cartButton = document.querySelector('button[onclick="toggleCart()"]');
@@ -893,6 +1210,8 @@ window.NavbarManager = {
     configureRoleSpecificMenus,
     toggleMobileMenu,
     toggleUserDropdown,
+    toggleNotificationsPanel,
+    goToAllNotifications,
     displayUserInfo,
     openLoginModal,
     closeLoginModal,
@@ -1030,8 +1349,8 @@ function toggleForgotPasswordVisibility(inputId, iconId) {
     }
 }
 
-//Función para procesar el cambio de contraseña
-async function processForgotPassword(email, newPassword) {
+//Función para procesar la solicitud de recuperación de contraseña
+async function processForgotPassword(email) {
     try {
         const btn = document.getElementById('forgotPasswordBtn');
         const btnText = document.getElementById('forgotPasswordBtnText');
@@ -1047,15 +1366,14 @@ async function processForgotPassword(email, newPassword) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                email: email,
-                newPassword: newPassword
+                email: email
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'Error al cambiar la contraseña');
+            throw new Error(data.message || 'Error al procesar la solicitud');
         }
         
         const modal = document.getElementById('forgotPasswordModal');
@@ -1070,26 +1388,23 @@ async function processForgotPassword(email, newPassword) {
         }, 300);
         
         await Swal.fire({
-            title: '¡Contraseña Cambiada!',
+            title: '¡Correo Enviado!',
             html: `
                 <div class="text-center py-4">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
-                        <i class="fas fa-check text-white text-2xl"></i>
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                        <i class="fas fa-envelope text-white text-2xl"></i>
                     </div>
-                    <p class="text-gray-700 text-lg">Tu contraseña ha sido cambiada exitosamente</p>
-                    <p class="text-gray-600 text-sm mt-2">Ya puedes iniciar sesión con tu nueva contraseña</p>
+                    <p class="text-gray-700 text-lg">Si el correo existe, recibirás un enlace para recuperar tu contraseña</p>
+                    <p class="text-gray-600 text-sm mt-2">Revisa tu bandeja de entrada y sigue las instrucciones</p>
                 </div>
             `,
-            confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
-            confirmButtonColor: '#10b981',
-            buttonsStyling: false,
-            customClass: {
-                confirmButton: 'bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition'
-            }
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true
         });
         
     } catch (error) {
-        console.error('Error al cambiar contraseña:', error);
+        console.error('Error al procesar solicitud:', error);
         
         await Swal.fire({
             title: 'Error',
@@ -1098,7 +1413,7 @@ async function processForgotPassword(email, newPassword) {
                     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
                         <i class="fas fa-times text-white text-2xl"></i>
                     </div>
-                    <p class="text-gray-700 text-lg">Error al cambiar la contraseña</p>
+                    <p class="text-gray-700 text-lg">Error al procesar la solicitud</p>
                     <p class="text-gray-600 text-sm mt-2">${error.message}</p>
                 </div>
             `,
@@ -1133,8 +1448,6 @@ function initializeForgotPasswordModal() {
             e.preventDefault();
             
             const email = document.getElementById('forgotPasswordEmail').value.trim();
-            const newPassword = document.getElementById('forgotPasswordNewPassword').value;
-            const confirmPassword = document.getElementById('forgotPasswordConfirmPassword').value;
             
             if (!email) {
                 Swal.fire({
@@ -1146,47 +1459,19 @@ function initializeForgotPasswordModal() {
                 return;
             }
             
-            if (!newPassword) {
+            // Validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
                 Swal.fire({
                     title: 'Error',
-                    text: 'Por favor ingresa una nueva contraseña.',
+                    text: 'Por favor ingresa un correo electrónico válido.',
                     icon: 'error',
                     confirmButtonColor: '#ef4444'
                 });
                 return;
             }
             
-            if (newPassword !== confirmPassword) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Las contraseñas no coinciden.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            if (newPassword.length < 8) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'La contraseña debe tener al menos 8 caracteres.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'La contraseña debe incluir al menos una mayúscula y un número.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-            
-            await processForgotPassword(email, newPassword);
+            await processForgotPassword(email);
         });
     }
     
@@ -1199,15 +1484,443 @@ function initializeForgotPasswordModal() {
     }
 }
 
+// Función para validar que las contraseñas coincidan en tiempo real
+function validatePasswordMatch() {
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmPassword = (confirmPasswordInput?.value || '').replace(/\s+/g, '');
+    const matchError = document.getElementById('passwordMatchError');
+
+    // No permitir espacios en ningún campo de contraseña del modal temporal
+    if (newPasswordInput && newPasswordInput.value !== newPassword) {
+        newPasswordInput.value = newPassword;
+    }
+    if (confirmPasswordInput && confirmPasswordInput.value !== confirmPassword) {
+        confirmPasswordInput.value = confirmPassword;
+    }
+    
+    if (confirmPassword.length > 0) {
+        if (newPassword !== confirmPassword) {
+            if (matchError) {
+                matchError.classList.remove('hidden');
+                matchError.textContent = 'Las contraseñas no coinciden';
+            }
+            if (document.getElementById('confirmNewPassword')) {
+                document.getElementById('confirmNewPassword').classList.add('border-red-500');
+                document.getElementById('confirmNewPassword').classList.remove('border-gray-300');
+            }
+            return false;
+        } else {
+            if (matchError) {
+                matchError.classList.add('hidden');
+            }
+            if (document.getElementById('confirmNewPassword')) {
+                document.getElementById('confirmNewPassword').classList.remove('border-red-500');
+                document.getElementById('confirmNewPassword').classList.add('border-gray-300');
+            }
+            return true;
+        }
+    }
+    return true;
+}
+
+// Función para mostrar el modal de cambio de contraseña temporal
+function showChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    console.log('showChangePasswordModal llamado. Modal encontrado:', !!modal);
+    if (modal) {
+        console.log('Mostrando modal de cambio de contraseña...');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        disableChatAndCartButtons();
+        
+        // Prevenir que se cierre el modal haciendo clic fuera
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        });
+        
+        // Limpiar formulario
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            form.reset();
+        }
+        
+        // Ocultar mensajes de error
+        const errorMessage = document.getElementById('changePasswordErrorMessage');
+        if (errorMessage) {
+            errorMessage.classList.add('hidden');
+        }
+        
+        const matchError = document.getElementById('passwordMatchError');
+        if (matchError) {
+            matchError.classList.add('hidden');
+        }
+        
+        // Agregar validación en tiempo real
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmNewPassword');
+        
+        if (newPasswordInput) {
+            // Remover listeners anteriores
+            const newInput = newPasswordInput.cloneNode(true);
+            newPasswordInput.parentNode.replaceChild(newInput, newPasswordInput);
+            const sanitizedNewPasswordInput = document.getElementById('newPassword');
+            sanitizedNewPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
+        }
+        if (confirmPasswordInput) {
+            // Remover listeners anteriores
+            const newInput = confirmPasswordInput.cloneNode(true);
+            confirmPasswordInput.parentNode.replaceChild(newInput, confirmPasswordInput);
+            const sanitizedConfirmPasswordInput = document.getElementById('confirmNewPassword');
+            sanitizedConfirmPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
+        }
+        
+        // Configurar el formulario y botón después de un pequeño delay para asegurar que el DOM esté listo
+        setTimeout(() => {
+            setupChangePasswordForm();
+        }, 100);
+    } else {
+        console.error('❌ Modal changePasswordModal no encontrado en el DOM');
+        // Si el modal no existe, mostrar un alert como fallback
+        alert('Debes cambiar tu contraseña temporal. Por favor, ve a tu perfil para cambiarla.');
+    }
+}
+
+// Función para cerrar el modal de cambio de contraseña
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        enableChatAndCartButtons();
+    }
+}
+
+// Función para alternar visibilidad de nueva contraseña
+function toggleNewPassword() {
+    const passwordInput = document.getElementById('newPassword');
+    const icon = document.getElementById('newPasswordIcon');
+    if (passwordInput && icon) {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
+
+// Función para alternar visibilidad de confirmar nueva contraseña
+function toggleConfirmNewPassword() {
+    const passwordInput = document.getElementById('confirmNewPassword');
+    const icon = document.getElementById('confirmNewPasswordIcon');
+    if (passwordInput && icon) {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
+
+// Función para manejar el cambio de contraseña
+async function handleChangePassword() {
+    console.log('handleChangePassword llamado');
+    
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmNewPassword = (confirmNewPasswordInput?.value || '').replace(/\s+/g, '');
+    if (newPasswordInput) newPasswordInput.value = newPassword;
+    if (confirmNewPasswordInput) confirmNewPasswordInput.value = confirmNewPassword;
+    const errorMessage = document.getElementById('changePasswordErrorMessage');
+    const errorText = document.getElementById('changePasswordErrorText');
+    const btn = document.getElementById('changePasswordBtn');
+    const btnText = document.getElementById('changePasswordBtnText');
+    const btnSpinner = document.getElementById('changePasswordBtnSpinner');
+    const matchError = document.getElementById('passwordMatchError');
+    
+    // Validaciones
+    if (!newPassword || newPassword.length < 6) {
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        }
+        return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = 'Las contraseñas no coinciden';
+        }
+        if (matchError) {
+            matchError.classList.remove('hidden');
+            matchError.textContent = 'Las contraseñas no coinciden';
+        }
+        return;
+    }
+    
+    // Ocultar errores
+    if (errorMessage) errorMessage.classList.add('hidden');
+    if (matchError) matchError.classList.add('hidden');
+    
+    // Deshabilitar botón y mostrar spinner
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.classList.add('hidden');
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            throw new Error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+        }
+        
+        console.log('=== INICIANDO CAMBIO DE CONTRASEÑA ===');
+        console.log('Nueva contraseña (longitud):', newPassword.length);
+        console.log('Nueva contraseña (primeros 3 chars):', newPassword.substring(0, 3) + '***');
+        console.log('Token presente:', !!token);
+        console.log('Token (primeros 30 chars):', token ? token.substring(0, 30) + '...' : 'N/A');
+        
+        const requestBody = {
+            nuevaContrasena: newPassword
+        };
+        
+        console.log('Enviando petición POST a /api/auth/change-temporary-password');
+        console.log('Body:', JSON.stringify({ nuevaContrasena: '***' }));
+        
+        const response = await fetch('/api/auth/change-temporary-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        console.log('Respuesta recibida');
+        console.log('  - Status:', response.status);
+        console.log('  - OK:', response.ok);
+        console.log('  - Status Text:', response.statusText);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error en respuesta:', errorText);
+            let errorMessage = 'Error al cambiar la contraseña';
+            try {
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData.message || errorMessage;
+            } catch (parseError) {
+                errorMessage = errorText || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+        
+        if (data.success) {
+            // Actualizar datos del usuario en localStorage
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            userData.contrasena_temporal = false;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            // Cerrar modal
+            closeChangePasswordModal();
+            
+            // Mostrar mensaje de éxito
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Contraseña cambiada!',
+                    text: 'Tu contraseña ha sido actualizada exitosamente. Serás redirigido...',
+                    confirmButtonColor: '#f97316',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            
+            // Actualizar estado de autenticación
+            if (typeof updateAuthState === 'function') {
+                updateAuthState();
+            }
+            if (typeof configureRoleSpecificMenus === 'function') {
+                configureRoleSpecificMenus();
+            }
+            
+            // Redirigir según el rol
+            if (userData.tipoUsuario === 'Administrador') {
+                window.location.href = '/admin/dashboard.html';
+            } else if (userData.tipoUsuario === 'Empleado') {
+                window.location.href = '/empleado/dashboard.html';
+            } else {
+                window.location.href = '/cliente/dashboard.html';
+            }
+        } else {
+            throw new Error(data.message || 'Error al cambiar la contraseña');
+        }
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        if (errorMessage && errorText) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = error.message || 'Error al cambiar la contraseña. Por favor, intenta de nuevo.';
+        }
+    } finally {
+        // Restaurar botón
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.classList.remove('hidden');
+        if (btnSpinner) btnSpinner.classList.add('hidden');
+    }
+}
+
+// Manejar el envío del formulario de cambio de contraseña
+function setupChangePasswordForm() {
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const btn = document.getElementById('changePasswordBtn');
+    
+    // Configurar listener del formulario
+    if (changePasswordForm) {
+        // Remover todos los listeners anteriores
+        const newForm = changePasswordForm.cloneNode(true);
+        changePasswordForm.parentNode.replaceChild(newForm, changePasswordForm);
+        
+        // Obtener el nuevo formulario
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmNewPassword');
+
+            // Reaplicar sanitización después de reconstruir el formulario
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            }, { once: false, capture: true });
+        }
+    }
+    
+    // Configurar listener directo del botón (más confiable)
+    if (btn) {
+        // Remover listeners anteriores
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Obtener el nuevo botón
+        const button = document.getElementById('changePasswordBtn');
+        if (button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            }, { once: false, capture: true });
+            
+            // También agregar como onclick como último recurso
+            button.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChangePassword();
+                return false;
+            };
+        }
+    }
+}
+
 //Funciones globales
 window.openForgotPasswordModal = openForgotPasswordModal;
 window.closeForgotPasswordModal = closeForgotPasswordModal;
 window.toggleForgotPasswordVisibility = toggleForgotPasswordVisibility;
+window.showChangePasswordModal = showChangePasswordModal;
+window.closeChangePasswordModal = closeChangePasswordModal;
+window.toggleNewPassword = toggleNewPassword;
+window.toggleConfirmNewPassword = toggleConfirmNewPassword;
+
+// Función para verificar si el usuario tiene contraseña temporal al cargar la página
+async function checkTemporaryPasswordOnLoad() {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (!token || !userData) {
+        return; // No hay sesión activa
+    }
+    
+    try {
+        const user = JSON.parse(userData);
+        
+        // Verificar si tiene contraseña temporal en los datos guardados
+        if (user.contrasena_temporal === true || user.contrasena_temporal === 1) {
+            console.log('Usuario tiene contraseña temporal, mostrando modal...');
+            showChangePasswordModal();
+            return;
+        }
+        
+        // Si no está en los datos guardados, verificar con el servidor
+        const response = await fetch('/api/auth/verify', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data && data.data.user) {
+                const updatedUser = data.data.user;
+                // Actualizar datos del usuario
+                localStorage.setItem('userData', JSON.stringify(updatedUser));
+                
+                // Verificar si tiene contraseña temporal
+                if (updatedUser.contrasena_temporal === true || updatedUser.contrasena_temporal === 1) {
+                    console.log('Usuario tiene contraseña temporal (verificado con servidor), mostrando modal...');
+                    showChangePasswordModal();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error al verificar contraseña temporal:', error);
+    }
+}
 
 //Carga el navbar automáticamente cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
+    setupChangePasswordForm();
     const currentPath = window.location.pathname;
     const currentPage = currentPath === '/' ? '/index.html' : currentPath;
     
     loadNavbar(currentPage);
+    
+    // Verificar contraseña temporal después de un pequeño delay para asegurar que el DOM esté listo
+    setTimeout(checkTemporaryPasswordOnLoad, 1000);
 });

@@ -11,6 +11,7 @@
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/footer.js"></script>
+    <script src="/js/chatbot.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -198,21 +199,6 @@
                                 </div>
                             </div>
 
-                            <!-- Información de Recordatorio -->
-                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                <div class="flex items-start gap-3">
-                                    <div class="text-blue-600 text-xl">❗</div>
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-800">
-                                            Recordatorio automático incluido
-                                        </p>
-                                        <p class="text-sm text-gray-600 mt-1">
-                                            Te enviaremos un correo 24 horas antes con los detalles de tu reservación.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Confirmation -->
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <h4 class="font-semibold mb-2">Resumen de la Reservación</h4>
@@ -271,6 +257,120 @@
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
+
+    <!-- ChatBot -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button id="chatbotButton" onclick="toggleChatbot()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center">
+            <i class="fas fa-comments text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Modal del Chatbot -->
+    <div id="chatbotModal" class="fixed bottom-4 right-4 z-50 hidden w-full max-w-md h-[600px] flex flex-col">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full flex flex-col">
+            <!-- Header del Chatbot -->
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-robot text-xl"></i>
+                    <h3 class="font-semibold text-lg">Asistente Virtual</h3>
+                </div>
+                <button onclick="toggleChatbot()" class="text-white hover:text-gray-200 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Área de mensajes -->
+            <div id="chatbotMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div class="flex items-start gap-2">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-gray-800">¡Hola! 👋 Soy el asistente virtual de Sunset's Tarbaca. ¿En qué puedo ayudarte hoy?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input de mensaje -->
+            <div class="p-4 border-t bg-white rounded-b-lg">
+                <form id="chatbotForm" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="chatbotInput" 
+                        placeholder="Escribe tu mensaje..." 
+                        class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Efecto de pulse para el botón de chatbot */
+        #chatbotButton {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Animación para el modal del chatbot */
+        #chatbotModal {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        #chatbotModal.hidden {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+        
+        /* Responsive: en móviles el modal ocupa más espacio */
+        @media (max-width: 640px) {
+            #chatbotModal {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                max-width: 100%;
+                height: 80vh;
+                border-radius: 1rem 1rem 0 0;
+            }
+        }
+    </style>
 
     <script>
         const MAX_PERSONAS_RESERVA = Number(document.body.dataset.maxReservas) || 8;
@@ -591,8 +691,21 @@
             });
         }
 
+        function bloquearCamposCliente() {
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+
+            [fullNameInput, emailInput, phoneInput].forEach((input) => {
+                if (!input) return;
+                input.readOnly = true;
+                input.disabled = true;
+                input.classList.add('bg-gray-100', 'text-gray-600', 'cursor-not-allowed');
+            });
+        }
+
         async function loadClientProfile() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 return;
             }
@@ -614,17 +727,52 @@
                     return;
                 }
 
-                if (user.nombre) {
-                    document.getElementById('fullName').value = user.nombre;
+                const fullNameInput = document.getElementById('fullName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+
+                if (fullNameInput && user.nombre) {
+                    fullNameInput.value = user.nombre;
                 }
-                if (user.correo) {
-                    document.getElementById('email').value = user.correo;
+                if (emailInput && user.correo) {
+                    emailInput.value = user.correo;
                 }
-                if (user.telefono) {
-                    document.getElementById('phone').value = user.telefono;
+                if (phoneInput && user.telefono) {
+                    phoneInput.value = user.telefono;
                 }
+
+                bloquearCamposCliente();
             } catch (error) {
-                // Silenciar errores de carga de perfil
+                try {
+                    const rawUserData = localStorage.getItem('userData');
+                    const userData = rawUserData ? JSON.parse(rawUserData) : null;
+                    if (!userData) return;
+
+                    const fullNameInput = document.getElementById('fullName');
+                    const emailInput = document.getElementById('email');
+                    const phoneInput = document.getElementById('phone');
+
+                    if (fullNameInput && userData.nombre) fullNameInput.value = userData.nombre;
+                    if (emailInput && userData.correo) emailInput.value = userData.correo;
+                    if (phoneInput && userData.telefono) phoneInput.value = userData.telefono;
+
+                    bloquearCamposCliente();
+                } catch (_) {
+                    // Silenciar errores de fallback
+                }
+            }
+        }
+
+        // Función para verificar si el usuario es admin o empleado
+        function isAdminOrEmployee() {
+            const userData = localStorage.getItem('userData');
+            if (!userData) return false;
+            
+            try {
+                const user = JSON.parse(userData);
+                return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+            } catch (error) {
+                return false;
             }
         }
 
@@ -632,12 +780,26 @@
             event.preventDefault();
             clearValidationFeedback();
 
-            const token = localStorage.getItem('authToken');
+            // Verificar si el usuario es admin o empleado
+            if (isAdminOrEmployee()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso restringido',
+                    text: 'Los administradores y empleados no pueden realizar reservaciones.',
+                    confirmButtonColor: '#f97316',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Necesitas una cuenta',
-                    text: 'Crea una cuenta o inicia sesión para confirmar tu reservación.'
+                    text: 'Crea una cuenta o inicia sesión para confirmar tu reservación.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#f97316'
                 });
                 return;
             }
@@ -714,7 +876,9 @@
                         <p>${successTextParts.join(' ')}</p>
                         ${previewUrl ? `<p class="mt-3"><a href="${previewUrl}" target="_blank" class="text-orange-500 underline">Ver vista previa del correo</a></p>` : ''}
                     `,
-                    confirmButtonText: 'Entendido'
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
                 }).then(() => {
                     reservationForm.reset();
                     reservationState.date = null;
@@ -733,6 +897,7 @@
                     generateCalendar();
                     clearValidationFeedback();
                     updateSummary();
+                    loadClientProfile();
                 });
             } catch (error) {
                 Swal.fire({
@@ -764,7 +929,7 @@
             updateTablePreferenceStyles();
             updateSummary();
 
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
                 loadClientProfile();
             }

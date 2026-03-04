@@ -31,14 +31,16 @@ function renderMenu() {
     
     const productsByCategory = groupProductsByCategory(menuProducts);
     
-    Object.keys(productsByCategory).forEach((category, index) => {
+    const categories = Object.keys(productsByCategory);
+    for (let index = 0; index < categories.length; index++) {
+        const category = categories[index];
         if (index > 0) {
             menuContent.appendChild(createSeparator());
         }
         
         const categorySection = createCategorySection(category, productsByCategory[category]);
         menuContent.appendChild(categorySection);
-    });
+    }
     
     applyFilters();
 }
@@ -50,12 +52,28 @@ function groupProductsByCategory(products) {
     products.forEach(product => {
         let category = product.category.toLowerCase().trim();
         
+        // Normalizar nombres de categorías de la base de datos
         const categoryMapping = {
+            'arroces': 'arroces',
+            'bebidas calientes': 'bebidas calientes',
+            'bebidas frías': 'bebidas frías',
+            'cafés fríos': 'cafés fríos',
+            'casados': 'casados',
+            'cortes de carne': 'cortes de carne',
+            'cócteles': 'cócteles',
+            'desayunos': 'desayunos',
+            'entradas': 'entradas',
+            'hamburguesas': 'hamburguesas',
+            'licores': 'licores',
+            'menú de niños': 'menú de niños',
+            'paninis': 'paninis',
+            'para el café': 'para el café',
             'pizzas': 'pizzas',
-            'entradas': 'entradas', 
-            'principales': 'principales',
-            'bebidas': 'bebidas',
-            'postres': 'postres'
+            'platos fuertes': 'platos fuertes',
+            'postres': 'postres',
+            'quesadillas': 'quesadillas',
+            'sandwiches': 'sandwiches',
+            'vinos': 'vinos'
         };
         
         category = categoryMapping[category] || category;
@@ -90,10 +108,10 @@ function createCategorySection(categoryName, products) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch';
     
-    products.forEach(product => {
+    for (const product of products) {
         const productCard = createProductCard(product);
         grid.appendChild(productCard);
-    });
+    }
     
     section.appendChild(title);
     section.appendChild(grid);
@@ -104,14 +122,37 @@ function createCategorySection(categoryName, products) {
 //Función para obtener nombre de categoría para mostrar
 function getCategoryDisplayName(categoryName) {
     const categoryNames = {
-        'pizzas': 'Pizzas Artesanales',
+        'arroces': 'Arroces',
+        'bebidas calientes': 'Bebidas Calientes',
+        'bebidas frías': 'Bebidas Frías',
+        'cafés fríos': 'Cafés Fríos',
+        'casados': 'Casados',
+        'cortes de carne': 'Cortes de Carne',
+        'cócteles': 'Cócteles',
+        'desayunos': 'Desayunos',
         'entradas': 'Entradas',
-        'principales': 'Platos Principales',
-        'bebidas': 'Bebidas',
-        'postres': 'Postres'
+        'hamburguesas': 'Hamburguesas',
+        'licores': 'Licores',
+        'menú de niños': 'Menú de Niños',
+        'paninis': 'Paninis',
+        'para el café': 'Para el Café',
+        'pizzas': 'Pizzas',
+        'platos fuertes': 'Platos Fuertes',
+        'postres': 'Postres',
+        'quesadillas': 'Quesadillas',
+        'sandwiches': 'Sandwiches',
+        'vinos': 'Vinos'
     };
     
     return categoryNames[categoryName] || categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+}
+
+// Función helper para formatear precios con 2 decimales
+function formatPrice(price) {
+    return parseFloat(price || 0).toLocaleString('es-CR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 //Función para crear tarjeta de producto
@@ -133,13 +174,42 @@ function createProductCard(product) {
              <i class="fas fa-image text-gray-500 text-3xl"></i>
            </div>`;
     
+    // Usar calificaciones ya incluidas en /api/menu/products
+    let promedioHtml = '';
+    if (product.ratingAverage > 0) {
+        const estrellasLlenas = Math.floor(product.ratingAverage);
+        const tieneMedia = product.ratingAverage % 1 >= 0.5;
+        const estrellasVacias = 5 - estrellasLlenas - (tieneMedia ? 1 : 0);
+        
+        promedioHtml = `
+            <div class="flex items-center gap-1">
+                <div class="flex text-yellow-400">
+                    ${'★'.repeat(estrellasLlenas)}${tieneMedia ? '☆' : ''}${'☆'.repeat(estrellasVacias)}
+                </div>
+                <span class="text-xs text-gray-600">${product.ratingAverage} (${product.ratingTotal})</span>
+            </div>
+        `;
+    }
+    
+    // Calcular precio a mostrar
+    const displayPrice = product.hasDiscount ? product.finalPrice : product.price;
+    const priceHtml = product.hasDiscount
+        ? `
+            <div class="flex flex-col items-end">
+                <span class="text-gray-400 line-through text-xs">₡${formatPrice(product.price)}</span>
+                <span class="text-gray-800 font-bold text-sm">₡${formatPrice(displayPrice)}</span>
+                <span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-semibold mt-1">-${product.discountPercentage}%</span>
+            </div>
+        `
+        : `<span class="text-gray-800 font-bold text-sm">₡${formatPrice(displayPrice)}</span>`;
+
     card.innerHTML = `
         ${imageHtml}
         <div class="p-3 flex flex-col" style="min-height: 160px;">
             <!-- Título y precio - altura fija -->
             <div class="flex justify-between items-start mb-2" style="min-height: 40px;">
                 <h3 class="text-base font-semibold leading-tight">${product.name}</h3>
-                <span class="text-orange-600 font-bold text-sm">₡${product.price.toLocaleString()}</span>
+                ${priceHtml}
             </div>
             
             <!-- Descripción - altura fija -->
@@ -176,9 +246,14 @@ function createProductCard(product) {
             <!-- Espacio flexible para empujar el botón hacia abajo -->
             <div style="flex: 1; min-height: 10px;"></div>
             
-            <!-- Botón - altura fija y siempre visible -->
-            <div class="flex justify-end pt-1" style="min-height: 44px; margin-top: auto;">
-                <button onclick="addToCart('${product.name}', ${product.price}, this)" 
+            <!-- Calificaciones y Botón - en la misma fila -->
+            <div class="flex justify-between items-center pt-1" style="min-height: 44px; margin-top: auto;">
+                <!-- Calificaciones alineadas a la izquierda -->
+                <div class="flex items-center">
+                    ${promedioHtml || '<div class="flex items-center gap-1"><span class="text-xs text-gray-400">Sin calificaciones</span></div>'}
+                </div>
+                <!-- Botón alineado a la derecha -->
+                <button onclick="addToCart('${product.name}', ${displayPrice}, this)" 
                         class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center flex-shrink-0 shadow-lg">
                     <i class="fas fa-plus text-lg"></i>
                 </button>
@@ -392,6 +467,7 @@ function showMenuContent() {
 
 let cart = [];
 let cartTotal = 0;
+let cartToastTimeout = null;
 
 //Carga el carrito desde localStorage al inicializar
 function loadCartFromStorage() {
@@ -441,21 +517,60 @@ function createAddToCartAnimation(buttonElement, productName) {
     }
 }
 
+// Notificación visual no intrusiva al agregar al carrito
+function showCartToast(productName) {
+    let toast = document.getElementById('cartToast');
+
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cartToast';
+        toast.className = 'fixed right-4 z-50 max-w-xs bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none';
+        toast.style.top = '150px';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = `"${productName}" agregado al carrito`;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+
+    if (cartToastTimeout) {
+        clearTimeout(cartToastTimeout);
+    }
+
+    cartToastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+    }, 1800);
+}
+
 //Funciones del carrito en scope global para que estén disponibles desde onclick
 window.addToCart = function(name, price, buttonElement) {
     const product = menuProducts.find(p => p.name === name);
     
     createAddToCartAnimation(buttonElement, name);
+    showCartToast(name);
     
     const existingItem = cart.find(item => item.name === name);
     
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
+        // Guardar precio original y precio con descuento
+        const originalPrice = product ? product.price : price;
+        const finalPrice = product && product.hasDiscount ? product.finalPrice : price;
+        const hasDiscount = product ? product.hasDiscount : false;
+        const discountPercentage = product ? product.discountPercentage : null;
+        
         cart.push({
             id: product.id,
             name: name,
-            price: price,
+            price: finalPrice, // Precio que se usa para calcular (con descuento si aplica)
+            originalPrice: originalPrice, // Precio original del producto
+            finalPrice: finalPrice, // Precio final (con descuento si aplica)
+            hasDiscount: hasDiscount,
+            discountPercentage: discountPercentage,
             quantity: 1,
             image: product ? product.image : null,
             description: product ? product.description : null,
@@ -536,22 +651,84 @@ function updateCartDisplay() {
     cartTotal = 0;
     let totalItems = 0;
     
+    const cartFooter = document.getElementById('cartFooter');
+    
+    // Mostrar mensaje si el carrito está vacío
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-shopping-cart text-4xl mb-3 text-gray-300"></i>
+                <p class="text-sm font-medium">Tu carrito está vacío</p>
+                <p class="text-xs mt-1">Agrega productos deliciosos para comenzar</p>
+            </div>
+        `;
+        cartTotalElement.textContent = '₡0';
+        cartCount.textContent = '0';
+        // Ocultar footer cuando el carrito está vacío
+        if (cartFooter) {
+            cartFooter.classList.add('hidden');
+        }
+        return;
+    }
+    
+    // Mostrar footer cuando hay productos
+    if (cartFooter) {
+        cartFooter.classList.remove('hidden');
+    }
+    
     cart.forEach(item => {
-        cartTotal += item.price * item.quantity;
+        // Usar originalPrice si existe, sino usar price
+        const originalPrice = item.originalPrice || item.price;
+        const finalPrice = item.finalPrice || item.price;
+        const hasDiscount = item.hasDiscount && originalPrice > finalPrice;
+        
+        cartTotal += finalPrice * item.quantity;
         totalItems += item.quantity;
         
         const itemElement = document.createElement('div');
-        itemElement.className = 'flex items-center justify-between border-b pb-2';
+        itemElement.className = 'flex items-start gap-3 border-b pb-3 mb-3';
+        
+        const totalItem = finalPrice * item.quantity;
+        const totalOriginal = originalPrice * item.quantity;
+        
+        let priceHtml = '';
+        if (hasDiscount) {
+            priceHtml = `
+                <div class="flex flex-col items-end flex-shrink-0" style="width: 100px;">
+                    <span class="text-xs text-gray-400 line-through mb-1">₡${formatPrice(totalOriginal)}</span>
+                    <span class="text-sm font-semibold text-gray-800">₡${formatPrice(totalItem)}</span>
+                </div>
+            `;
+        } else {
+            priceHtml = `
+                <div class="flex flex-col items-end flex-shrink-0" style="width: 100px;">
+                    <span class="text-sm font-semibold text-gray-800">₡${formatPrice(totalItem)}</span>
+                </div>
+            `;
+        }
+        
         itemElement.innerHTML = `
-            <div class="flex-1">
-                <h4 class="font-medium">${item.name}</h4>
-                <p class="text-sm text-gray-600">₡${item.price.toLocaleString()} c/u</p>
+            <div class="flex-1 min-w-0">
+                <h4 class="font-semibold text-sm text-gray-800 mb-1">${item.name}</h4>
+                ${hasDiscount ? `
+                    <div class="text-xs text-gray-400 line-through mb-1">₡${formatPrice(originalPrice)}</div>
+                    <div class="text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+                        <span>₡${formatPrice(finalPrice)} c/u</span>
+                        <span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-semibold">
+                            -${item.discountPercentage || Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
+                        </span>
+                    </div>
+                ` : `
+                    <div class="text-xs text-gray-500">
+                        <span>₡${formatPrice(finalPrice)} c/u</span>
+                    </div>
+                `}
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center gap-2 flex-shrink-0" style="width: 140px; margin-left: 8px;">
                 <button class="cart-btn-decrease" onclick="updateQuantity('${item.name}', -1)">
                     <i class="fas fa-minus"></i>
                 </button>
-                <span class="w-8 text-center">${item.quantity}</span>
+                <span class="w-8 text-center text-sm font-medium">${item.quantity}</span>
                 <button class="cart-btn-increase" onclick="updateQuantity('${item.name}', 1)">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -559,11 +736,12 @@ function updateCartDisplay() {
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
+            ${priceHtml}
         `;
         cartItems.appendChild(itemElement);
     });
     
-    cartTotalElement.textContent = `₡${cartTotal.toLocaleString()}`;
+    cartTotalElement.textContent = `₡${formatPrice(cartTotal)}`;
     cartCount.textContent = totalItems;
 }
 
@@ -601,6 +779,31 @@ function setupCartClickOutside() {
 
 //Función para proceder al checkout
 window.checkout = function() {
+    // Función para verificar si el usuario es admin o empleado
+    function isAdminOrEmployee() {
+        const userData = localStorage.getItem('userData');
+        if (!userData) return false;
+        
+        try {
+            const user = JSON.parse(userData);
+            return user.tipoUsuario === 'Administrador' || user.tipoUsuario === 'Empleado';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // Verificar si el usuario es admin o empleado
+    if (isAdminOrEmployee()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Acceso restringido',
+            text: 'Los administradores y empleados no pueden realizar pedidos.',
+            confirmButtonColor: '#f97316',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
     window.location.href = '/pedidos.html';
 };
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -145,6 +146,7 @@
         .badge-redeemed { background-color: #fed7aa; color: #c2410c; }
     </style>
 </head>
+
 <body class="bg-gray-50">
     <!-- Navbar Container -->
     <div id="navbar-container"></div>
@@ -155,97 +157,136 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Welcome Section -->
                         <div class="bg-gray-800 text-white rounded-lg p-6 mb-8">
-            <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
-            <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
-            </div>
-            
+                <h1 class="text-3xl font-bold mb-2">¡Bienvenido/a, <span class="user-name">-</span>!</h1>
+                <p class="text-gray-300">Gestiona tus pedidos, reservaciones y consulta tus puntos de lealtad</p>
+                </div>
+
 
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column -->
             <div class="lg:col-span-2 space-y-8">
-                <!-- Active Reservations -->
+                    <!-- Active Reservations -->
                 <div class="bg-white rounded-lg shadow-md">
                     <div class="p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Reservaciones Activas</h2>
-                        <hr class="mb-4">
-                    </div>
-                    <div class="p-6 pt-0">
-                        <div id="reservationsLoading" class="text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                            <p class="mt-2 text-gray-600">Cargando reservaciones activas...</p>
-                        </div>
-
-                        <div id="reservationsContainer" class="space-y-4 hidden">
-                            <!-- Reservaciones activas se cargan dinámicamente -->
-                        </div>
-
-                        <div id="reservationsEmpty" class="text-center py-8 hidden">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800">Reservaciones Activas</h2>
+                                <a href="/cliente/mis-reservas.html" class="text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver todas
+                                </a>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes reservaciones próximas</h3>
-                            <p class="text-gray-600">Agenda una nueva reservación y aparecerá aquí.</p>
-                        </div>
+                            <hr class="mb-4">
+                                    </div>
+                        <div class="p-6 pt-0">
+                            <div id="reservationsLoading" class="text-center py-8">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                                <p class="mt-2 text-gray-600">Cargando reservaciones activas...</p>
+                                    </div>
 
-                        <div id="reservationsError" class="text-center py-8 hidden">
-                            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                            <div id="reservationsContainer" class="space-y-4 hidden">
+                                <!-- Reservaciones activas se cargan dinámicamente -->
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar reservaciones</h3>
-                            <p class="text-gray-600 mb-4" data-error-message>No se pudieron cargar tus reservaciones activas.</p>
-                            <button onclick="loadActiveReservations()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
-                                <i class="fas fa-redo"></i>
-                                Reintentar
-                            </button>
-                        </div>
+                            
+                            <div id="reservationsEmpty" class="text-center py-8 hidden">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+                                    </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes reservaciones próximas</h3>
+                                <p class="text-gray-600">Agenda una nueva reservación y aparecerá aquí.</p>
+                            </div>
+                            
+                            <div id="reservationsError" class="text-center py-8 hidden">
+                                <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                                    </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Error al cargar reservaciones</h3>
+                                <p class="text-gray-600 mb-4" data-error-message>No se pudieron cargar tus reservaciones activas.</p>
+                                <button onclick="loadActiveReservations()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                                    <i class="fas fa-redo"></i>
+                                    Reintentar
+                                </button>
+                                    </div>
 
                         <div class="mt-6 text-center">
-                            <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
-                                <i class="fas fa-calendar-alt"></i>
-                                Nueva Reservación
-                            </a>
+                                <a href="/reservaciones.html" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    Nueva Reservación
+                                </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-                <!-- Recent Orders -->
+                    <!-- Recent Orders -->
                 <div class="bg-white rounded-lg shadow-md">
                     <div class="p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pedidos Recientes</h2>
-                        <hr class="mb-4">
-                    </div>
-                    <div class="p-6 pt-0">
-                        <!-- Loading State -->
-                        <div id="recentOrdersLoading" class="text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                            <p class="mt-2 text-gray-600">Cargando pedidos recientes...</p>
-                        </div>
-
-                        <!-- Orders Container -->
-                        <div id="recentOrdersContainer" class="space-y-4 hidden">
-                            <!-- Orders will be loaded here dynamically -->
-                        </div>
-
-                        <!-- Empty State -->
-                        <div id="recentOrdersEmpty" class="text-center py-8 hidden">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800">Pedidos Recientes</h2>
+                                <a href="/cliente/mis-pedidos.html" class="text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver todas
+                                </a>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes pedidos recientes</h3>
-                            <p class="text-gray-600 mb-4">¡Haz tu primer pedido y aparecerá aquí!</p>
-                            <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
-                                <i class="fas fa-plus"></i>
-                                Hacer Pedido
-                            </a>
+                            <hr class="mb-4">
+                                </div>
+                        <div class="p-6 pt-0">
+                            <!-- Loading State -->
+                            <div id="recentOrdersLoading" class="text-center py-8">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                                <p class="mt-2 text-gray-600">Cargando pedidos recientes...</p>
+                                    </div>
+
+                            <!-- Orders Container -->
+                            <div id="recentOrdersContainer" class="space-y-4 hidden">
+                                <!-- Orders will be loaded here dynamically -->
+                            </div>
+                            
+                            <!-- Empty State -->
+                            <div id="recentOrdersEmpty" class="text-center py-8 hidden">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">No tienes pedidos recientes</h3>
+                                <p class="text-gray-600 mb-4">¡Haz tu primer pedido y aparecerá aquí!</p>
+                                <a href="/menu.html" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold inline-flex items-center gap-2">
+                                    <i class="fas fa-plus"></i>
+                                    Hacer Pedido
+                                </a>
+                                    </div>
+                            </div>
                         </div>
-                        <div class="mt-6">
-                            <a href="/cliente/mis-pedidos.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
-                                Ver todos los pedidos
-                            </a>
+
+                    <!-- Mis Opiniones -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800">Mis Opiniones</h2>
+                                <a href="/cliente/mis-opiniones.html" class="text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                                    Ver todas
+                                </a>
+                            </div>
+                            <hr class="mb-4">
+                        </div>
+                        <div class="p-6 pt-0">
+                            <!-- Loading State -->
+                            <div id="opinionesLoading" class="text-center py-4">
+                                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                            </div>
+
+                            <!-- Opiniones Container -->
+                            <div id="opinionesContainer" class="grid grid-cols-2 gap-3 hidden">
+                                <!-- Las últimas 4 opiniones se cargarán aquí -->
+                            </div>
+
+                            <!-- Empty State -->
+                            <div id="opinionesEmpty" class="text-center py-8 hidden">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-star text-gray-400 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Aún no has dejado opiniones</h3>
+                                <p class="text-gray-600">Deja tu primera opinión y aparecerá aquí.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    
             </div>
 
             <!-- Right Column -->
@@ -253,30 +294,37 @@
                 <!-- Profile Card -->
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="text-center mb-6">
-                        <div class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-user text-white text-3xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
-                        <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
+                            <div
+                                class="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-user text-white text-3xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 user-name mb-2">-</h3>
+                            <div class="mb-2">
+                                <span id="nivelActualBadge" class="inline-block px-4 py-1 rounded-full text-sm font-semibold text-white" style="background: linear-gradient(90deg, #8B4513 0%, #CD7F32 50%, #E6A857 100%);">
+                                    Bronce
+                                </span>
+                            </div>
+                            <p class="text-gray-600" id="fechaRegistro">Cliente desde 2022</p>
                     </div>
                     
                     <div class="space-y-4">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-envelope text-gray-400"></i>
-                            <span class="text-sm user-email">-</span>
+                                <span class="text-sm user-email">-</span>
                         </div>
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-phone text-gray-400"></i>
-                            <span class="text-sm" id="telefonoUsuario">-</span>
+                                <span class="text-sm" id="telefonoUsuario">-</span>
                         </div>
-                        <div class="flex items-center space-x-3" id="direccionPrincipal" style="display: none;">
+                            <div class="flex items-center space-x-3" id="direccionPrincipal" style="display: none;">
                             <i class="fas fa-map-marker-alt text-gray-400"></i>
-                            <span class="text-sm" id="direccionTexto">-</span>
+                                <span class="text-sm" id="direccionTexto">-</span>
                         </div>
                     </div>
                     
                     <div class="mt-6">
-                        <a href="/cliente/perfil.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
+                            <a href="/cliente/perfil.html"
+                                class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
                             Editar Perfil
                         </a>
                     </div>
@@ -284,16 +332,22 @@
 
                 <!-- Loyalty Points -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
-                    <hr class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Programa de Lealtad</h3>
+                        <hr class="mb-4">
                     
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 mb-4">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold" id="puntosDisplay">-</div>
-                            <div class="text-orange-100">Puntos Acumulados</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-center flex-1">
+                                <div class="text-3xl font-bold" id="puntosDisplay">-</div>
+                                <div class="text-orange-100 text-sm">Puntos Acumulados</div>
+                            </div>
+                            <div class="text-center flex-1 border-l border-orange-300 pl-4">
+                                <div class="text-3xl font-bold" id="puntosActualesDisplay">-</div>
+                                <div class="text-orange-100 text-sm">Puntos Actuales</div>
+                            </div>
                         </div>
                     </div>
-                    
+
                     
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
@@ -301,24 +355,46 @@
                             <span class="text-sm font-semibold">Plata (2,000 pts)</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-orange-600 h-2 rounded-full" id="progresoBar" style="width: 0%"></div>
+                                <div class="h-2 rounded-full" id="progresoBar" style="width: 0%; background: linear-gradient(90deg, #8B4513 0%, #CD7F32 50%, #E6A857 100%);"></div>
                         </div>
-                        <div class="text-xs text-gray-500 text-center" id="progresoText">Calculando progreso...</div>
+                            <div class="text-xs text-gray-500 text-center" id="progresoText">Calculando progreso...
+                            </div>
                     </div>
                     
                     <div class="mt-6">
-                        <button onclick="openRewardsModal()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center flex items-center justify-center gap-2">
-                            <i class="fas fa-gift"></i>
+                            <button type="button" onclick="openRewardsModal()"
+                                class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-md font-semibold transition text-center block flex items-center justify-center gap-2">
+                                <i class="fas fa-gift"></i>
                             Canjear Puntos
-                        </button>
+                            </button>
+                        </div>
+                    </div>
+
+                <!-- Mis Recompensas -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Mis Recompensas</h3>
+                    <hr class="mb-4">
+                    
+                    <div id="myRewardsLoading" class="text-center py-8 hidden">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                        <p class="mt-3 text-sm text-gray-600">Cargando recompensas...</p>
+                    </div>
+
+                    <div id="myRewardsEmpty" class="text-center py-8 hidden">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-gift text-gray-400 text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">No has canjeado recompensas aún</h4>
+                        <p class="text-sm text-gray-600">Canjea puntos por descuentos y experiencias exclusivas.</p>
+                    </div>
+
+                    <div id="myRewardsList" class="space-y-3 max-h-96 overflow-y-auto hidden">
                     </div>
                 </div>
 
-
-                </div>
             </div>
-        </div>
-    </div>
+                    </div>
+                </div>
 
     <!-- Footer Container -->
     <div id="footer-container"></div>
@@ -406,17 +482,17 @@
                             <span>Cualquiera</span>
                         </label>
                     </div>
-                </div>
-
+                        </div>
+                        
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="submit" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold flex items-center gap-2">
                         <i class="fas fa-edit"></i>
                         Actualizar
                     </button>
-                </div>
+                        </div>
             </form>
-        </div>
-    </div>
+                    </div>
+                </div>
 
     <!-- Rewards Modal -->
     <div id="rewardsModal" class="modal">
@@ -425,21 +501,31 @@
                 <div>
                     <h3 class="text-2xl font-semibold text-gray-800">Catálogo de Recompensas</h3>
                     <p class="text-sm text-gray-500 mt-1">Canjea tus puntos por descuentos y experiencias exclusivas.</p>
-                </div>
+                    <div class="mt-4 flex gap-6 text-sm">
+                        <div>
+                            <span class="text-gray-600">Puntos Acumulados:</span>
+                            <span class="font-semibold text-gray-800 ml-2" id="rewardsPuntosAcumulados">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Puntos Actuales:</span>
+                            <span class="font-semibold text-orange-600 ml-2" id="rewardsPuntosActuales">-</span>
+                        </div>
+                    </div>
+            </div>
                 <button type="button" class="modal-close" onclick="closeRewardsModal()">
                     <i class="fas fa-times"></i>
                 </button>
-            </div>
+        </div>
 
             <div id="rewardsLoading" class="text-center py-10 hidden">
                 <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                 <p class="mt-3 text-gray-600">Cargando opciones de canje...</p>
-            </div>
+    </div>
 
             <div id="rewardsError" class="text-center py-10 hidden">
                 <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                     <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-                </div>
+        </div>
                 <h4 class="text-lg font-semibold text-gray-800 mb-2">No se pudieron cargar las recompensas</h4>
                 <p class="text-gray-600 mb-4">Inténtalo de nuevo en unos segundos.</p>
                 <button onclick="fetchRewardsCatalog()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition inline-flex items-center gap-2">
@@ -463,7 +549,8 @@
     <script>
         let reservasCapacidadMaxima = 8;
         let currentReservationEditing = null;
-        let currentUserPoints = 0;
+        let currentUserPoints = 0; // Puntos actuales disponibles para canjear
+        let puntosAcumulados = 0; // Puntos acumulados totales (para progresión de nivel)
 
         //Carga los datos del perfil del usuario al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
@@ -474,11 +561,12 @@
                 direccionElement: !!direccionElement,
                 direccionTextoElement: !!direccionTextoElement
             });
-            
+
             setupReservationModal();
             loadUserProfile();
             loadActiveReservations();
             loadRecentOrders();
+            loadMyRewards();
         });
 
         //Carga el perfil del usuario
@@ -501,35 +589,34 @@
 
                 if (data.success) {
                     const userData = data.data.user;
-                    
-                    const puntos = userData.puntos_acumulados || 0;
-                    const puntosDisplayElement = document.getElementById('puntosDisplay');
-                    
-                    if (puntosDisplayElement) {
-                        puntosDisplayElement.textContent = puntos;
-                    }
-                    currentUserPoints = puntos;
 
-                    updateRewardPointsDisplay(puntos);
-
-                    updateLoyaltyProgress(puntos);
+                    puntosAcumulados = userData.puntos_acumulados || 0;
+                    // Los puntos actuales se cargarán desde la API de recompensas para obtener el valor correcto
+                    // Por ahora usamos los acumulados como valor temporal
+                    currentUserPoints = puntosAcumulados;
+                    updateRewardPointsDisplay();
+                    updateLoyaltyProgress(puntosAcumulados);
+                    updateNivelActualBadge(puntosAcumulados);
                     
+                    // Cargar los puntos disponibles reales desde la API de recompensas
+                    loadAvailableLoyaltyPoints();
+
                     //Actualiza información del usuario
                     const nameElements = document.querySelectorAll('.user-name');
                     nameElements.forEach(element => {
                         element.textContent = userData.nombre || '-';
                     });
-                    
+
                     const emailElements = document.querySelectorAll('.user-email');
                     emailElements.forEach(element => {
                         element.textContent = userData.correo || '-';
                     });
-                    
+
                     const telefonoElement = document.getElementById('telefonoUsuario');
                     if (telefonoElement) {
                         telefonoElement.textContent = userData.telefono || '-';
                     }
-                    
+
                     const fechaRegistroElement = document.getElementById('fechaRegistro');
                     if (fechaRegistroElement && userData.fecha_registro) {
                         const fecha = new Date(userData.fecha_registro);
@@ -538,12 +625,12 @@
                         const year = fecha.getFullYear();
                         fechaRegistroElement.textContent = `Cliente desde ${day}/${month}/${year}`;
                     }
-                    
+
                     //Cargar dirección principal con un pequeño delay para asegurar que los elementos estén listos
                     setTimeout(async () => {
                         await loadMainAddress();
                     }, 100);
-                    
+
                     //Actualiza el localStorage con los nuevos datos
                     localStorage.setItem('userData', JSON.stringify(userData));
                 } else {
@@ -554,11 +641,75 @@
             }
         }
 
-        function updateRewardPointsDisplay(updatedPoints) {
-            currentUserPoints = updatedPoints;
+        // Actualiza puntos actuales en UI y estado (solo para recompensas)
+        function updateRewardPointsDisplay(puntosActuales) {
+            if (typeof puntosActuales === 'number') {
+                currentUserPoints = Number(puntosActuales) || 0;
+            }
             const puntosDisplayElement = document.getElementById('puntosDisplay');
             if (puntosDisplayElement) {
-                puntosDisplayElement.textContent = updatedPoints.toLocaleString();
+                puntosDisplayElement.textContent = puntosAcumulados.toLocaleString();
+            }
+            const puntosActualesDisplayElement = document.getElementById('puntosActualesDisplay');
+            if (puntosActualesDisplayElement) {
+                puntosActualesDisplayElement.textContent = currentUserPoints.toLocaleString();
+            }
+            // Actualizar display en modal si existe
+            updateRewardsModalPoints();
+        }
+
+        // Actualiza la etiqueta de nivel actual en la tarjeta de perfil
+        function updateNivelActualBadge(puntos) {
+            const nivelBadge = document.getElementById('nivelActualBadge');
+            if (!nivelBadge) return;
+
+            const niveles = [
+                { 
+                    nombre: 'Bronce', 
+                    puntos: 0, 
+                    gradient: 'linear-gradient(90deg, #8B4513 0%, #CD7F32 50%, #E6A857 100%)' 
+                },
+                { 
+                    nombre: 'Plata', 
+                    puntos: 2000, 
+                    gradient: 'linear-gradient(90deg, #A8A8A8 0%, #D3D3D3 50%, #F5F5F5 100%)' 
+                },
+                { 
+                    nombre: 'Oro', 
+                    puntos: 5000, 
+                    gradient: 'linear-gradient(90deg, #DAA520 0%, #FFD700 50%, #FFEF00 100%)' 
+                },
+                { 
+                    nombre: 'Diamante', 
+                    puntos: 10000, 
+                    gradient: 'linear-gradient(90deg, #4FC3F7 0%, #81D4FA 50%, #B3E5FC 100%)' 
+                }
+            ];
+
+            // Encuentra el nivel actual
+            let nivelActual = niveles[0];
+            for (let i = niveles.length - 1; i >= 0; i--) {
+                if (puntos >= niveles[i].puntos) {
+                    nivelActual = niveles[i];
+                    break;
+                }
+            }
+
+            // Actualizar texto y gradiente
+            nivelBadge.textContent = nivelActual.nombre;
+            nivelBadge.style.background = nivelActual.gradient;
+        }
+
+        // Actualiza la visualización de puntos en el modal de recompensas
+        function updateRewardsModalPoints() {
+            const puntosAcumuladosElement = document.getElementById('rewardsPuntosAcumulados');
+            const puntosActualesElement = document.getElementById('rewardsPuntosActuales');
+            
+            if (puntosAcumuladosElement) {
+                puntosAcumuladosElement.textContent = puntosAcumulados.toLocaleString();
+            }
+            if (puntosActualesElement) {
+                puntosActualesElement.textContent = currentUserPoints.toLocaleString();
             }
         }
 
@@ -581,14 +732,14 @@
                 });
 
                 console.log('Respuesta recibida:', response.status);
-                
+
                 if (!response.ok) {
                     console.error('Error en la respuesta HTTP:', response.status, response.statusText);
                     const errorText = await response.text();
                     console.error('Texto de error:', errorText);
                     return;
                 }
-                
+
                 const data = await response.json();
                 console.log('Datos de direcciones:', data);
                 console.log('Tipo de data:', typeof data);
@@ -604,33 +755,33 @@
                 if (data.success && direcciones && direcciones.length > 0) {
                     console.log('Direcciones encontradas:', direcciones.length);
                     console.log('Todas las direcciones:', direcciones);
-                    
+
                     //Busca la dirección principal
                     let mainAddress = direcciones.find(addr => addr.direccion_principal === 1);
                     console.log('Dirección principal encontrada:', mainAddress);
-                    
+
                     if (!mainAddress && direcciones.length > 0) {
                         mainAddress = direcciones[0];
                         console.log('Usando primera dirección disponible:', mainAddress);
                     }
-                    
+
                     if (mainAddress) {
                         console.log('Configurando elementos de dirección...');
                         const direccionElement = document.getElementById('direccionPrincipal');
                         const direccionTextoElement = document.getElementById('direccionTexto');
-                        
+
                         console.log('Elementos encontrados:', {
                             direccionElement: !!direccionElement,
                             direccionTextoElement: !!direccionTextoElement
                         });
-                        
+
                         if (direccionElement && direccionTextoElement) {
                             const direccionTexto = `${mainAddress.provincia}, ${mainAddress.canton}, ${mainAddress.distrito}`;
                             console.log('Texto de dirección a mostrar:', direccionTexto);
-                            
+
                             direccionTextoElement.textContent = direccionTexto;
                             direccionElement.style.display = 'flex';
-                            
+
                             console.log('Dirección principal configurada exitosamente');
                         }
                     } else {
@@ -652,26 +803,26 @@
                 console.log('=== PRUEBA MANUAL DE API DE DIRECCIONES ===');
                 const token = localStorage.getItem('authToken');
                 console.log('Token encontrado:', !!token);
-                
+
                 const response = await fetch('/api/cliente/direcciones', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
+
                 console.log('Respuesta HTTP:', response.status, response.statusText);
                 const data = await response.json();
                 console.log('Datos completos de la API:', JSON.stringify(data, null, 2));
-                
+
                 const direcciones = data.direcciones || data.data;
                 if (data.success && direcciones && direcciones.length > 0) {
                     const direccion = direcciones[0];
                     console.log('Primera dirección encontrada:', direccion);
-                    
+
                     const direccionElement = document.getElementById('direccionPrincipal');
                     const direccionTextoElement = document.getElementById('direccionTexto');
-                    
+
                     if (direccionElement && direccionTextoElement) {
                         direccionTextoElement.textContent = `${direccion.provincia}, ${direccion.canton}, ${direccion.distrito}`;
                         direccionElement.style.display = 'flex';
@@ -694,21 +845,37 @@
         function updateLoyaltyProgress(puntos) {
             const progresoBar = document.getElementById('progresoBar');
             const progresoText = document.getElementById('progresoText');
-            
+
             if (!progresoBar || !progresoText) return;
-            
-            //Niveles de lealtad
+
+            //Niveles de lealtad con gradientes brillantes
             const niveles = [
-                { nombre: 'Bronce', puntos: 0 },
-                { nombre: 'Plata', puntos: 2000 },
-                { nombre: 'Oro', puntos: 5000 },
-                { nombre: 'Diamante', puntos: 10000 }
+                { 
+                    nombre: 'Bronce', 
+                    puntos: 0, 
+                    gradient: 'linear-gradient(90deg, #8B4513 0%, #CD7F32 50%, #E6A857 100%)' 
+                }, // Bronce con gradiente
+                { 
+                    nombre: 'Plata', 
+                    puntos: 2000, 
+                    gradient: 'linear-gradient(90deg, #A8A8A8 0%, #D3D3D3 50%, #F5F5F5 100%)' 
+                }, // Plata con gradiente metálico
+                { 
+                    nombre: 'Oro', 
+                    puntos: 5000, 
+                    gradient: 'linear-gradient(90deg, #DAA520 0%, #FFD700 50%, #FFEF00 100%)' 
+                }, // Oro con gradiente dorado
+                { 
+                    nombre: 'Diamante', 
+                    puntos: 10000, 
+                    gradient: 'linear-gradient(90deg, #4FC3F7 0%, #81D4FA 50%, #B3E5FC 100%)' 
+                } // Diamante con gradiente brillante
             ];
-            
+
             //Encuentra el nivel actual y el siguiente
             let nivelActual = niveles[0];
             let siguienteNivel = niveles[1];
-            
+
             for (let i = niveles.length - 1; i >= 0; i--) {
                 if (puntos >= niveles[i].puntos) {
                     nivelActual = niveles[i];
@@ -716,11 +883,19 @@
                     break;
                 }
             }
-            
+
+            // Aplicar gradiente según el nivel actual
+            if (progresoBar && nivelActual.gradient) {
+                progresoBar.style.background = nivelActual.gradient;
+            }
+
+            // Actualizar badge de nivel en la tarjeta de perfil
+            updateNivelActualBadge(puntos);
+
             if (siguienteNivel) {
                 const progreso = ((puntos - nivelActual.puntos) / (siguienteNivel.puntos - nivelActual.puntos)) * 100;
                 const puntosRestantes = siguienteNivel.puntos - puntos;
-                
+
                 progresoBar.style.width = `${Math.min(progreso, 100)}%`;
                 progresoText.textContent = `${puntosRestantes} puntos más para ${siguienteNivel.nombre}`;
             } else {
@@ -811,33 +986,44 @@
 
         function createReservationCard(reservacion) {
             const card = document.createElement('div');
-            card.className = 'flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 bg-gray-50 rounded-lg';
+            card.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg';
 
             const leftSection = document.createElement('div');
+            leftSection.className = 'flex items-center space-x-4';
 
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-calendar-alt text-white text-lg';
+            iconContainer.appendChild(icon);
+            leftSection.appendChild(iconContainer);
+
+            const textContainer = document.createElement('div');
             const title = document.createElement('h4');
             title.className = 'font-semibold';
             title.textContent = `Reservación #${reservacion.id_reservacion.toString().padStart(5, '0')}`;
-            leftSection.appendChild(title);
+            textContainer.appendChild(title);
 
             const details = document.createElement('p');
             details.className = 'text-sm text-gray-600';
             details.textContent = `${formatReservationDateLabel(reservacion.fecha_reserva)} • ${formatReservationTimeLabel(reservacion.hora_reserva)} • ${formatPeopleLabel(reservacion.cantidad_personas)}`;
-            leftSection.appendChild(details);
+            textContainer.appendChild(details);
 
             if (reservacion.preferencia_mesa) {
                 const preference = document.createElement('p');
                 preference.className = 'text-sm text-gray-600';
                 preference.textContent = `Mesa: ${reservacion.preferencia_mesa}`;
-                leftSection.appendChild(preference);
+                textContainer.appendChild(preference);
             }
 
             if (reservacion.notas_especiales) {
                 const notes = document.createElement('p');
                 notes.className = 'text-sm text-gray-600';
                 notes.textContent = `Notas: ${reservacion.notas_especiales}`;
-                leftSection.appendChild(notes);
+                textContainer.appendChild(notes);
             }
+            
+            leftSection.appendChild(textContainer);
 
             const rightSection = document.createElement('div');
             rightSection.className = 'text-left md:text-right flex flex-col items-start md:items-end gap-3';
@@ -1050,6 +1236,7 @@
             return;
         }
         modal.classList.add('show');
+        updateRewardsModalPoints(); // Actualizar puntos al abrir el modal
         fetchRewardsCatalog();
     }
 
@@ -1072,6 +1259,163 @@
             }
         });
     })();
+
+    // Función para cargar los puntos disponibles (acumulados - usados) al cargar el perfil
+    async function loadAvailableLoyaltyPoints() {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                return;
+            }
+
+            const response = await fetch('/api/cliente/recompensas', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Actualizar ambos valores: puntos acumulados y puntos disponibles
+                if (typeof result.data?.puntosAcumulados === 'number') {
+                    puntosAcumulados = Number(result.data.puntosAcumulados) || 0;
+                }
+                if (typeof result.data?.puntosActuales === 'number') {
+                    currentUserPoints = Number(result.data.puntosActuales) || 0;
+                }
+                // Actualizar ambos displays (dashboard y modal) con los valores actualizados
+                updateRewardPointsDisplay();
+                updateLoyaltyProgress(puntosAcumulados);
+                updateNivelActualBadge(puntosAcumulados);
+            }
+        } catch (error) {
+            console.error('Error al cargar puntos disponibles:', error);
+            // Si hay error, mantener los valores actuales
+        }
+    }
+
+    // Función para cargar las recompensas canjeadas por el cliente
+    async function loadMyRewards() {
+        const loadingElement = document.getElementById('myRewardsLoading');
+        const emptyElement = document.getElementById('myRewardsEmpty');
+        const listElement = document.getElementById('myRewardsList');
+
+        if (!loadingElement || !emptyElement || !listElement) {
+            return;
+        }
+
+        loadingElement.classList.remove('hidden');
+        emptyElement.classList.add('hidden');
+        // No limpiar el contenido inicial aún, se limpiará cuando haya datos
+
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('No hay token de autenticación');
+            }
+
+            const response = await fetch('/api/cliente/recompensas/canjeadas', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'No se pudieron cargar las recompensas canjeadas');
+            }
+
+            const canjes = Array.isArray(result.data?.canjes) ? result.data.canjes : [];
+
+            loadingElement.classList.add('hidden');
+
+            if (canjes.length === 0) {
+                emptyElement.classList.remove('hidden');
+                listElement.classList.add('hidden');
+                return;
+            }
+
+            emptyElement.classList.add('hidden');
+            listElement.classList.remove('hidden');
+            listElement.innerHTML = '';
+
+            canjes.forEach(canje => {
+                const estadoClass = canje.estado === 'pendiente' 
+                    ? 'bg-yellow-100 text-yellow-800 border-yellow-300' 
+                    : canje.estado === 'aplicado'
+                    ? 'bg-green-100 text-green-800 border-green-300'
+                    : 'bg-gray-100 text-gray-800 border-gray-300';
+
+                const estadoText = canje.estado === 'pendiente'
+                    ? 'Pendiente'
+                    : canje.estado === 'aplicado'
+                    ? 'Utilizada'
+                    : 'Completada';
+
+                const estadoIcon = canje.estado === 'pendiente'
+                    ? 'fa-clock'
+                    : canje.estado === 'aplicado'
+                    ? 'fa-check-circle'
+                    : 'fa-check-double';
+
+                const fecha = new Date(canje.fecha_canje);
+                const fechaFormateada = fecha.toLocaleDateString('es-CR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                let valorText = '';
+                if (canje.tipo === 'descuento_porcentaje') {
+                    // Para porcentajes, solo mostrar el número y el símbolo %
+                    valorText = `${parseFloat(canje.valor || 0)}%`;
+                } else if (canje.tipo === 'descuento' || canje.tipo === 'descuento_colones') {
+                    // Para descuentos en colones, mostrar con símbolo de moneda
+                    valorText = `₡${parseFloat(canje.valor || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else if (canje.valor > 0) {
+                    // Para otros tipos con valor, mostrar con símbolo de moneda
+                    valorText = `₡${parseFloat(canje.valor).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                }
+
+                const rewardCard = document.createElement('div');
+                rewardCard.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white';
+                rewardCard.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h4 class="font-semibold text-gray-800">${canje.nombre || 'Recompensa'}</h4>
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold border ${estadoClass}">
+                                    <i class="fas ${estadoIcon} mr-1"></i>
+                                    ${estadoText}
+                                </span>
+                            </div>
+                            ${canje.descripcion ? `<p class="text-sm text-gray-600 mb-2">${canje.descripcion}</p>` : ''}
+                            <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                                <span><i class="fas fa-calendar-alt mr-1"></i>${fechaFormateada}</span>
+                                <span><i class="fas fa-coins mr-1"></i>${canje.puntos_utilizados} puntos</span>
+                                ${valorText ? `<span><i class="fas fa-tag mr-1"></i>${valorText}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listElement.appendChild(rewardCard);
+            });
+
+        } catch (error) {
+            console.error('Error al cargar recompensas canjeadas:', error);
+            loadingElement.classList.add('hidden');
+            listElement.innerHTML = `
+                <div class="text-center py-4 text-red-600">
+                    <i class="fas fa-exclamation-circle mb-2"></i>
+                    <p class="text-sm">Error al cargar las recompensas. Intenta recargar la página.</p>
+                </div>
+            `;
+        }
+    }
 
     async function fetchRewardsCatalog() {
         const loadingElement = document.getElementById('rewardsLoading');
@@ -1113,9 +1457,15 @@
 
             const rewards = Array.isArray(result.data?.recompensas) ? result.data.recompensas : [];
 
-            if (typeof result.data?.puntosActuales === 'number') {
-                updateRewardPointsDisplay(result.data.puntosActuales);
+            // Actualizar ambos valores: puntos acumulados y puntos disponibles
+            if (typeof result.data?.puntosAcumulados === 'number') {
+                puntosAcumulados = Number(result.data.puntosAcumulados) || 0;
             }
+            if (typeof result.data?.puntosActuales === 'number') {
+                currentUserPoints = Number(result.data.puntosActuales) || 0;
+            }
+            // Actualizar ambos displays (dashboard y modal) con los valores actualizados
+            updateRewardPointsDisplay();
 
             if (rewards.length === 0) {
                 loadingElement.classList.add('hidden');
@@ -1123,15 +1473,18 @@
                 return;
             }
 
-            renderRewardsList(rewards);
-            loadingElement.classList.add('hidden');
-            contentElement.classList.remove('hidden');
-        } catch (error) {
-            console.error('Error al cargar recompensas:', error);
-            loadingElement.classList.add('hidden');
-            errorElement.classList.remove('hidden');
+                renderRewardsList(rewards);
+                loadingElement.classList.add('hidden');
+                contentElement.classList.remove('hidden');
+                
+                // Recargar las recompensas canjeadas después de canjear una nueva
+                loadMyRewards();
+            } catch (error) {
+                console.error('Error al cargar recompensas:', error);
+                loadingElement.classList.add('hidden');
+                errorElement.classList.remove('hidden');
+            }
         }
-    }
 
     function renderRewardsList(rewards) {
         const contentElement = document.getElementById('rewardsContent');
@@ -1173,7 +1526,7 @@
                             ${valorRecompensa != null
                                 ? `<div class="flex items-center gap-2">
                                         <i class="fas fa-tag text-orange-500"></i>
-                                        <span>${tipo === 'descuento' ? `Descuento de ${formatRewardValue(valorRecompensa)}` : `Valor estimado: ₡${valorRecompensa.toLocaleString()}`}</span>
+                                        <span>${(tipo === 'descuento' || tipo === 'descuento_colones' || tipo === 'descuento_porcentaje') ? `Descuento de ${formatRewardValue(tipo, valorRecompensa)}` : `Valor estimado: ₡${valorRecompensa.toLocaleString()}`}</span>
                                    </div>`
                                 : ''
                             }
@@ -1206,7 +1559,12 @@
 
     function formatRewardType(type) {
         switch (type) {
+            case 'descuento_colones':
+                return 'Descuento (₡)';
+            case 'descuento_porcentaje':
+                return 'Descuento (%)';
             case 'descuento':
+                // Compatibilidad con tipos antiguos
                 return 'Descuento Especial';
             case 'producto':
                 return 'Producto Exclusivo';
@@ -1217,7 +1575,7 @@
         }
     }
 
-    function formatRewardValue(valor) {
+    function formatRewardValue(tipo, valor) {
         if (valor === null || valor === undefined) {
             return '';
         }
@@ -1227,10 +1585,25 @@
             return valor;
         }
 
-        if (numeric <= 100) {
+        // Si es descuento en porcentaje, mostrar con %
+        if (tipo === 'descuento_porcentaje') {
             return `${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)}%`;
         }
 
+        // Si es descuento en colones, mostrar con ₡
+        if (tipo === 'descuento_colones') {
+            return `₡${numeric.toLocaleString()}`;
+        }
+
+        // Para el tipo antiguo 'descuento', determinar automáticamente
+        if (tipo === 'descuento') {
+            if (numeric <= 100) {
+                return `${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)}%`;
+            }
+            return `₡${numeric.toLocaleString()}`;
+        }
+
+        // Por defecto, mostrar en colones
         return `₡${numeric.toLocaleString()}`;
     }
 
@@ -1245,7 +1618,7 @@
             const faltan = puntosRequeridos - currentUserPoints;
             return `Te faltan ${faltan.toLocaleString()} puntos para canjear esta recompensa.`;
         }
-        if (reward.tipo_recompensa === 'descuento') {
+        if (reward.tipo_recompensa === 'descuento' || reward.tipo_recompensa === 'descuento_colones' || reward.tipo_recompensa === 'descuento_porcentaje') {
             return 'Se aplicará el descuento automáticamente en tu próxima compra.';
         }
         return 'Recibirás confirmación de tu canje por correo.';
@@ -1253,7 +1626,10 @@
 
     function getRewardTypeBadgeClass(type) {
         switch (type) {
+            case 'descuento_colones':
+            case 'descuento_porcentaje':
             case 'descuento':
+                // Compatibilidad con tipos antiguos
                 return 'badge-discount';
             case 'producto':
                 return 'badge-product';
@@ -1293,11 +1669,15 @@
                 throw new Error(result.message || 'No se pudo completar el canje.');
             }
 
-            const puntosRestantes = result.data?.puntos_restantes ?? currentUserPoints;
-            updateRewardPointsDisplay(puntosRestantes);
+            // Actualizar solo los puntos actuales (disponibles para canjear)
+            if (typeof result.data?.puntos_restantes === 'number') {
+                currentUserPoints = Number(result.data.puntos_restantes) || 0;
+                updateRewardsModalPoints();
+            }
 
             if (result.data?.canje && result.data?.recompensa) {
-                if (result.data.recompensa.tipo_recompensa === 'descuento' && result.data.canje.estado_canje === 'pendiente') {
+                const tipoRecompensa = result.data.recompensa.tipo_recompensa;
+                if ((tipoRecompensa === 'descuento' || tipoRecompensa === 'descuento_colones' || tipoRecompensa === 'descuento_porcentaje') && result.data.canje.estado_canje === 'pendiente') {
                     storePendingReward(result.data);
                 }
             }
@@ -1311,6 +1691,7 @@
 
             closeRewardsModal();
             loadUserProfile();
+            loadMyRewards(); // Actualizar lista de recompensas canjeadas
         } catch (error) {
             console.error('Error al canjear recompensa:', error);
             Swal.fire({
@@ -1779,14 +2160,13 @@
         //Función para crear elemento HTML de pedido reciente
         function createRecentOrderElement(order) {
             const orderDiv = document.createElement('div');
-            orderDiv.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer';
-            orderDiv.onclick = () => window.location.href = '/cliente/mis-pedidos.html';
+            orderDiv.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg transition';
 
             const orderNumber = `#${order.id_pedido.toString().padStart(6, '0')}`;
             const orderDate = formatDate(order.fecha_pedido);
             const orderTotal = `₡${order.total.toLocaleString()}`;
             const statusInfo = getStatusInfo(order.estado_pedido);
-            
+
             let itemsSummary = '';
             if (order.items && order.items.length > 0) {
                 const firstTwoItems = order.items.slice(0, 2);
@@ -1826,7 +2206,7 @@
             loadingElement.classList.add('hidden');
             containerElement.classList.add('hidden');
             emptyElement.classList.remove('hidden');
-            
+
             emptyElement.innerHTML = `
                 <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                     <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
@@ -1863,7 +2243,141 @@
                 day: 'numeric'
             });
         }
+
+        // Funcion para cargar notificaciones y promociones personalizadas del usuario
+        async function loadNotificaciones() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.warn('No hay token de autenticación para notificaciones');
+                    return;
+                }
+
+                const res = await fetch('/api/cliente/notificaciones', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await res.json();
+                if (data.success && data.notificaciones.length > 0) {
+                    const container = document.getElementById('notificacionesContainer');
+                    if (!container) {
+                        console.warn('No se encontró el contenedor de notificaciones');
+                        return;
+                    }
+
+                    container.innerHTML = '';
+
+                    data.notificaciones.slice(0, 3).forEach(n => {
+                        const div = document.createElement('div');
+                        div.className = 'p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+                        div.innerHTML = `
+          <strong>${n.titulo}</strong><br>
+          <span class="text-sm text-gray-600">${n.contenido}</span><br>
+          <em class="text-xs text-gray-400">${new Date(n.fecha_envio).toLocaleDateString('es-ES')}</em>
+        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    console.log('No hay notificaciones disponibles');
+                }
+            } catch (err) {
+                console.error('Error al cargar notificaciones:', err);
+            }
+        }
+
+        // Cargar últimas 4 opiniones del cliente
+        async function loadUltimasOpiniones() {
+            const opinionesLoading = document.getElementById('opinionesLoading');
+            const opinionesContainer = document.getElementById('opinionesContainer');
+            const opinionesEmpty = document.getElementById('opinionesEmpty');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    opinionesLoading.classList.add('hidden');
+                    opinionesEmpty.classList.remove('hidden');
+                    return;
+                }
+
+                const response = await fetch('/api/opiniones/mis-opiniones', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                opinionesLoading.classList.add('hidden');
+
+                if (!data.success || !data.opiniones || data.opiniones.length === 0) {
+                    opinionesContainer.classList.add('hidden');
+                    opinionesEmpty.classList.remove('hidden');
+                    return;
+                }
+
+                // Tomar solo las últimas 4 opiniones
+                const ultimasOpiniones = data.opiniones.slice(0, 4);
+                opinionesEmpty.classList.add('hidden');
+                opinionesContainer.classList.remove('hidden');
+
+                opinionesContainer.innerHTML = ultimasOpiniones.map(opinion => {
+                    const estrellas = '★'.repeat(opinion.calificacion) + '☆'.repeat(5 - opinion.calificacion);
+                    const fecha = new Date(opinion.fecha_opinion).toLocaleDateString('es-ES', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const estado = opinion.aprobada ? 'Aprobada' : 'Pendiente';
+                    const estadoClass = opinion.aprobada ? 'text-green-600' : 'text-yellow-600';
+                    const tipoTexto = opinion.tipo_opinion === 'restaurante' 
+                        ? 'Restaurante' 
+                        : (opinion.nombre_producto || 'Producto');
+                    
+                    const comentarioPreview = opinion.comentario 
+                        ? (opinion.comentario.length > 50 
+                            ? opinion.comentario.substring(0, 50) + '...' 
+                            : opinion.comentario)
+                        : 'Sin comentario';
+
+                    return `
+                        <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition bg-white">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">${tipoTexto}</h4>
+                                <span class="text-xs ${estadoClass} font-semibold">${estado}</span>
+                            </div>
+                            <div class="flex items-center mb-2 text-yellow-400 text-xl">
+                                ${estrellas}
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${comentarioPreview}</p>
+                            <p class="text-xs text-gray-400">${fecha}</p>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error al cargar opiniones:', error);
+                opinionesLoading.classList.add('hidden');
+                opinionesContainer.classList.add('hidden');
+                opinionesEmpty.classList.remove('hidden');
+            }
+        }
+
+        // Ejecutar al cargar el DOM
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM cargado, verificando elementos...');
+
+            const direccionElement = document.getElementById('direccionPrincipal');
+            const direccionTextoElement = document.getElementById('direccionTexto');
+
+            console.log('Elementos DOM encontrados al cargar:', {
+                direccionElement: !!direccionElement,
+                direccionTextoElement: !!direccionTextoElement
+            });
+
+            loadUserProfile();
+            loadRecentOrders();
+            loadNotificaciones();
+            loadUltimasOpiniones();
+        });
     </script>
 
 </body>
+
 </html> 

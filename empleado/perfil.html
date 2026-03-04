@@ -275,6 +275,15 @@
             loadUserData();
             
             document.getElementById('saveSecurityBtn').addEventListener('click', handleSecurityUpdate);
+
+            ['contrasenaActual', 'nuevaContrasena', 'confirmarNuevaContrasena'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function(e) {
+                        e.target.value = e.target.value.replace(/\s/g, '');
+                    });
+                }
+            });
         });
 
         //Función para mostrar secciones
@@ -342,9 +351,13 @@
             saveBtnSpinner.classList.remove('hidden');
             
             try {
-                const contrasenaActual = document.getElementById('contrasenaActual').value;
-                const nuevaContrasena = document.getElementById('nuevaContrasena').value;
-                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value;
+                const contrasenaActual = document.getElementById('contrasenaActual').value.replace(/\s/g, '');
+                const nuevaContrasena = document.getElementById('nuevaContrasena').value.replace(/\s/g, '');
+                const confirmarNuevaContrasena = document.getElementById('confirmarNuevaContrasena').value.replace(/\s/g, '');
+
+                document.getElementById('contrasenaActual').value = contrasenaActual;
+                document.getElementById('nuevaContrasena').value = nuevaContrasena;
+                document.getElementById('confirmarNuevaContrasena').value = confirmarNuevaContrasena;
 
                 if (!nuevaContrasena || !confirmarNuevaContrasena) {
                     throw new Error('Debes completar todos los campos de contraseña');
@@ -359,6 +372,9 @@
                 }
 
                 const formData = {
+                    nombre: document.getElementById('nombre').value.trim(),
+                    correo: document.getElementById('correo').value.trim(),
+                    telefono: document.getElementById('telefono').value.trim(),
                     contrasenaActual: contrasenaActual,
                     nuevaContrasena: nuevaContrasena
                 };
@@ -382,7 +398,10 @@
                     document.getElementById('nuevaContrasena').value = '';
                     document.getElementById('confirmarNuevaContrasena').value = '';
                 } else {
-                    showMessage(data.message || 'Error al actualizar la contraseña', true);
+                    const validationErrors = Array.isArray(data.errors) && data.errors.length > 0
+                        ? data.errors.map(err => err.msg).join(', ')
+                        : null;
+                    showMessage(validationErrors || data.message || 'Error al actualizar la contraseña', true);
                 }
             } catch (error) {
                 console.error('Error:', error);

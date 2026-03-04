@@ -1,4 +1,66 @@
 const { pool } = require('../config/database');
+const { registrarCambio } = require('../utils/auditoria');
+const fs = require('fs/promises');
+const path = require('path');
+const crypto = require('crypto');
+
+const PRODUCT_IMAGE_UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'productos');
+const MAX_PRODUCT_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+const MIME_TYPE_TO_EXTENSION = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif'
+};
+
+const persistProductImage = async (imageValue) => {
+    if (typeof imageValue !== 'string') {
+        return imageValue ?? null;
+    }
+
+    const trimmedImage = imageValue.trim();
+    if (!trimmedImage) {
+        return null;
+    }
+
+    // Si ya es URL/ruta, se mantiene tal cual
+    if (!trimmedImage.startsWith('data:image/')) {
+        return trimmedImage;
+    }
+
+    const imageMatch = trimmedImage.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!imageMatch) {
+        throw new Error('El formato de la imagen no es válido');
+    }
+
+    const mimeType = imageMatch[1].toLowerCase();
+    const base64Payload = imageMatch[2];
+    const fileExtension = MIME_TYPE_TO_EXTENSION[mimeType];
+
+    if (!fileExtension) {
+        throw new Error('Tipo de imagen no permitido. Usa JPG, PNG, WEBP o GIF');
+    }
+
+    const imageBuffer = Buffer.from(base64Payload, 'base64');
+    if (!imageBuffer.length) {
+        throw new Error('La imagen está vacía o no es válida');
+    }
+
+    if (imageBuffer.length > MAX_PRODUCT_IMAGE_SIZE_BYTES) {
+        throw new Error('La imagen supera el tamaño máximo permitido de 5MB');
+    }
+
+    await fs.mkdir(PRODUCT_IMAGE_UPLOAD_DIR, { recursive: true });
+
+    const fileName = `producto-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${fileExtension}`;
+    const filePath = path.join(PRODUCT_IMAGE_UPLOAD_DIR, fileName);
+
+    await fs.writeFile(filePath, imageBuffer);
+
+    return `/uploads/productos/${fileName}`;
+};
 
 const parseDiscountPayload = (payload = {}) => {
     const descuentoActivoRaw = payload.descuentoActivo;
@@ -44,6 +106,9 @@ const parseDiscountPayload = (payload = {}) => {
         fechaFinDescuento
     };
 };
+
+// Los descuentos ahora se gestionan desde Promociones, no desde productos
+// La sincronización va de promociones -> productos
 
 //Obtiene inventario
 const getInventario = async (req, res) => {
@@ -169,11 +234,31 @@ const crearItemInventario = async (req, res) => {
             idResponsable
         ]);
 
+        const itemId = result.insertId;
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'inventario',
+            id_registro_afectado: itemId,
+            accion_realizada: 'CREATE',
+            datos_nuevos: {
+                nombre,
+                cantidad_actual,
+                cantidad_minima,
+                unidad_medida,
+                costo_unitario,
+                area,
+                id_responsable: idResponsable
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
+
         res.status(201).json({
             success: true,
             message: 'Item de inventario creado exitosamente',
             data: {
-                id: result.insertId
+                id: itemId
             }
         });
     } catch (error) {
@@ -207,7 +292,8 @@ const actualizarItemInventario = async (req, res) => {
             });
         }
 
-        const itemQuery = `SELECT id_inventario FROM inventario WHERE id_inventario = ?`;
+        // Obtener datos anteriores para auditoría
+        const itemQuery = `SELECT * FROM inventario WHERE id_inventario = ?`;
         const [itemRows] = await pool.execute(itemQuery, [itemId]);
 
         if (itemRows.length === 0) {
@@ -216,6 +302,8 @@ const actualizarItemInventario = async (req, res) => {
                 message: 'Item de inventario no encontrado'
             });
         }
+
+        const datosAnteriores = itemRows[0];
 
         const updateQuery = `
             UPDATE inventario 
@@ -232,6 +320,24 @@ const actualizarItemInventario = async (req, res) => {
             area || null,
             itemId
         ]);
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'inventario',
+            id_registro_afectado: itemId,
+            accion_realizada: 'UPDATE',
+            datos_anteriores: datosAnteriores,
+            datos_nuevos: {
+                nombre,
+                cantidad_actual,
+                cantidad_minima,
+                unidad_medida,
+                costo_unitario,
+                area: area || null
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
 
         res.json({
             success: true,
@@ -253,7 +359,7 @@ const eliminarItemInventario = async (req, res) => {
         const userId = req.user.id;
         const itemId = req.params.itemId;
 
-        const itemQuery = `SELECT id_inventario FROM inventario WHERE id_inventario = ?`;
+        const itemQuery = `SELECT * FROM inventario WHERE id_inventario = ?`;
         const [itemRows] = await pool.execute(itemQuery, [itemId]);
 
         if (itemRows.length === 0) {
@@ -263,8 +369,20 @@ const eliminarItemInventario = async (req, res) => {
             });
         }
 
+        const datosAnteriores = itemRows[0];
+
         const deleteQuery = `DELETE FROM inventario WHERE id_inventario = ?`;
         await pool.execute(deleteQuery, [itemId]);
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'inventario',
+            id_registro_afectado: itemId,
+            accion_realizada: 'DELETE',
+            datos_anteriores: datosAnteriores,
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
 
         res.json({
             success: true,
@@ -647,6 +765,16 @@ const crearProducto = async (req, res) => {
     try {
         const userId = req.user.id;
         const { nombre, categoria, precio, disponible, descripcion, imagen } = req.body;
+        let imagenNormalizada;
+
+        try {
+            imagenNormalizada = await persistProductImage(imagen);
+        } catch (imageError) {
+            return res.status(400).json({
+                success: false,
+                message: imageError.message
+            });
+        }
 
         let discountData;
         try {
@@ -706,18 +834,43 @@ const crearProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
             discountData.fechaFinDescuento
         ]);
 
+        const productoId = result.insertId;
+
+        // Los descuentos se gestionan desde Promociones, no se sincronizan aquí
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'producto',
+            id_registro_afectado: productoId,
+            accion_realizada: 'CREATE',
+            datos_nuevos: {
+                nombre,
+                id_categoria: idCategoria,
+                precio,
+                disponible,
+                descripcion,
+                imagen_url: imagenNormalizada,
+                descuento_activo: discountData.descuentoActivo,
+                porcentaje_descuento: discountData.porcentajeDescuento,
+                fecha_inicio_descuento: discountData.fechaInicioDescuento,
+                fecha_fin_descuento: discountData.fechaFinDescuento
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
+
         res.status(201).json({
             success: true,
             message: 'Producto creado exitosamente',
             data: {
-                id: result.insertId
+                id: productoId
             }
         });
     } catch (error) {
@@ -741,8 +894,28 @@ const actualizarProducto = async (req, res) => {
         const userId = req.user.id;
         const productoId = req.params.productoId;
         const { nombre, categoria, precio, disponible, descripcion, imagen } = req.body;
+        let imagenNormalizada;
+
+        try {
+            imagenNormalizada = await persistProductImage(imagen);
+        } catch (imageError) {
+            return res.status(400).json({
+                success: false,
+                message: imageError.message
+            });
+        }
 
         console.log('Datos extraídos:', { nombre, categoria, precio, disponible, descripcion, imagen });
+
+        let discountData;
+        try {
+            discountData = parseDiscountPayload(req.body);
+        } catch (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError.message
+            });
+        }
 
         if (!nombre || !categoria || precio === undefined || disponible === undefined) {
             console.log('Error: Campos obligatorios faltantes');
@@ -791,6 +964,11 @@ const actualizarProducto = async (req, res) => {
             });
         }
 
+        // Obtener datos anteriores para auditoría
+        const productoAnteriorQuery = `SELECT * FROM producto WHERE id_producto = ?`;
+        const [productoAnteriorRows] = await pool.execute(productoAnteriorQuery, [productoId]);
+        const datosAnteriores = productoAnteriorRows[0];
+
         const updateQuery = `
             UPDATE producto 
             SET 
@@ -814,7 +992,7 @@ const actualizarProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
@@ -828,13 +1006,37 @@ const actualizarProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
             discountData.fechaFinDescuento,
             productoId
         ]);
+
+        // Los descuentos se gestionan desde Promociones, no se sincronizan aquí
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'producto',
+            id_registro_afectado: productoId,
+            accion_realizada: 'UPDATE',
+            datos_anteriores: datosAnteriores,
+            datos_nuevos: {
+                id_categoria: idCategoria,
+                nombre,
+                precio,
+                disponible,
+                descripcion,
+                imagen_url: imagenNormalizada,
+                descuento_activo: discountData.descuentoActivo,
+                porcentaje_descuento: discountData.porcentajeDescuento,
+                fecha_inicio_descuento: discountData.fechaInicioDescuento,
+                fecha_fin_descuento: discountData.fechaFinDescuento
+            },
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
 
         console.log('Producto actualizado exitosamente');
 
@@ -858,7 +1060,7 @@ const eliminarProducto = async (req, res) => {
         const userId = req.user.id;
         const productoId = req.params.productoId;
 
-        const productoQuery = `SELECT id_producto FROM producto WHERE id_producto = ?`;
+        const productoQuery = `SELECT * FROM producto WHERE id_producto = ?`;
         const [productoRows] = await pool.execute(productoQuery, [productoId]);
 
         if (productoRows.length === 0) {
@@ -868,8 +1070,20 @@ const eliminarProducto = async (req, res) => {
             });
         }
 
+        const datosAnteriores = productoRows[0];
+
         const deleteQuery = `DELETE FROM producto WHERE id_producto = ?`;
         await pool.execute(deleteQuery, [productoId]);
+
+        // Registrar cambio en auditoría
+        await registrarCambio({
+            id_usuario: userId,
+            tabla_afectada: 'producto',
+            id_registro_afectado: productoId,
+            accion_realizada: 'DELETE',
+            datos_anteriores: datosAnteriores,
+            ip_usuario: req.ip || req.connection?.remoteAddress
+        });
 
         res.json({
             success: true,

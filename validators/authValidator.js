@@ -10,18 +10,20 @@ const registerValidation = [
         .withMessage('El nombre solo puede contener letras y espacios'),
 
     body('correo')
+        .trim()
         .isEmail()
         .withMessage('Debe proporcionar un correo electrónico válido')
-        .normalizeEmail()
+        // No usar normalizeEmail() para mantener el formato exacto (puntos en Gmail)
+        .toLowerCase()
         .isLength({ max: 100 })
         .withMessage('El correo electrónico es demasiado largo'),
 
     body('telefono')
         .trim()
-        .isLength({ min: 8, max: 20 })
-        .withMessage('El teléfono debe tener entre 8 y 20 caracteres')
-        .matches(/^[\+]?[0-9\s\-\(\)]+$/)
-        .withMessage('Formato de teléfono inválido'),
+        .isLength({ min: 8, max: 8 })
+        .withMessage('El teléfono debe tener exactamente 8 dígitos')
+        .matches(/^[0-9]{8}$/)
+        .withMessage('El teléfono solo puede contener números y debe tener 8 dígitos'),
 
     body('contrasena')
         .isLength({ min: 8 })
@@ -89,9 +91,12 @@ const createReservationValidation = [
 //Validaciones para login
 const loginValidation = [
     body('correo')
+        .trim()
         .isEmail()
         .withMessage('Debe proporcionar un correo electrónico válido')
-        .normalizeEmail(),
+        // No usar normalizeEmail() porque elimina puntos en Gmail (ej: porras.h@gmail.com -> porrash@gmail.com)
+        // El correo debe buscarse exactamente como está guardado en la BD
+        .toLowerCase(),
 
     body('contrasena')
         .notEmpty()

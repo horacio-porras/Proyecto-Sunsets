@@ -7,6 +7,26 @@ const ESTADO_RESERVA_PENDIENTE = 'pendiente';
 const ESTADO_RESERVA_CANCELADA = 'cancelada';
 const ESTADOS_NO_MODIFICABLES = new Set(['cancelada', 'rechazada', 'completada']);
 
+const enviarCorreoReservacionEnSegundoPlano = ({ to, nombre, numeroReserva, fecha, hora, personas, contexto }) => {
+    setTimeout(async () => {
+        try {
+            console.log(`[Reservación] (${contexto}) Enviando correo de confirmación a: ${to}`);
+            await sendReservationEmail({
+                to,
+                nombre,
+                numeroReserva,
+                fecha,
+                hora,
+                personas
+            });
+            console.log(`[Reservación] (${contexto}) ✓ Correo de confirmación enviado exitosamente`);
+        } catch (mailErr) {
+            console.error(`[Reservación] (${contexto}) ✗ ERROR al enviar correo de confirmación:`, mailErr.message);
+            console.error(`[Reservación] (${contexto}) Detalles completos del error:`, mailErr);
+        }
+    }, 0);
+};
+
 const buildValidationError = (field, message) => ({ field, message });
 
 const validateReservaPayload = ({ fecha_reserva, hora_reserva, cantidad_personas }) => {
@@ -142,23 +162,15 @@ const createReservation = async (req, res) => {
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] (Auth) Enviando correo de confirmación a: ${userCorreo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: userCorreo,
-                nombre: userNombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] (Auth) ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] (Auth) ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] (Auth) Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: userCorreo,
+            nombre: userNombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Auth'
+        });
 
         return res.status(201).json({
             success: true,
@@ -173,7 +185,7 @@ const createReservation = async (req, res) => {
                 },
                 max_capacidad: MAX_PERSONAS_RESERVA,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
@@ -234,23 +246,15 @@ const createPublicReservation = async (req, res) => {
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] Enviando correo de confirmación a: ${correo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: correo,
-                nombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: correo,
+            nombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Pública'
+        });
 
         return res.status(201).json({
             success: true,
@@ -258,7 +262,7 @@ const createPublicReservation = async (req, res) => {
             data: {
                 id_reservacion: idReserva,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
@@ -344,6 +348,105 @@ const getActiveReservations = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener reservaciones activas:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+const getAllReservations = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const [rows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        // Actualizar automáticamente las reservaciones que ya pasaron su fecha/hora a "completada"
+        const now = new Date();
+        const reservacionesToUpdate = [];
+
+        for (const reserva of rows) {
+            // Solo actualizar si no está cancelada, rechazada o ya completada
+            if (reserva.estado_reserva && 
+                !['cancelada', 'rechazada', 'completada'].includes(reserva.estado_reserva.toLowerCase())) {
+                
+                const reservaDateTime = new Date(`${reserva.fecha_reserva}T${reserva.hora_reserva}`);
+                
+                // Si la fecha/hora de la reserva ya pasó, actualizar a "completada"
+                if (reservaDateTime < now) {
+                    reservacionesToUpdate.push(reserva.id_reservacion);
+                }
+            }
+        }
+
+        // Actualizar en lote todas las reservaciones que deben cambiar a "completada"
+        if (reservacionesToUpdate.length > 0) {
+            try {
+                const placeholders = reservacionesToUpdate.map(() => '?').join(',');
+                await pool.execute(
+                    `UPDATE reservacion 
+                     SET estado_reserva = 'completada' 
+                     WHERE id_reservacion IN (${placeholders})`,
+                    reservacionesToUpdate
+                );
+                console.log(`[Reservaciones] Actualizadas ${reservacionesToUpdate.length} reservaciones a estado "completada"`);
+            } catch (updateError) {
+                console.error('Error al actualizar estados de reservaciones:', updateError);
+                // Continuar aunque falle la actualización
+            }
+        }
+
+        // Volver a consultar para obtener los estados actualizados
+        const [updatedRows] = await pool.execute(
+            `SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion
+            FROM reservacion r
+            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+            WHERE c.id_usuario = ?
+            ORDER BY r.fecha_reserva DESC, r.hora_reserva DESC`,
+            [userId]
+        );
+
+        const reservaciones = updatedRows.map(reserva => {
+            const { notas, preferenciaMesa } = parseNotas(reserva.notas_especiales);
+            return {
+                id_reservacion: reserva.id_reservacion,
+                fecha_reserva: reserva.fecha_reserva,
+                hora_reserva: reserva.hora_reserva,
+                cantidad_personas: reserva.cantidad_personas,
+                estado_reserva: reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                notas_especiales: notas,
+                preferencia_mesa: preferenciaMesa,
+                fecha_creacion: reserva.fecha_creacion
+            };
+        });
+
+        return res.json({
+            success: true,
+            reservaciones
+        });
+    } catch (error) {
+        console.error('Error al obtener todas las reservaciones:', error);
         return res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
@@ -524,12 +627,123 @@ const cancelReservation = async (req, res) => {
     }
 };
 
+const getAllReservationsAdmin = async (req, res) => {
+    try {
+        const [reservaciones] = await pool.execute(`
+            SELECT 
+                r.id_reservacion,
+                r.fecha_reserva,
+                r.hora_reserva,
+                r.cantidad_personas,
+                r.estado_reserva,
+                r.notas_especiales,
+                r.fecha_creacion,
+                COALESCE(u.nombre, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.nombre'))) as nombre_cliente,
+                COALESCE(u.correo, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.correo'))) as correo_cliente,
+                COALESCE(u.telefono, JSON_UNQUOTE(JSON_EXTRACT(r.notas_especiales, '$.telefono'))) as telefono_cliente
+            FROM reservacion r
+            LEFT JOIN cliente c ON r.id_cliente = c.id_cliente
+            LEFT JOIN usuario u ON c.id_usuario = u.id_usuario
+            ORDER BY r.fecha_creacion DESC
+        `);
+
+        const reservacionesFormateadas = reservaciones.map(reserva => {
+            const notasParsed = parseNotas(reserva.notas_especiales);
+            return {
+                id_reservacion: reserva.id_reservacion,
+                fecha_reserva: reserva.fecha_reserva,
+                hora_reserva: reserva.hora_reserva,
+                cantidad_personas: reserva.cantidad_personas,
+                estado_reserva: reserva.estado_reserva,
+                fecha_creacion: reserva.fecha_creacion,
+                nombre_cliente: reserva.nombre_cliente || 'Invitado',
+                correo_cliente: reserva.correo_cliente || 'No disponible',
+                telefono_cliente: reserva.telefono_cliente || 'No disponible',
+                notas_especiales: notasParsed.notas,
+                preferencia_mesa: notasParsed.preferenciaMesa
+            };
+        });
+
+        return res.json({
+            success: true,
+            data: {
+                reservaciones: reservacionesFormateadas
+            }
+        });
+    } catch (error) {
+        console.error('Error al obtener reservaciones (admin):', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+const cancelReservationAdmin = async (req, res) => {
+    try {
+        const reservacionId = req.params.id;
+
+        const [rows] = await pool.execute(
+            `SELECT id_reservacion, estado_reserva
+             FROM reservacion
+             WHERE id_reservacion = ?`,
+            [reservacionId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Reservación no encontrada'
+            });
+        }
+
+        const reservacionActual = rows[0];
+
+        if (reservacionActual.estado_reserva && ESTADOS_NO_MODIFICABLES.has(reservacionActual.estado_reserva)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Esta reservación no se puede cancelar en su estado actual'
+            });
+        }
+
+        await pool.execute(
+            `UPDATE reservacion
+             SET estado_reserva = ?
+             WHERE id_reservacion = ?`,
+            [
+                ESTADO_RESERVA_CANCELADA,
+                reservacionId
+            ]
+        );
+
+        return res.json({
+            success: true,
+            message: 'Reservación cancelada correctamente',
+            data: {
+                reservacion: {
+                    id_reservacion: Number(reservacionId),
+                    estado_reserva: ESTADO_RESERVA_CANCELADA
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al cancelar reservación (admin):', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
 module.exports = {
     createReservation,
     createPublicReservation,
     getActiveReservations,
+    getAllReservations,
     updateReservation,
     cancelReservation,
+    getAllReservationsAdmin,
+    cancelReservationAdmin,
     MAX_PERSONAS_RESERVA
 };
 

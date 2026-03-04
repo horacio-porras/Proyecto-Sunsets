@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Reservaciones - Sunset's Tarbaca</title>
+    <link rel="icon" type="image/png" href="/sunsets_logo_b.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/routeProtection.js"></script>
+    <script src="/js/footer.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content > .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-confirmada { background-color: #dbeafe; color: #1e40af; }
+        .status-cancelada { background-color: #fecaca; color: #dc2626; }
+        .status-rechazada { background-color: #fee2e2; color: #991b1b; }
+        .status-completada { background-color: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+        <div class="container mx-auto px-4 py-8 min-h-full">
+            <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">
+                            <i class="fas fa-calendar-alt mr-3"></i>Gestión de Reservaciones
+                        </h1>
+                        <p class="text-gray-300">Monitorea y gestiona todas las reservaciones del restaurante</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+                        <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmada">Confirmada</option>
+                            <option value="cancelada">Cancelada</option>
+                            <option value="rechazada">Rechazada</option>
+                            <option value="completada">Completada</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Fecha desde:</label>
+                        <input type="date" id="fechaDesde" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Fecha hasta:</label>
+                        <input type="date" id="fechaHasta" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <button onclick="aplicarFiltros()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-md font-semibold transition">
+                        <i class="fas fa-filter mr-2"></i>Filtrar
+                    </button>
+                    <button onclick="limpiarFiltros()" class="text-sm text-gray-600 hover:text-gray-800 underline">
+                        Limpiar filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reservations Table -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">ID Reservación</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Cliente</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Fecha</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Hora</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Personas</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Estado</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold">Contacto</th>
+                                <th class="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaReservaciones" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="8" class="text-center py-10 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                                    <p>Cargando reservaciones...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="reservacionesPaginationControls" class="hidden mt-6 bg-white rounded-lg shadow-md p-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div id="reservacionesPaginationSummary" class="text-sm text-gray-700"></div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Mostrar:</label>
+                            <select id="reservacionesPorPagina" class="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">por página</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div id="reservacionesPaginationInfo" class="text-sm text-gray-700"></div>
+                        <div class="flex gap-2">
+                            <button id="reservacionesPrevPageBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-left mr-1"></i>Anterior
+                            </button>
+                            <button id="reservacionesNextPageBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Siguiente<i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script>
+        let reservaciones = [];
+        let reservacionesFiltradas = [];
+        let reservacionesPaginaActual = 1;
+        let RESERVACIONES_POR_PAGINA = 10;
+
+        let reservacionesPaginationControls;
+        let reservacionesPaginationSummary;
+        let reservacionesPaginationInfo;
+        let reservacionesPrevPageBtn;
+        let reservacionesNextPageBtn;
+        let reservacionesPorPaginaSelect;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavbar();
+            inicializarControlesPaginacion();
+            loadReservaciones();
+            setupEventListeners();
+        });
+
+        function inicializarControlesPaginacion() {
+            reservacionesPaginationControls = document.getElementById('reservacionesPaginationControls');
+            reservacionesPaginationSummary = document.getElementById('reservacionesPaginationSummary');
+            reservacionesPaginationInfo = document.getElementById('reservacionesPaginationInfo');
+            reservacionesPrevPageBtn = document.getElementById('reservacionesPrevPageBtn');
+            reservacionesNextPageBtn = document.getElementById('reservacionesNextPageBtn');
+            reservacionesPorPaginaSelect = document.getElementById('reservacionesPorPagina');
+
+            if (reservacionesPrevPageBtn) {
+                reservacionesPrevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+            }
+
+            if (reservacionesNextPageBtn) {
+                reservacionesNextPageBtn.addEventListener('click', () => cambiarPagina(1));
+            }
+
+            if (reservacionesPorPaginaSelect) {
+                reservacionesPorPaginaSelect.addEventListener('change', function() {
+                    RESERVACIONES_POR_PAGINA = parseInt(this.value) || 10;
+                    reservacionesPaginaActual = 1;
+                    renderReservaciones();
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', aplicarFiltros);
+            }
+        }
+
+        async function loadReservaciones() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch('/api/reservaciones/admin/todas', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText || 'Error desconocido' };
+                    }
+                    throw new Error(errorData.message || 'No se pudieron cargar las reservaciones');
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'No se pudieron cargar las reservaciones');
+                }
+
+                reservaciones = data.data?.reservaciones || [];
+                reservacionesFiltradas = [...reservaciones];
+                reservacionesPaginaActual = 1;
+                renderReservaciones();
+            } catch (error) {
+                console.error('Error al cargar reservaciones:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron cargar las reservaciones.'
+                });
+                reservaciones = [];
+                reservacionesFiltradas = [];
+                reservacionesPaginaActual = 1;
+                renderReservaciones();
+            }
+        }
+
+        function aplicarFiltros() {
+            const estado = document.getElementById('statusFilter')?.value || '';
+            const fechaDesde = document.getElementById('fechaDesde')?.value || '';
+            const fechaHasta = document.getElementById('fechaHasta')?.value || '';
+
+            reservacionesFiltradas = reservaciones.filter(reserva => {
+                let matchesEstado = true;
+                let matchesFechaDesde = true;
+                let matchesFechaHasta = true;
+
+                if (estado) {
+                    matchesEstado = reserva.estado_reserva === estado;
+                }
+
+                if (fechaDesde) {
+                    const fechaReserva = new Date(reserva.fecha_reserva);
+                    const desde = new Date(fechaDesde);
+                    matchesFechaDesde = fechaReserva >= desde;
+                }
+
+                if (fechaHasta) {
+                    const fechaReserva = new Date(reserva.fecha_reserva);
+                    const hasta = new Date(fechaHasta);
+                    hasta.setHours(23, 59, 59, 999);
+                    matchesFechaHasta = fechaReserva <= hasta;
+                }
+
+                return matchesEstado && matchesFechaDesde && matchesFechaHasta;
+            });
+
+            reservacionesPaginaActual = 1;
+            renderReservaciones();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            reservacionesFiltradas = [...reservaciones];
+            reservacionesPaginaActual = 1;
+            renderReservaciones();
+        }
+
+        function renderReservaciones() {
+            const tabla = document.getElementById('tablaReservaciones');
+            if (!tabla) return;
+
+            if (reservacionesFiltradas.length === 0) {
+                tabla.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-10 text-gray-500">
+                            <i class="fas fa-calendar-times text-3xl mb-3"></i>
+                            <p>No se encontraron reservaciones</p>
+                        </td>
+                    </tr>
+                `;
+                if (reservacionesPaginationControls) {
+                    reservacionesPaginationControls.classList.add('hidden');
+                }
+                return;
+            }
+
+            const inicio = (reservacionesPaginaActual - 1) * RESERVACIONES_POR_PAGINA;
+            const fin = inicio + RESERVACIONES_POR_PAGINA;
+            const reservacionesPagina = reservacionesFiltradas.slice(inicio, fin);
+
+            tabla.innerHTML = reservacionesPagina.map(reserva => {
+                const fecha = new Date(reserva.fecha_reserva);
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                const horaFormateada = reserva.hora_reserva.substring(0, 5);
+
+                const estadoClass = `status-${reserva.estado_reserva}`;
+                const estadoTexto = reserva.estado_reserva.charAt(0).toUpperCase() + reserva.estado_reserva.slice(1);
+
+                const puedeCancelar = reserva.estado_reserva !== 'cancelada' && 
+                                     reserva.estado_reserva !== 'rechazada' && 
+                                     reserva.estado_reserva !== 'completada';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #${String(reserva.id_reservacion).padStart(6, '0')}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${reserva.nombre_cliente || 'Invitado'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            ${fechaFormateada}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            ${horaFormateada}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            ${reserva.cantidad_personas}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${estadoClass}">${estadoTexto}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <div class="flex flex-col">
+                                <span>${reserva.correo_cliente || 'N/A'}</span>
+                                <span class="text-xs text-gray-500">${reserva.telefono_cliente || 'N/A'}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                            ${puedeCancelar ? `
+                                <button onclick="cancelarReservacion(${reserva.id_reservacion})" 
+                                        class="text-red-600 hover:text-red-800 font-semibold transition">
+                                    <i class="fas fa-times-circle mr-1"></i>Cancelar
+                                </button>
+                            ` : '<span class="text-gray-400">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            actualizarPaginacion();
+        }
+
+        function actualizarPaginacion() {
+            const total = reservacionesFiltradas.length;
+            const totalPaginas = Math.ceil(total / RESERVACIONES_POR_PAGINA);
+
+            if (reservacionesPaginationControls) {
+                if (totalPaginas > 1) {
+                    reservacionesPaginationControls.classList.remove('hidden');
+                } else {
+                    reservacionesPaginationControls.classList.add('hidden');
+                }
+            }
+
+            if (reservacionesPaginationSummary) {
+                const inicio = total === 0 ? 0 : (reservacionesPaginaActual - 1) * RESERVACIONES_POR_PAGINA + 1;
+                const fin = Math.min(reservacionesPaginaActual * RESERVACIONES_POR_PAGINA, total);
+                reservacionesPaginationSummary.textContent = `Mostrando ${inicio} a ${fin} de ${total} reservaciones`;
+            }
+
+            if (reservacionesPaginationInfo) {
+                reservacionesPaginationInfo.textContent = `Página ${reservacionesPaginaActual} de ${totalPaginas}`;
+            }
+
+            if (reservacionesPrevPageBtn) {
+                reservacionesPrevPageBtn.disabled = reservacionesPaginaActual === 1;
+            }
+
+            if (reservacionesNextPageBtn) {
+                reservacionesNextPageBtn.disabled = reservacionesPaginaActual >= totalPaginas;
+            }
+        }
+
+        function cambiarPagina(direccion) {
+            const totalPaginas = Math.ceil(reservacionesFiltradas.length / RESERVACIONES_POR_PAGINA);
+            const nuevaPagina = reservacionesPaginaActual + direccion;
+
+            if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+                reservacionesPaginaActual = nuevaPagina;
+                renderReservaciones();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        async function cancelarReservacion(idReservacion) {
+            const result = await Swal.fire({
+                title: '¿Cancelar reservación?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No, mantener'
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No hay token de autenticación');
+                }
+
+                const response = await fetch(`/api/reservaciones/admin/${idReservacion}/cancel`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo cancelar la reservación');
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reservación cancelada',
+                    text: 'La reservación ha sido cancelada exitosamente',
+                    confirmButtonColor: '#f97316'
+                });
+
+                await loadReservaciones();
+            } catch (error) {
+                console.error('Error al cancelar reservación:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo cancelar la reservación',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

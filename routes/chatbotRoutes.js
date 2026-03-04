@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-//const chatbotController = require('../controllers/chatbotController');
-const { registerConversation } = require('../controllers/chatbotController');
+const { registerConversation, procesarPregunta } = require('../controllers/chatbotController');
 
-//Ruta de registro del chatbot
+// Ruta para procesar preguntas del chatbot
+router.post('/ask', procesarPregunta);
+
+// Ruta de registro del chatbot (mantener para compatibilidad)
 router.post('/', registerConversation);
 
 module.exports = router;
