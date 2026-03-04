@@ -38,10 +38,11 @@ async function generarPDFVentas(datos) {
                .fillColor('#000000')
                .text('REPORTE DE VENTAS', 50, 100, { align: 'center' });
 
-            doc.fontSize(10)
-               .fillColor('#666666')
-               .text(`Fecha de generación: ${new Date().toLocaleString('es-CR')}`, 50, 130)
-               .text(`Período: ${datos.fechaDesde || 'Inicio'} - ${datos.fechaHasta || 'Hoy'}`, 50, 145);
+                const fechaGeneracion = datos.fechaGeneracion || new Date().toLocaleString('es-CR');
+                doc.fontSize(10)
+                    .fillColor('#666666')
+                    .text(`Fecha de generación: ${fechaGeneracion}`, 50, 130)
+                    .text(`Período: ${datos.fechaDesde || 'Inicio'} - ${datos.fechaHasta || 'Hoy'}`, 50, 145);
 
             let yPos = 180;
 

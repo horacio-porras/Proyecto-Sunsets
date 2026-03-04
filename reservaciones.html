@@ -527,17 +527,18 @@
 
             calendarElement.innerHTML = '';
 
-            for (let i = 0; i < 42; i += 1) {
-                const current = new Date(startDate);
-                current.setDate(startDate.getDate() + i);
+            // Solo mostrar días del mes actual
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const current = new Date(year, month, day);
                 const isoDate = current.toISOString().split('T')[0];
 
                 const dayElement = document.createElement('div');
                 dayElement.className = calendarDayBaseClasses;
                 dayElement.dataset.isoDate = isoDate;
-                dayElement.textContent = current.getDate();
+                dayElement.textContent = day;
 
-                if (current.getMonth() !== month || current < today) {
+                if (current < today) {
                     dayElement.classList.add('disabled');
                 } else {
                     dayElement.addEventListener('click', () => handleDateSelection(isoDate, dayElement));

@@ -94,6 +94,7 @@ router.get('/ventas', authenticateToken, async (req, res) => {
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
             res.send(buffer);
         } else {
+            datos.fechaGeneracion = new Date().toLocaleString('es-CR');
             const pdfBuffer = await generarPDFVentas(datos);
             const filename = `reporte_ventas_${new Date().toISOString().split('T')[0]}.pdf`;
             
