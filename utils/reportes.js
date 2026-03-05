@@ -185,7 +185,7 @@ async function generarPDFClientes(datos) {
 
                     doc.text(String(cliente.id_cliente || ''), 50, yPos)
                        .text((cliente.nombre || '').substring(0, 25), 100, yPos)
-                       .text((cliente.correo || '').substring(0, 25), 220, yPos)
+                       .text((cliente.email || cliente.correo || '').substring(0, 25), 220, yPos)
                        .text(cliente.telefono || '', 380, yPos)
                        .text(String(cliente.total_pedidos || 0), 480, yPos);
                     
@@ -486,7 +486,7 @@ async function generarExcelClientes(datos) {
             worksheet.addRow([
                 cliente.id_cliente || '',
                 cliente.nombre || '',
-                cliente.correo || '',
+                cliente.email || cliente.correo || '',
                 cliente.telefono || '',
                 cliente.total_pedidos || 0
             ]);
