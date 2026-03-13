@@ -115,7 +115,7 @@
                         </thead>
                         <tbody id="tablaCambios" class="divide-y divide-gray-200">
                             <tr>
-                                <td colspan="7" class="text-center py-10 text-gray-500">
+                                <td colspan="6" class="text-center py-10 text-gray-500">
                                     <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
                                     <p>Cargando cambios...</p>
                                 </td>
@@ -327,7 +327,7 @@
                 });
                 document.getElementById('tablaCambios').innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center py-10 text-red-500">
+                        <td colspan="6" class="text-center py-10 text-red-500">
                             <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
                             <p class="text-lg font-medium">Error al cargar los cambios</p>
                             <p class="text-sm">${error.message || 'No se pudieron cargar los cambios'}</p>
@@ -343,7 +343,7 @@
             if (cambios.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center py-10 text-gray-500">
+                        <td colspan="6" class="text-center py-10 text-gray-500">
                             <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
                             <p class="text-lg font-medium">No se encontraron cambios</p>
                             <p class="text-gray-500">No hay registros de auditoría con los filtros seleccionados.</p>
@@ -387,9 +387,6 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">
                             ${cambio.id_registro_afectado || '-'}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">
-                            <!-- ${cambio.ip_usuario || '-'} -->
                         </td>
                         <td class="px-6 py-4 text-center">
                             <button onclick="verDetallesCambio(${cambio.id_cambio})" class="text-orange-600 hover:text-orange-700 font-semibold">

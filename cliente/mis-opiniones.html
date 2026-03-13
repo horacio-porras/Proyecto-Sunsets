@@ -255,9 +255,6 @@
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-                    const estado = opinion.aprobada ? 'Aprobada' : 'Pendiente de aprobación';
-                    const estadoClass = opinion.aprobada ? 'text-green-600 bg-green-50' : 'text-yellow-600 bg-yellow-50';
-                    const estadoIcon = opinion.aprobada ? 'fa-check-circle' : 'fa-clock';
                     const tipoTexto = opinion.tipo_opinion === 'restaurante' 
                         ? 'Restaurante' 
                         : (opinion.nombre_producto || 'Producto');
@@ -274,10 +271,6 @@
                                         ${fecha}
                                     </p>
                                 </div>
-                                <span class="text-xs ${estadoClass} font-semibold px-3 py-1 rounded-full flex items-center gap-1">
-                                    <i class="fas ${estadoIcon}"></i>
-                                    ${estado}
-                                </span>
                             </div>
                             
                             <div class="flex items-center mb-4 text-yellow-400 text-2xl">
