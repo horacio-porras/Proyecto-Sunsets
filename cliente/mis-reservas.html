@@ -173,7 +173,7 @@
             </div>
 
             <!-- Reservaciones List -->
-            <div id="reservaciones-list" class="space-y-6 hidden">
+            <div id="reservaciones-list" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Las reservaciones se cargarán dinámicamente aquí -->
             </div>
 
@@ -297,7 +297,7 @@
     <script>
         let allReservaciones = [];
         let currentPage = 1;
-        const ITEMS_PER_PAGE = 5;
+        const ITEMS_PER_PAGE = 6;
         let currentReservationEditing = null;
         const reservasCapacidadMaxima = 8;
 
@@ -396,7 +396,9 @@
                 emptyState.classList.add('hidden');
                 reservacionesList.classList.remove('hidden');
 
-                allReservaciones = data.reservaciones || [];
+                allReservaciones = (data.reservaciones || []).sort(
+                    (a, b) => Number(b.id_reservacion || 0) - Number(a.id_reservacion || 0)
+                );
                 currentPage = 1;
                 displayReservaciones();
             } catch (error) {
@@ -464,7 +466,7 @@
                                                 <button onclick="cancelarReservacion(${reservacion.id_reservacion})" 
                                                         class="text-red-600 hover:text-red-700 transition text-lg"
                                                         title="Cancelar reservación">
-                                                    <i class="fas fa-trash"></i>
+                                                    <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
                                         ` : ''}
@@ -479,7 +481,7 @@
                                         <button onclick="cancelarReservacion(${reservacion.id_reservacion})" 
                                                 class="text-red-600 hover:text-red-700 transition text-lg"
                                                 title="Cancelar reservación">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-times"></i>
                                         </button>
                                     </div>
                                 ` : '')}
