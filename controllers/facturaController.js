@@ -3,27 +3,110 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const { getMailProvider } = require('../utils/mailer');
 
-// Configurar transporter de email
-let transporter = null;
-try {
-    // Usar las mismas variables que config.env (SMTP_*)
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        transporter = nodemailer.createTransport({
+async function enviarFacturaPorCorreo({ to, nombreCliente, numeroFactura, idPedido, pdfBuffer }) {
+    if (!to) {
+        return;
+    }
+
+    const { MAIL_BCC, REPLY_TO } = process.env;
+    const subject = `[Sunset's Tarbaca] Factura Electronica ${numeroFactura}`;
+    const text = `Estimado/a ${nombreCliente},\n\nAdjunto encontrara su factura electronica ${numeroFactura} correspondiente al pedido #${idPedido}.\n\nGracias por su compra.\n\nSunset's Tarbaca`;
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #FF6B35;">Factura Electronica</h2>
+            <p>Estimado/a <strong>${nombreCliente}</strong>,</p>
+            <p>Adjunto encontrara su factura electronica <strong>${numeroFactura}</strong> correspondiente al pedido <strong>#${idPedido}</strong>.</p>
+            <p>Gracias por su compra.</p>
+            <p style="color: #666;">Sunset's Tarbaca</p>
+        </div>
+    `;
+
+    try {
+        const provider = await getMailProvider();
+
+        if (provider.type === 'resend') {
+            const payload = {
+                from: provider.from,
+                to: [to],
+                subject,
+                text,
+                html,
+                reply_to: REPLY_TO && REPLY_TO.trim().length > 0 ? REPLY_TO : undefined,
+                attachments: [
+                    {
+                        filename: `factura_${numeroFactura}.pdf`,
+                        content: pdfBuffer.toString('base64')
+                    }
+                ]
+            };
+
+            await provider.client.emails.send(payload);
+
+            if (MAIL_BCC && MAIL_BCC.trim().length > 0) {
+                await provider.client.emails.send({
+                    ...payload,
+                    to: [MAIL_BCC],
+                    subject: `[BCC] ${subject}`
+                });
+            }
+            return;
+        }
+
+        if (provider.type === 'smtp' || provider.type === 'smtp-test') {
+            await provider.transporter.sendMail({
+                from: provider.from,
+                to,
+                bcc: MAIL_BCC && MAIL_BCC.trim().length > 0 ? MAIL_BCC : undefined,
+                replyTo: REPLY_TO && REPLY_TO.trim().length > 0 ? REPLY_TO : undefined,
+                subject,
+                text,
+                html,
+                attachments: [
+                    {
+                        filename: `factura_${numeroFactura}.pdf`,
+                        content: pdfBuffer
+                    }
+                ]
+            });
+            return;
+        }
+
+        throw new Error(`Proveedor de correo no soportado para facturas: ${provider.type}`);
+    } catch (providerError) {
+        console.error(`[Factura Mail] Error con proveedor principal, intentando fallback SMTP directo: ${providerError.message}`);
+
+        if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            throw providerError;
+        }
+
+        const fallbackTransporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: parseInt(process.env.SMTP_PORT || '587', 10),
-            secure: process.env.SMTP_SECURE === 'true',
+            secure: String(process.env.SMTP_SECURE || 'false') === 'true',
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
             }
         });
-    } else {
-        console.warn('⚠ Variables SMTP no configuradas en config.env para facturas');
+
+        await fallbackTransporter.sendMail({
+            from: process.env.MAIL_FROM || process.env.SMTP_USER,
+            to,
+            bcc: MAIL_BCC && MAIL_BCC.trim().length > 0 ? MAIL_BCC : undefined,
+            replyTo: REPLY_TO && REPLY_TO.trim().length > 0 ? REPLY_TO : undefined,
+            subject,
+            text,
+            html,
+            attachments: [
+                {
+                    filename: `factura_${numeroFactura}.pdf`,
+                    content: pdfBuffer
+                }
+            ]
+        });
     }
-} catch (err) {
-    console.warn('No se pudo configurar transporter SMTP para facturas:', err.message || err);
-    transporter = null;
 }
 
 // Función para generar número de factura único
@@ -503,38 +586,18 @@ async function generarFacturaAutomatica(idPedido, connection = null) {
 
         // Enviar factura por correo si el cliente tiene email
         if (pedido.cliente_email) {
-            if (transporter) {
-                try {
-                    await transporter.sendMail({
-                        from: process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@sunsets.local',
-                        to: pedido.cliente_email,
-                        bcc: process.env.MAIL_BCC || undefined,
-                        replyTo: process.env.REPLY_TO || process.env.SMTP_USER || undefined,
-                        subject: `[Sunset's Tarbaca] Factura Electrónica ${numeroFactura}`,
-                        text: `Estimado/a ${pedido.cliente_nombre},\n\nAdjunto encontrará su factura electrónica ${numeroFactura} correspondiente al pedido #${idPedido}.\n\nGracias por su compra.\n\nSunset's Tarbaca`,
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                                <h2 style="color: #FF6B35;">Factura Electrónica</h2>
-                                <p>Estimado/a <strong>${pedido.cliente_nombre}</strong>,</p>
-                                <p>Adjunto encontrará su factura electrónica <strong>${numeroFactura}</strong> correspondiente al pedido <strong>#${idPedido}</strong>.</p>
-                                <p>Gracias por su compra.</p>
-                                <p style="color: #666;">Sunset's Tarbaca</p>
-                            </div>
-                        `,
-                        attachments: [
-                            {
-                                filename: `factura_${numeroFactura}.pdf`,
-                                content: pdfBuffer
-                            }
-                        ]
-                    });
-                    console.log(`✓ Factura ${numeroFactura} enviada por correo a ${pedido.cliente_email}`);
-                } catch (emailError) {
-                    console.error(`✗ Error al enviar factura por correo a ${pedido.cliente_email}:`, emailError.message || emailError);
-                    // No lanzar error, la factura ya fue creada
-                }
-            } else {
-                console.warn(`⚠ Transporter de email no configurado. Factura ${numeroFactura} no se pudo enviar a ${pedido.cliente_email}`);
+            try {
+                await enviarFacturaPorCorreo({
+                    to: pedido.cliente_email,
+                    nombreCliente: pedido.cliente_nombre || 'Cliente',
+                    numeroFactura,
+                    idPedido,
+                    pdfBuffer
+                });
+                console.log(`✓ Factura ${numeroFactura} enviada por correo a ${pedido.cliente_email}`);
+            } catch (emailError) {
+                console.error(`✗ Error al enviar factura por correo a ${pedido.cliente_email}:`, emailError.message || emailError);
+                // No lanzar error, la factura ya fue creada
             }
         } else {
             console.warn(`⚠ Cliente sin email registrado. Factura ${numeroFactura} no se pudo enviar.`);

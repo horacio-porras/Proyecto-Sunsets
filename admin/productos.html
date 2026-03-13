@@ -438,13 +438,6 @@
             if (btnCerrarModal) {
                 btnCerrarModal.addEventListener('click', cerrarModalProducto);
             }
-            if (modalProducto) {
-                modalProducto.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('modal')) {
-                        cerrarModalProducto();
-                    }
-                });
-            }
             if (formProducto) {
                 formProducto.addEventListener('submit', handleSubmitProducto);
             }
@@ -702,7 +695,7 @@
                                 <span></span>
                             </label>
                         </td>
-                        <td class="px-6 py-4 text-center align-top">
+                        <td class="px-6 py-4 text-center">
                             <div class="flex justify-center space-x-3 text-lg">
                                 <button onclick="editarProducto(${producto.id})" 
                                         class="text-orange-600 hover:text-orange-700 transition"
@@ -931,7 +924,7 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
             });

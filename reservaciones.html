@@ -527,17 +527,18 @@
 
             calendarElement.innerHTML = '';
 
-            for (let i = 0; i < 42; i += 1) {
-                const current = new Date(startDate);
-                current.setDate(startDate.getDate() + i);
+            // Solo mostrar días del mes actual
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const current = new Date(year, month, day);
                 const isoDate = current.toISOString().split('T')[0];
 
                 const dayElement = document.createElement('div');
                 dayElement.className = calendarDayBaseClasses;
                 dayElement.dataset.isoDate = isoDate;
-                dayElement.textContent = current.getDate();
+                dayElement.textContent = day;
 
-                if (current.getMonth() !== month || current < today) {
+                if (current < today) {
                     dayElement.classList.add('disabled');
                 } else {
                     dayElement.addEventListener('click', () => handleDateSelection(isoDate, dayElement));
@@ -691,8 +692,21 @@
             });
         }
 
+        function bloquearCamposCliente() {
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+
+            [fullNameInput, emailInput, phoneInput].forEach((input) => {
+                if (!input) return;
+                input.readOnly = true;
+                input.disabled = true;
+                input.classList.add('bg-gray-100', 'text-gray-600', 'cursor-not-allowed');
+            });
+        }
+
         async function loadClientProfile() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 return;
             }
@@ -714,17 +728,39 @@
                     return;
                 }
 
-                if (user.nombre) {
-                    document.getElementById('fullName').value = user.nombre;
+                const fullNameInput = document.getElementById('fullName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+
+                if (fullNameInput && user.nombre) {
+                    fullNameInput.value = user.nombre;
                 }
-                if (user.correo) {
-                    document.getElementById('email').value = user.correo;
+                if (emailInput && user.correo) {
+                    emailInput.value = user.correo;
                 }
-                if (user.telefono) {
-                    document.getElementById('phone').value = user.telefono;
+                if (phoneInput && user.telefono) {
+                    phoneInput.value = user.telefono;
                 }
+
+                bloquearCamposCliente();
             } catch (error) {
-                // Silenciar errores de carga de perfil
+                try {
+                    const rawUserData = localStorage.getItem('userData');
+                    const userData = rawUserData ? JSON.parse(rawUserData) : null;
+                    if (!userData) return;
+
+                    const fullNameInput = document.getElementById('fullName');
+                    const emailInput = document.getElementById('email');
+                    const phoneInput = document.getElementById('phone');
+
+                    if (fullNameInput && userData.nombre) fullNameInput.value = userData.nombre;
+                    if (emailInput && userData.correo) emailInput.value = userData.correo;
+                    if (phoneInput && userData.telefono) phoneInput.value = userData.telefono;
+
+                    bloquearCamposCliente();
+                } catch (_) {
+                    // Silenciar errores de fallback
+                }
             }
         }
 
@@ -757,12 +793,14 @@
                 return;
             }
 
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Necesitas una cuenta',
-                    text: 'Crea una cuenta o inicia sesión para confirmar tu reservación.'
+                    text: 'Crea una cuenta o inicia sesión para confirmar tu reservación.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#f97316'
                 });
                 return;
             }
@@ -839,7 +877,9 @@
                         <p>${successTextParts.join(' ')}</p>
                         ${previewUrl ? `<p class="mt-3"><a href="${previewUrl}" target="_blank" class="text-orange-500 underline">Ver vista previa del correo</a></p>` : ''}
                     `,
-                    confirmButtonText: 'Entendido'
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
                 }).then(() => {
                     reservationForm.reset();
                     reservationState.date = null;
@@ -858,6 +898,7 @@
                     generateCalendar();
                     clearValidationFeedback();
                     updateSummary();
+                    loadClientProfile();
                 });
             } catch (error) {
                 Swal.fire({
@@ -889,7 +930,7 @@
             updateTablePreferenceStyles();
             updateSummary();
 
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
                 loadClientProfile();
             }

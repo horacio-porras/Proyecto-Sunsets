@@ -170,7 +170,7 @@
                 <div class="bg-white rounded-lg shadow-md">
                     <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-lg font-semibold text-gray-800">Reservaciones Activas</h2>
+                                <h2 class="text-lg font-semibold text-gray-800">Reservación Activa</h2>
                                 <a href="/cliente/mis-reservas.html" class="text-sm text-orange-600 hover:text-orange-700 font-semibold">
                                     Ver todas
                                 </a>
@@ -2325,8 +2325,6 @@
                         month: 'short',
                         day: 'numeric'
                     });
-                    const estado = opinion.aprobada ? 'Aprobada' : 'Pendiente';
-                    const estadoClass = opinion.aprobada ? 'text-green-600' : 'text-yellow-600';
                     const tipoTexto = opinion.tipo_opinion === 'restaurante' 
                         ? 'Restaurante' 
                         : (opinion.nombre_producto || 'Producto');
@@ -2341,7 +2339,6 @@
                         <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition bg-white">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-semibold text-gray-800">${tipoTexto}</h4>
-                                <span class="text-xs ${estadoClass} font-semibold">${estado}</span>
                             </div>
                             <div class="flex items-center mb-2 text-yellow-400 text-xl">
                                 ${estrellas}

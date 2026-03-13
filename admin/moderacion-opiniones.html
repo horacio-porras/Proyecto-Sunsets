@@ -315,7 +315,9 @@
                         icon: 'success',
                         title: '¡Opinión aprobada!',
                         text: 'La opinión ahora es visible para todos los usuarios',
-                        confirmButtonColor: '#f97316'
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
                     });
                     loadOpinionesPendientes();
                 } else {
@@ -367,7 +369,9 @@
                         icon: 'success',
                         title: '¡Opinión rechazada!',
                         text: 'La opinión ha sido eliminada del sistema',
-                        confirmButtonColor: '#f97316'
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
                     });
                     loadOpinionesPendientes();
                 } else {

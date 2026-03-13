@@ -1083,7 +1083,7 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Sí, cancelar',
                 cancelButtonText: 'No'
             });
@@ -1209,6 +1209,12 @@
             const fechaFormateada = new Date(pedido.fecha_pedido).toLocaleString('es-ES');
             const estadoClass = getEstadoClass(pedido.estado_pedido);
             const estadoText = getEstadoText(pedido.estado_pedido);
+            const subtotal = Number(pedido.subtotal) || 0;
+            const impuestos = Number(pedido.impuestos) || 0;
+            const descuentos = Number(pedido.descuentos) || 0;
+            const total = Number(pedido.total) || 0;
+            const costoEntregaRaw = Number(pedido.costo_entrega);
+            const costoEntrega = Number.isFinite(costoEntregaRaw) && costoEntregaRaw >= 0 ? costoEntregaRaw : 1500;
             
             loadingState.classList.add('hidden');
             content.classList.remove('hidden');
@@ -1301,21 +1307,25 @@
                         <div class="space-y-2">
                             <div class="flex justify-between">
                                 <span>Subtotal:</span>
-                                <span>₡${pedido.subtotal.toLocaleString()}</span>
+                                <span>₡${subtotal.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Costo de Entrega:</span>
+                                <span>₡${costoEntrega.toLocaleString()}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>Impuestos:</span>
-                                <span>₡${pedido.impuestos.toLocaleString()}</span>
+                                <span>₡${impuestos.toLocaleString()}</span>
                             </div>
-                            ${pedido.descuentos > 0 ? `
+                            ${descuentos > 0 ? `
                                 <div class="flex justify-between text-green-600">
                                     <span>Descuentos:</span>
-                                    <span>-₡${pedido.descuentos.toLocaleString()}</span>
+                                    <span>-₡${descuentos.toLocaleString()}</span>
                                 </div>
                             ` : ''}
                             <div class="flex justify-between font-bold text-lg border-t border-gray-300 pt-2">
                                 <span>Total:</span>
-                                <span>₡${pedido.total.toLocaleString()}</span>
+                                <span>₡${total.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

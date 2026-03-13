@@ -3,9 +3,32 @@ const { validationResult } = require('express-validator');
 const { sendReservationEmail } = require('../utils/mailer');
 
 const MAX_PERSONAS_RESERVA = parseInt(process.env.RESERVA_MAX_PERSONAS, 10) || 8;
+const TOTAL_MESAS_RESTAURANTE = parseInt(process.env.RESERVA_TOTAL_MESAS, 10) || 12;
+const DURACION_RESERVA_MINUTOS = parseInt(process.env.RESERVA_DURACION_MINUTOS, 10) || 120;
 const ESTADO_RESERVA_PENDIENTE = 'pendiente';
+const ESTADO_RESERVA_CONFIRMADA = 'confirmada';
 const ESTADO_RESERVA_CANCELADA = 'cancelada';
 const ESTADOS_NO_MODIFICABLES = new Set(['cancelada', 'rechazada', 'completada']);
+
+const enviarCorreoReservacionEnSegundoPlano = ({ to, nombre, numeroReserva, fecha, hora, personas, contexto }) => {
+    setTimeout(async () => {
+        try {
+            console.log(`[Reservación] (${contexto}) Enviando correo de confirmación a: ${to}`);
+            await sendReservationEmail({
+                to,
+                nombre,
+                numeroReserva,
+                fecha,
+                hora,
+                personas
+            });
+            console.log(`[Reservación] (${contexto}) ✓ Correo de confirmación enviado exitosamente`);
+        } catch (mailErr) {
+            console.error(`[Reservación] (${contexto}) ✗ ERROR al enviar correo de confirmación:`, mailErr.message);
+            console.error(`[Reservación] (${contexto}) Detalles completos del error:`, mailErr);
+        }
+    }, 0);
+};
 
 const buildValidationError = (field, message) => ({ field, message });
 
@@ -57,9 +80,10 @@ const validateReservaPayload = ({ fecha_reserva, hora_reserva, cantidad_personas
 
 const buildNotasFinales = (notas, preferenciaMesa) => {
     const notasLimpias = notas && notas.trim().length > 0 ? notas.trim() : null;
-    const preferenciaTexto = preferenciaMesa && preferenciaMesa.trim().length > 0
-        ? `Preferencia de mesa: ${preferenciaMesa.trim()}`
-        : null;
+    const preferenciaFinal = preferenciaMesa && preferenciaMesa.trim().length > 0
+        ? preferenciaMesa.trim()
+        : 'Cualquiera';
+    const preferenciaTexto = `Preferencia de mesa: ${preferenciaFinal}`;
 
     if (notasLimpias && preferenciaTexto) {
         return `${notasLimpias}\n${preferenciaTexto}`;
@@ -71,6 +95,62 @@ const buildNotasFinales = (notas, preferenciaMesa) => {
         return preferenciaTexto;
     }
     return null;
+};
+
+const obtenerReservacionActivaCliente = async (idCliente) => {
+    const [rows] = await pool.execute(
+        `SELECT id_reservacion, fecha_reserva, hora_reserva, estado_reserva
+         FROM reservacion
+         WHERE id_cliente = ?
+           AND (estado_reserva IS NULL OR LOWER(estado_reserva) NOT IN ('cancelada', 'rechazada', 'completada'))
+           AND fecha_reserva >= CURDATE()
+         ORDER BY fecha_reserva ASC, hora_reserva ASC
+         LIMIT 1`,
+        [idCliente]
+    );
+
+    return rows[0] || null;
+};
+
+const normalizarHoraReserva = (horaReserva) => {
+    if (typeof horaReserva !== 'string') return horaReserva;
+    return /^\d{2}:\d{2}$/.test(horaReserva) ? `${horaReserva}:00` : horaReserva;
+};
+
+const calcularDisponibilidadMesas = async ({ fechaReserva, horaReserva, reservacionIdExcluir = null }) => {
+    const horaNormalizada = normalizarHoraReserva(horaReserva);
+    const inicioReserva = `${fechaReserva} ${horaNormalizada}`;
+
+    let query = `
+        SELECT COUNT(*) AS mesas_ocupadas
+        FROM reservacion
+        WHERE estado_reserva = ?
+          AND TIMESTAMP(fecha_reserva, hora_reserva) < DATE_ADD(?, INTERVAL ? MINUTE)
+          AND DATE_ADD(TIMESTAMP(fecha_reserva, hora_reserva), INTERVAL ? MINUTE) > ?
+    `;
+    const params = [
+        ESTADO_RESERVA_CONFIRMADA,
+        inicioReserva,
+        DURACION_RESERVA_MINUTOS,
+        DURACION_RESERVA_MINUTOS,
+        inicioReserva
+    ];
+
+    if (reservacionIdExcluir) {
+        query += ' AND id_reservacion <> ?';
+        params.push(reservacionIdExcluir);
+    }
+
+    const [[ocupadasRow]] = await pool.execute(query, params);
+    const mesasOcupadas = Number(ocupadasRow?.mesas_ocupadas || 0);
+    const mesasDisponibles = Math.max(TOTAL_MESAS_RESTAURANTE - mesasOcupadas, 0);
+
+    return {
+        mesasOcupadas,
+        mesasDisponibles,
+        totalMesas: TOTAL_MESAS_RESTAURANTE,
+        hayMesasDisponibles: mesasDisponibles > 0
+    };
 };
 
 const createReservation = async (req, res) => {
@@ -113,9 +193,32 @@ const createReservation = async (req, res) => {
         }
 
         const cantidadFinal = Number(cantidad_personas);
-        const horaFinal = `${hora_reserva}:00`;
+        const horaFinal = normalizarHoraReserva(hora_reserva);
+
+        const reservacionActiva = await obtenerReservacionActivaCliente(clienteRows[0].id_cliente);
+        if (reservacionActiva) {
+            return res.status(409).json({
+                success: false,
+                message: 'Ya tienes una reservación activa. Podrás crear una nueva al día siguiente de tu reservación actual.',
+                data: {
+                    reservacion_activa: {
+                        id_reservacion: reservacionActiva.id_reservacion,
+                        fecha_reserva: reservacionActiva.fecha_reserva,
+                        hora_reserva: reservacionActiva.hora_reserva,
+                        estado_reserva: (reservacionActiva.estado_reserva || ESTADO_RESERVA_PENDIENTE).toLowerCase()
+                    }
+                }
+            });
+        }
 
         const notasFinales = buildNotasFinales(notas_especiales, preferencia_mesa);
+        const disponibilidad = await calcularDisponibilidadMesas({
+            fechaReserva: fecha_reserva,
+            horaReserva: horaFinal
+        });
+        const estadoAutomatico = disponibilidad.hayMesasDisponibles
+            ? ESTADO_RESERVA_CONFIRMADA
+            : ESTADO_RESERVA_PENDIENTE;
 
         const [result] = await pool.execute(
             `INSERT INTO reservacion (
@@ -133,7 +236,7 @@ const createReservation = async (req, res) => {
                 fecha_reserva,
                 horaFinal,
                 cantidadFinal,
-                ESTADO_RESERVA_PENDIENTE,
+                estadoAutomatico,
                 notasFinales
             ]
         );
@@ -142,38 +245,34 @@ const createReservation = async (req, res) => {
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] (Auth) Enviando correo de confirmación a: ${userCorreo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: userCorreo,
-                nombre: userNombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] (Auth) ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] (Auth) ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] (Auth) Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: userCorreo,
+            nombre: userNombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Auth'
+        });
 
         return res.status(201).json({
             success: true,
-            message: 'Reservación creada exitosamente',
+            message: estadoAutomatico === ESTADO_RESERVA_CONFIRMADA
+                ? 'Reservación creada y confirmada automáticamente'
+                : 'Reservación creada en estado pendiente por falta de mesas disponibles en ese horario',
             data: {
                 reservacion: {
                     id_reservacion: result.insertId,
                     fecha_reserva,
                     hora_reserva: horaFinal,
                     cantidad_personas: cantidadFinal,
-                    estado_reserva: ESTADO_RESERVA_PENDIENTE
+                    estado_reserva: estadoAutomatico
                 },
                 max_capacidad: MAX_PERSONAS_RESERVA,
+                total_mesas: TOTAL_MESAS_RESTAURANTE,
+                duracion_reserva_minutos: DURACION_RESERVA_MINUTOS,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
@@ -214,8 +313,17 @@ const createPublicReservation = async (req, res) => {
             correo,
             telefono,
             notas: solicitudes_especiales || '',
-            preferencia: preferencia_mesa || ''
+            preferencia: (preferencia_mesa && preferencia_mesa.trim()) || 'Cualquiera'
         });
+
+        const horaFinal = normalizarHoraReserva(hora_reserva);
+        const disponibilidad = await calcularDisponibilidadMesas({
+            fechaReserva: fecha_reserva,
+            horaReserva: horaFinal
+        });
+        const estadoAutomatico = disponibilidad.hayMesasDisponibles
+            ? ESTADO_RESERVA_CONFIRMADA
+            : ESTADO_RESERVA_PENDIENTE;
 
         const [result] = await pool.execute(
             `INSERT INTO reservacion (
@@ -227,38 +335,35 @@ const createPublicReservation = async (req, res) => {
                 notas_especiales,
                 fecha_creacion,
                 recordatorio_enviado
-            ) VALUES (NULL, ?, ?, ?, 'Confirmada', ?, NOW(), FALSE)`,
-            [fecha_reserva, hora_reserva, cantidad_personas, datosInvitado]
+            ) VALUES (NULL, ?, ?, ?, ?, ?, NOW(), FALSE)`,
+            [fecha_reserva, horaFinal, cantidad_personas, estadoAutomatico, datosInvitado]
         );
 
         const idReserva = result.insertId;
         const numeroReserva = `R-${String(idReserva).padStart(6, '0')}`;
 
-        try {
-            console.log(`[Reservación] Enviando correo de confirmación a: ${correo}`);
-            const { previewUrl } = await sendReservationEmail({
-                to: correo,
-                nombre,
-                numeroReserva,
-                fecha: fecha_reserva,
-                hora: hora_reserva,
-                personas: cantidad_personas
-            });
-            req._emailPreviewUrl = previewUrl;
-            console.log(`[Reservación] ✓ Correo de confirmación enviado exitosamente`);
-        } catch (mailErr) {
-            console.error('[Reservación] ✗ ERROR al enviar correo de confirmación:', mailErr.message);
-            console.error('[Reservación] Detalles completos del error:', mailErr);
-            // No fallar la reservación si el correo falla
-        }
+        enviarCorreoReservacionEnSegundoPlano({
+            to: correo,
+            nombre,
+            numeroReserva,
+            fecha: fecha_reserva,
+            hora: hora_reserva,
+            personas: cantidad_personas,
+            contexto: 'Pública'
+        });
 
         return res.status(201).json({
             success: true,
-            message: 'Reservación creada exitosamente',
+            message: estadoAutomatico === ESTADO_RESERVA_CONFIRMADA
+                ? 'Reservación creada y confirmada automáticamente'
+                : 'Reservación creada en estado pendiente por falta de mesas disponibles en ese horario',
             data: {
                 id_reservacion: idReserva,
+                estado_reserva: estadoAutomatico,
+                total_mesas: TOTAL_MESAS_RESTAURANTE,
+                duracion_reserva_minutos: DURACION_RESERVA_MINUTOS,
                 numero_reserva: numeroReserva,
-                preview_url: req._emailPreviewUrl
+                preview_url: null
             }
         });
     } catch (error) {
@@ -328,7 +433,7 @@ const getActiveReservations = async (req, res) => {
                 fecha_reserva: reserva.fecha_reserva,
                 hora_reserva: reserva.hora_reserva,
                 cantidad_personas: reserva.cantidad_personas,
-                estado_reserva: reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                estado_reserva: (reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE).toLowerCase(),
                 notas_especiales: notas,
                 preferencia_mesa: preferenciaMesa,
                 fecha_creacion: reserva.fecha_creacion
@@ -377,8 +482,8 @@ const getAllReservations = async (req, res) => {
 
         for (const reserva of rows) {
             // Solo actualizar si no está cancelada, rechazada o ya completada
-            if (reserva.estado_reserva && 
-                !['cancelada', 'rechazada', 'completada'].includes(reserva.estado_reserva.toLowerCase())) {
+            if (reserva.estado_reserva &&
+                !['cancelada', 'rechazada', 'completada'].includes(String(reserva.estado_reserva).toLowerCase())) {
                 
                 const reservaDateTime = new Date(`${reserva.fecha_reserva}T${reserva.hora_reserva}`);
                 
@@ -430,7 +535,7 @@ const getAllReservations = async (req, res) => {
                 fecha_reserva: reserva.fecha_reserva,
                 hora_reserva: reserva.hora_reserva,
                 cantidad_personas: reserva.cantidad_personas,
-                estado_reserva: reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                estado_reserva: (reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE).toLowerCase(),
                 notas_especiales: notas,
                 preferencia_mesa: preferenciaMesa,
                 fecha_creacion: reserva.fecha_creacion
@@ -498,7 +603,8 @@ const updateReservation = async (req, res) => {
 
         const reservacionActual = rows[0];
 
-        if (reservacionActual.estado_reserva && ESTADOS_NO_MODIFICABLES.has(reservacionActual.estado_reserva)) {
+        const estadoActual = (reservacionActual.estado_reserva || '').toLowerCase();
+        if (estadoActual && ESTADOS_NO_MODIFICABLES.has(estadoActual)) {
             return res.status(400).json({
                 success: false,
                 message: 'Esta reservación no se puede modificar en su estado actual'
@@ -522,18 +628,27 @@ const updateReservation = async (req, res) => {
         }
 
         const notasFinales = buildNotasFinales(notas_especiales, preferencia_mesa);
-        const horaFinal = `${hora_reserva}:00`;
+        const horaFinal = normalizarHoraReserva(hora_reserva);
         const cantidadFinal = Number(cantidad_personas);
+        const disponibilidad = await calcularDisponibilidadMesas({
+            fechaReserva: fecha_reserva,
+            horaReserva: horaFinal,
+            reservacionIdExcluir: reservacionId
+        });
+        const estadoAutomatico = disponibilidad.hayMesasDisponibles
+            ? ESTADO_RESERVA_CONFIRMADA
+            : ESTADO_RESERVA_PENDIENTE;
 
         await pool.execute(
             `UPDATE reservacion
-             SET fecha_reserva = ?, hora_reserva = ?, cantidad_personas = ?, notas_especiales = ?
+             SET fecha_reserva = ?, hora_reserva = ?, cantidad_personas = ?, notas_especiales = ?, estado_reserva = ?
              WHERE id_reservacion = ?`,
             [
                 fecha_reserva,
                 horaFinal,
                 cantidadFinal,
                 notasFinales,
+                estadoAutomatico,
                 reservacionId
             ]
         );
@@ -547,7 +662,7 @@ const updateReservation = async (req, res) => {
                     fecha_reserva,
                     hora_reserva: horaFinal,
                     cantidad_personas: cantidadFinal,
-                    estado_reserva: reservacionActual.estado_reserva || ESTADO_RESERVA_PENDIENTE,
+                    estado_reserva: estadoAutomatico,
                     notas_especiales: notas_especiales || null,
                     preferencia_mesa: preferencia_mesa || null
                 }
@@ -587,7 +702,8 @@ const cancelReservation = async (req, res) => {
 
         const reservacionActual = rows[0];
 
-        if (reservacionActual.estado_reserva && ESTADOS_NO_MODIFICABLES.has(reservacionActual.estado_reserva)) {
+        const estadoActual = (reservacionActual.estado_reserva || '').toLowerCase();
+        if (estadoActual && ESTADOS_NO_MODIFICABLES.has(estadoActual)) {
             return res.status(400).json({
                 success: false,
                 message: 'Esta reservación no se puede cancelar en su estado actual'
@@ -650,7 +766,7 @@ const getAllReservationsAdmin = async (req, res) => {
                 fecha_reserva: reserva.fecha_reserva,
                 hora_reserva: reserva.hora_reserva,
                 cantidad_personas: reserva.cantidad_personas,
-                estado_reserva: reserva.estado_reserva,
+                estado_reserva: (reserva.estado_reserva || ESTADO_RESERVA_PENDIENTE).toLowerCase(),
                 fecha_creacion: reserva.fecha_creacion,
                 nombre_cliente: reserva.nombre_cliente || 'Invitado',
                 correo_cliente: reserva.correo_cliente || 'No disponible',
@@ -695,7 +811,8 @@ const cancelReservationAdmin = async (req, res) => {
 
         const reservacionActual = rows[0];
 
-        if (reservacionActual.estado_reserva && ESTADOS_NO_MODIFICABLES.has(reservacionActual.estado_reserva)) {
+        const estadoActual = (reservacionActual.estado_reserva || '').toLowerCase();
+        if (estadoActual && ESTADOS_NO_MODIFICABLES.has(estadoActual)) {
             return res.status(400).json({
                 success: false,
                 message: 'Esta reservación no se puede cancelar en su estado actual'

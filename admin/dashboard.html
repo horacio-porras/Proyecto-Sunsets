@@ -53,118 +53,155 @@
                 <!-- Left Column - 2/3 width -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Quick Access Cards -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-bolt text-orange-500 mr-3"></i>
-                            Accesos Rápidos
-                        </h2>
+            <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-4">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-3">Accesos Rápidos</h2>
+                            <hr class="mb-3">
+                        </div>
+                        <div class="p-4 pt-0">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="quickAccessGrid">
                             <!-- Cards will be populated by JavaScript -->
+                </div>
                 </div>
             </div>
             
                     <!-- Recent Orders -->
                 <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-clock text-orange-500 mr-3"></i>
-                                Pedidos Recientes
-                            </h2>
+                    <div class="p-4">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-3">Pedidos Recientes</h2>
+                        <hr class="mb-3">
                     </div>
-                    <div class="p-6">
-                            <div id="pedidosActivosContainer" class="space-y-4">
-                                <div class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-                                    <p>Cargando pedidos...</p>
+                    <div class="p-4 pt-0">
+                        <!-- Loading State -->
+                        <div id="pedidosRecientesLoading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                            <p class="mt-2 text-gray-600 text-sm">Cargando pedidos...</p>
+                        </div>
+
+                        <!-- Table Container -->
+                        <div id="pedidosRecientesTableContainer" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pedidosRecientesTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Los pedidos recientes se cargarán aquí dinámicamente -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <div class="mt-6 text-center">
-                                <a href="/admin/pedidos.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold">
-                                    Ver Historial Completo
-                                    <i class="fas fa-arrow-right ml-2"></i>
-                                </a>
+
+                        <!-- Empty State -->
+                        <div id="pedidosRecientesEmpty" class="hidden text-center py-12 text-gray-500">
+                            <div class="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clipboard-list text-3xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">No hay pedidos recientes</h3>
+                            <p class="text-gray-500 mb-4">Los nuevos pedidos aparecerán aquí</p>
+                        </div>
+
+                        <!-- Error State -->
+                        <div id="pedidosRecientesError" class="hidden text-center py-12 text-gray-500">
+                            <div class="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">Error al cargar pedidos</h3>
+                            <p class="text-gray-500 mb-4">No se pudieron cargar los pedidos recientes</p>
+                        </div>
+
+                        <div class="mt-6">
+                            <a href="/admin/pedidos.html" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition text-center block">
+                                Ver Pedidos
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Inventory Alerts -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
-                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-exclamation-triangle text-orange-500 mr-3"></i>
-                                Alertas de Inventario
-                            </h2>
-                    </div>
-                    <div class="p-6">
-                            <div id="alertasInventarioContainer" class="space-y-4">
-                                <div class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-                                    <p>Cargando alertas...</p>
-                            </div>
-                        </div>
-                        <div class="mt-6 text-center">
-                                <a href="/admin/inventario.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold">
-                                    Ver Inventario Completo
-                                    <i class="fas fa-arrow-right ml-2"></i>
-                                </a>
-                        </div>
-                    </div>
-                </div>
             </div>
 
                 <!-- Right Column - 1/3 width -->
                 <div class="space-y-6">
                     <!-- Staff Preview -->
                     <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6 border-b border-gray-200">
-                            <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-users text-orange-500 mr-3"></i>
-                                Personal Actual
-                            </h3>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Personal Actual</h3>
+                            <hr class="mb-3">
                     </div>
-                        <div class="p-6">
+                        <div class="p-4 pt-0">
                             <div id="personalContainer" class="space-y-3">
                                 <div class="text-center py-4 text-gray-500">
                                     <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
                                     <p class="text-sm">Cargando...</p>
                             </div>
                         </div>
-                            <div class="mt-4 text-center">
-                                <a href="/admin/personal.html" class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold text-sm">
-                                    Ver Todo el Personal
-                                    <i class="fas fa-arrow-right ml-2"></i>
+                            <div class="mt-4">
+                                <a href="/admin/personal.html" class="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded-md hover:bg-gray-200 transition text-center text-sm block">
+                                    Ver Personal
                                 </a>
                         </div>
                     </div>
                 </div>
 
+                    <!-- Inventory Alerts (Compact) -->
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Alertas de Inventario</h3>
+                        <hr class="mb-3">
+                        <div id="alertasInventarioContainer" class="space-y-2">
+                            <div class="text-center py-6 text-gray-500">
+                                <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+                                <p class="mt-2 text-xs">Cargando alertas...</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <a href="/admin/inventario.html" class="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded-md hover:bg-gray-200 transition text-center text-sm block">
+                                Ver Inventario
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                     <!-- Sales Summary -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-chart-line text-orange-500 mr-3"></i>
-                            Resumen de Ventas
-                        </h3>
+                <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Resumen de Ventas</h3>
+                            <hr class="mb-3">
+                        </div>
+                    <div class="p-4 pt-0">
                     <div class="space-y-4">
                             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                 <div>
                                     <p class="text-sm text-gray-600">Hoy</p>
-                                    <p class="text-lg font-bold text-gray-900" id="ventasHoy">₡0</p>
+                                    <p class="text-base font-semibold text-gray-900" id="ventasHoy">₡0</p>
                                 </div>
-                                <i class="fas fa-calendar-day text-orange-500 text-xl"></i>
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-calendar-day text-white text-sm"></i>
+                                </div>
                             </div>
                             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                 <div>
                                     <p class="text-sm text-gray-600">Esta Semana</p>
-                                    <p class="text-lg font-bold text-gray-900" id="ventasSemana">₡0</p>
+                                    <p class="text-base font-semibold text-gray-900" id="ventasSemana">₡0</p>
                         </div>
-                                <i class="fas fa-calendar-week text-orange-500 text-xl"></i>
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-calendar-week text-white text-sm"></i>
+                                </div>
                                 </div>
                             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
                                     <p class="text-sm text-gray-600">Este Mes</p>
-                                    <p class="text-lg font-bold text-gray-900" id="ventasMes">₡0</p>
+                                    <p class="text-base font-semibold text-gray-900" id="ventasMes">₡0</p>
                                 </div>
-                                <i class="fas fa-calendar-alt text-orange-500 text-xl"></i>
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-white text-sm"></i>
+                                </div>
                         </div>
                     </div>
                     <div class="mt-4 text-center">
@@ -173,41 +210,9 @@
                                 <i class="fas fa-file-export ml-2"></i>
                             </a>
                     </div>
+                    </div>
                 </div>
 
-                <!-- System Status -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-server text-orange-500 mr-3"></i>
-                            Estado del Sistema
-                        </h3>
-                    <div class="space-y-3">
-                            <div class="flex items-center justify-between p-2">
-                            <span class="text-sm text-gray-600">Sistema de Pedidos</span>
-                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
-                                    <i class="fas fa-check-circle mr-1"></i>Online
-                                </span>
-                        </div>
-                            <div class="flex items-center justify-between p-2">
-                            <span class="text-sm text-gray-600">Base de Datos</span>
-                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
-                                    <i class="fas fa-check-circle mr-1"></i>Activo
-                                </span>
-                        </div>
-                            <div class="flex items-center justify-between p-2">
-                            <span class="text-sm text-gray-600">Sistema de Pagos</span>
-                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
-                                    <i class="fas fa-check-circle mr-1"></i>Funcionando
-                                </span>
-                        </div>
-                            <div class="flex items-center justify-between p-2">
-                            <span class="text-sm text-gray-600">Notificaciones</span>
-                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
-                                    <i class="fas fa-check-circle mr-1"></i>Activo
-                                </span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -299,7 +304,7 @@
             container.innerHTML = quickAccessItems.map(item => `
                 <a href="${item.link}" class="quick-access-card bg-white border border-gray-200 rounded-lg p-4 hover:border-orange-300">
                     <div class="flex items-center space-x-4">
-                        <div class="bg-gradient-to-r ${item.color} text-white p-3 rounded-lg">
+                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
                             <i class="fas ${item.icon} text-xl"></i>
                         </div>
                         <div class="flex-1">
@@ -377,8 +382,8 @@
                                 
                                 return `
                                     <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <i class="fas fa-user text-orange-600"></i>
+                                        <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user text-white"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="font-medium text-sm text-gray-900 truncate">${e.nombre}</p>
@@ -413,79 +418,118 @@
 
         // Cargar pedidos recientes
         async function cargarPedidosRecientes() {
+            const loading = document.getElementById('pedidosRecientesLoading');
+            const tableContainer = document.getElementById('pedidosRecientesTableContainer');
+            const empty = document.getElementById('pedidosRecientesEmpty');
+            const errorState = document.getElementById('pedidosRecientesError');
+
+            loading.classList.remove('hidden');
+            tableContainer.classList.add('hidden');
+            empty.classList.add('hidden');
+            errorState.classList.add('hidden');
+
             try {
                 const token = localStorage.getItem('authToken');
-                if (!token) return;
+                if (!token) {
+                    loading.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                    return;
+                }
 
-                const response = await fetch('/api/pedidos/admin?limit=3', {
+                const response = await fetch('/api/pedidos/admin?limit=5', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    const container = document.getElementById('pedidosActivosContainer');
-                    
-                    if (container) {
-                        if (data.success && data.data.pedidos && data.data.pedidos.length > 0) {
-                            container.innerHTML = data.data.pedidos.map(pedido => {
-                                const statusConfig = {
-                                    'pendiente': { bg: 'bg-yellow-50', border: 'border-yellow-400', icon: 'fa-clock', text: 'Pendiente' },
-                                    'en_preparacion': { bg: 'bg-blue-50', border: 'border-blue-400', icon: 'fa-utensils', text: 'En Preparación' },
-                                    'listo': { bg: 'bg-green-50', border: 'border-green-400', icon: 'fa-check', text: 'Listo' },
-                                    'en_camino': { bg: 'bg-purple-50', border: 'border-purple-400', icon: 'fa-motorcycle', text: 'En Camino' },
-                                    'completado': { bg: 'bg-gray-50', border: 'border-gray-400', icon: 'fa-check-circle', text: 'Completado' },
-                                    'cancelado': { bg: 'bg-red-50', border: 'border-red-400', icon: 'fa-times-circle', text: 'Cancelado' }
-                                };
-                                
-                                const estado = pedido.estado_pedido || 'pendiente';
-                                const status = statusConfig[estado] || statusConfig['pendiente'];
-                                const productos = pedido.items && pedido.items.length > 0 
-                                    ? pedido.items.slice(0, 2).map(p => p.producto_nombre || p.nombre || 'Producto').join(', ')
-                                    : 'Sin productos';
-                                
-                                const fecha = new Date(pedido.fecha_pedido);
-                                const fechaFormateada = fecha.toLocaleString('es-CR', { 
-                                    day: '2-digit', 
-                                    month: '2-digit', 
-                                    year: 'numeric',
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                });
-                                
-                                return `
-                                    <div class="flex items-center justify-between p-4 ${status.bg} border-l-4 ${status.border} rounded-lg">
-                                        <div class="flex items-center space-x-4">
-                                            <div class="w-12 h-12 ${status.bg.replace('50', '100')} rounded-full flex items-center justify-center">
-                                                <i class="fas ${status.icon} ${status.border.replace('border-', 'text-')}"></i>
-                                            </div>
-                                            <div>
-                                                <h4 class="font-semibold text-gray-900">Pedido #${pedido.id_pedido}</h4>
-                                                <p class="text-sm text-gray-600">${productos}</p>
-                                                <p class="text-xs text-gray-500">Cliente: ${pedido.cliente_nombre || 'N/A'} • ${fechaFormateada}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-semibold text-gray-900">₡${parseFloat(pedido.total || 0).toFixed(2)}</p>
-                                            <span class="text-xs ${status.bg.replace('50', '100')} ${status.border.replace('border-', 'text-')} px-2 py-1 rounded">${status.text}</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('');
-                        } else {
-                            container.innerHTML = `
-                                <div class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-clipboard text-3xl mb-2"></i>
-                                    <p>No hay pedidos recientes</p>
-                                </div>
-                            `;
-                        }
-                    }
+                const data = await response.json();
+                loading.classList.add('hidden');
+
+                if (response.ok && data.success) {
+                    renderPedidosRecientesTable(data.data.pedidos || []);
+                    return;
                 }
+
+                errorState.classList.remove('hidden');
             } catch (error) {
                 console.error('Error al cargar pedidos recientes:', error);
+                loading.classList.add('hidden');
+                errorState.classList.remove('hidden');
             }
+        }
+
+        function renderPedidosRecientesTable(pedidos) {
+            const tableBody = document.getElementById('pedidosRecientesTableBody');
+            const tableContainer = document.getElementById('pedidosRecientesTableContainer');
+            const empty = document.getElementById('pedidosRecientesEmpty');
+
+            if (!pedidos || pedidos.length === 0) {
+                empty.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            pedidos.slice(0, 5).forEach(pedido => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">
+                            #${(pedido.id_pedido || 0).toString().padStart(6, '0')}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${pedido.cliente_nombre || 'Cliente invitado'}</div>
+                        <div class="text-sm text-gray-500">${pedido.cliente_correo || pedido.cliente_email || 'Sin correo'}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPedidoEstadoClassAdmin(pedido.estado_pedido)}">
+                            ${getPedidoEstadoTextAdmin(pedido.estado_pedido)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ₡${(parseFloat(pedido.total) || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        ${pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString('es-CR') : '-'}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            tableContainer.classList.remove('hidden');
+            empty.classList.add('hidden');
+        }
+
+        function getPedidoEstadoClassAdmin(estado) {
+            const estados = {
+                'pendiente': 'bg-yellow-100 text-yellow-800',
+                'confirmado': 'bg-blue-100 text-blue-800',
+                'en_preparacion': 'bg-orange-100 text-orange-800',
+                'preparando': 'bg-orange-100 text-orange-800',
+                'listo': 'bg-green-100 text-green-800',
+                'en_camino': 'bg-purple-100 text-purple-800',
+                'entregado': 'bg-green-100 text-green-800',
+                'completado': 'bg-gray-100 text-gray-800',
+                'cancelado': 'bg-red-100 text-red-800'
+            };
+            return estados[estado] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getPedidoEstadoTextAdmin(estado) {
+            const estados = {
+                'pendiente': 'Pendiente',
+                'confirmado': 'Confirmado',
+                'en_preparacion': 'En Preparación',
+                'preparando': 'Preparando',
+                'listo': 'Listo',
+                'en_camino': 'En Camino',
+                'entregado': 'Entregado',
+                'completado': 'Completado',
+                'cancelado': 'Cancelado'
+            };
+            return estados[estado] || (estado || 'Pendiente');
         }
 
         // Cargar alertas de inventario
@@ -506,33 +550,63 @@
                     
                     if (container && data.success) {
                         const items = data.data.items || [];
-                        const alertas = items.filter(item => item.cantidad_actual <= item.cantidad_minima);
+                        const alertas = items
+                            .filter(item => {
+                                const cantidadActual = Number(item.cantidad_actual) || 0;
+                                const cantidadMinima = Number(item.cantidad_minima) || 0;
+                                return cantidadMinima > 0 && cantidadActual <= (cantidadMinima * 1.5);
+                            })
+                            .sort((a, b) => {
+                                const aActual = Number(a.cantidad_actual) || 0;
+                                const aMin = Number(a.cantidad_minima) || 1;
+                                const bActual = Number(b.cantidad_actual) || 0;
+                                const bMin = Number(b.cantidad_minima) || 1;
+                                const aRatio = aActual / aMin;
+                                const bRatio = bActual / bMin;
+                                return aRatio - bRatio; // más crítico primero
+                            });
                         
                         if (alertas.length > 0) {
-                            container.innerHTML = alertas.slice(0, 3).map(item => {
-                                const isCritical = item.cantidad_actual === 0;
-                                const bgClass = isCritical ? 'bg-red-50 border-red-400' : 'bg-yellow-50 border-yellow-400';
-                                const textClass = isCritical ? 'text-red-800' : 'text-yellow-800';
-                                const subtextClass = isCritical ? 'text-red-600' : 'text-yellow-600';
-                                const iconClass = isCritical ? 'text-red-500' : 'text-yellow-500';
+                            container.innerHTML = alertas.slice(0, 2).map(item => {
+                                const cantidadActual = Number(item.cantidad_actual) || 0;
+                                const cantidadMinima = Number(item.cantidad_minima) || 0;
+                                const isStockBajo = cantidadActual <= cantidadMinima;
+                                const stockClass = isStockBajo ? 'bg-red-50 border-red-400' : 'bg-yellow-50 border-yellow-400';
+                                const textClass = isStockBajo ? 'text-red-600' : 'text-yellow-600';
+                                const iconClass = isStockBajo ? 'fa-exclamation-triangle text-red-500' : 'fa-exclamation-circle text-yellow-500';
+                                const alerta = isStockBajo
+                                    ? '<span class="ml-2 px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Stock Bajo</span>'
+                                    : '<span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Stock Medio</span>';
+                                const fechaActualizacion = item.ultima_actualizacion
+                                    ? new Date(item.ultima_actualizacion).toLocaleDateString('es-ES')
+                                    : '-';
                                 
                                 return `
-                                    <div class="flex items-center justify-between p-4 ${bgClass} border-l-4 rounded-lg">
-                                        <div class="flex items-center space-x-3">
-                                            <i class="fas fa-exclamation-triangle ${iconClass}"></i>
+                                    <div class="flex items-center justify-between p-3 border-l-4 rounded-lg ${stockClass}">
+                                        <div class="flex items-center space-x-2 min-w-0">
+                                            <i class="fas ${iconClass}"></i>
                                             <div>
-                                                <h4 class="font-semibold ${textClass}">${item.nombre}</h4>
-                                                <p class="text-sm ${subtextClass}">Stock: ${item.cantidad_actual} ${item.unidad_medida} (mín: ${item.cantidad_minima})</p>
+                                                <h4 class="font-semibold text-sm truncate">${item.nombre}</h4>
+                                                <p class="text-xs text-gray-600">
+                                                    <span class="${textClass} font-semibold">${item.cantidad_actual} ${item.unidad_medida}</span>
+                                                    ${alerta}
+                                                </p>
                                             </div>
+                                        </div>
+                                        <div class="text-right ml-2">
+                                            <span class="text-xs text-gray-500">${fechaActualizacion}</span>
                                         </div>
                                     </div>
                                 `;
                             }).join('');
                         } else {
                             container.innerHTML = `
-                                <div class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
-                                    <p>No hay alertas de inventario</p>
+                                <div class="text-center py-6 text-gray-500">
+                                    <div class="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-box-open text-lg text-gray-400"></i>
+                                    </div>
+                                    <h3 class="text-sm font-semibold mb-1 text-gray-700">Sin alertas</h3>
+                                    <p class="text-xs text-gray-500">Inventario estable</p>
                                 </div>
                             `;
                         }

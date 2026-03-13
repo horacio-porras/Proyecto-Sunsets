@@ -38,10 +38,11 @@ async function generarPDFVentas(datos) {
                .fillColor('#000000')
                .text('REPORTE DE VENTAS', 50, 100, { align: 'center' });
 
-            doc.fontSize(10)
-               .fillColor('#666666')
-               .text(`Fecha de generación: ${new Date().toLocaleString('es-CR')}`, 50, 130)
-               .text(`Período: ${datos.fechaDesde || 'Inicio'} - ${datos.fechaHasta || 'Hoy'}`, 50, 145);
+                const fechaGeneracion = datos.fechaGeneracion || new Date().toLocaleString('es-CR');
+                doc.fontSize(10)
+                    .fillColor('#666666')
+                    .text(`Fecha de generación: ${fechaGeneracion}`, 50, 130)
+                    .text(`Período: ${datos.fechaDesde || 'Inicio'} - ${datos.fechaHasta || 'Hoy'}`, 50, 145);
 
             let yPos = 180;
 
@@ -184,7 +185,7 @@ async function generarPDFClientes(datos) {
 
                     doc.text(String(cliente.id_cliente || ''), 50, yPos)
                        .text((cliente.nombre || '').substring(0, 25), 100, yPos)
-                       .text((cliente.correo || '').substring(0, 25), 220, yPos)
+                       .text((cliente.email || cliente.correo || '').substring(0, 25), 220, yPos)
                        .text(cliente.telefono || '', 380, yPos)
                        .text(String(cliente.total_pedidos || 0), 480, yPos);
                     
@@ -485,7 +486,7 @@ async function generarExcelClientes(datos) {
             worksheet.addRow([
                 cliente.id_cliente || '',
                 cliente.nombre || '',
-                cliente.correo || '',
+                cliente.email || cliente.correo || '',
                 cliente.telefono || '',
                 cliente.total_pedidos || 0
             ]);

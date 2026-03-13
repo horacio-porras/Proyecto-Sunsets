@@ -25,7 +25,7 @@ async function loadMenuProducts() {
 }
 
 //Función para renderizar el menú
-async function renderMenu() {
+function renderMenu() {
     const menuContent = document.getElementById('menu-content');
     menuContent.innerHTML = '';
     
@@ -38,7 +38,7 @@ async function renderMenu() {
             menuContent.appendChild(createSeparator());
         }
         
-        const categorySection = await createCategorySection(category, productsByCategory[category]);
+        const categorySection = createCategorySection(category, productsByCategory[category]);
         menuContent.appendChild(categorySection);
     }
     
@@ -96,7 +96,7 @@ function createSeparator() {
 }
 
 //Función para crear sección de categoría
-async function createCategorySection(categoryName, products) {
+function createCategorySection(categoryName, products) {
     const section = document.createElement('div');
     section.className = 'menu-section';
     section.setAttribute('data-category', categoryName);
@@ -109,7 +109,7 @@ async function createCategorySection(categoryName, products) {
     grid.className = 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch';
     
     for (const product of products) {
-        const productCard = await createProductCard(product);
+        const productCard = createProductCard(product);
         grid.appendChild(productCard);
     }
     
@@ -156,7 +156,7 @@ function formatPrice(price) {
 }
 
 //Función para crear tarjeta de producto
-async function createProductCard(product) {
+function createProductCard(product) {
     const card = document.createElement('div');
     card.className = 'menu-item bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition flex flex-col';
     card.style.minHeight = '320px';
@@ -174,27 +174,21 @@ async function createProductCard(product) {
              <i class="fas fa-image text-gray-500 text-3xl"></i>
            </div>`;
     
-    // Cargar promedio de calificaciones
+    // Usar calificaciones ya incluidas en /api/menu/products
     let promedioHtml = '';
-    try {
-        const response = await fetch(`/api/opiniones/producto/${product.id}/promedio`);
-        const data = await response.json();
-        if (data.success && data.promedio > 0) {
-            const estrellasLlenas = Math.floor(data.promedio);
-            const tieneMedia = data.promedio % 1 >= 0.5;
-            const estrellasVacias = 5 - estrellasLlenas - (tieneMedia ? 1 : 0);
-            
-            promedioHtml = `
-                <div class="flex items-center gap-1">
-                    <div class="flex text-yellow-400">
-                        ${'★'.repeat(estrellasLlenas)}${tieneMedia ? '☆' : ''}${'☆'.repeat(estrellasVacias)}
-                    </div>
-                    <span class="text-xs text-gray-600">${data.promedio} (${data.total})</span>
+    if (product.ratingAverage > 0) {
+        const estrellasLlenas = Math.floor(product.ratingAverage);
+        const tieneMedia = product.ratingAverage % 1 >= 0.5;
+        const estrellasVacias = 5 - estrellasLlenas - (tieneMedia ? 1 : 0);
+        
+        promedioHtml = `
+            <div class="flex items-center gap-1">
+                <div class="flex text-yellow-400">
+                    ${'★'.repeat(estrellasLlenas)}${tieneMedia ? '☆' : ''}${'☆'.repeat(estrellasVacias)}
                 </div>
-            `;
-        }
-    } catch (error) {
-        console.error('Error al cargar promedio:', error);
+                <span class="text-xs text-gray-600">${product.ratingAverage} (${product.ratingTotal})</span>
+            </div>
+        `;
     }
     
     // Calcular precio a mostrar
@@ -473,6 +467,7 @@ function showMenuContent() {
 
 let cart = [];
 let cartTotal = 0;
+let cartToastTimeout = null;
 
 //Carga el carrito desde localStorage al inicializar
 function loadCartFromStorage() {
@@ -522,11 +517,40 @@ function createAddToCartAnimation(buttonElement, productName) {
     }
 }
 
+// Notificación visual no intrusiva al agregar al carrito
+function showCartToast(productName) {
+    let toast = document.getElementById('cartToast');
+
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cartToast';
+        toast.className = 'fixed right-4 z-50 max-w-xs bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none';
+        toast.style.top = '150px';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = `"${productName}" agregado al carrito`;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+
+    if (cartToastTimeout) {
+        clearTimeout(cartToastTimeout);
+    }
+
+    cartToastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+    }, 1800);
+}
+
 //Funciones del carrito en scope global para que estén disponibles desde onclick
 window.addToCart = function(name, price, buttonElement) {
     const product = menuProducts.find(p => p.name === name);
     
     createAddToCartAnimation(buttonElement, name);
+    showCartToast(name);
     
     const existingItem = cart.find(item => item.name === name);
     

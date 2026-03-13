@@ -456,7 +456,7 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
-                    <i class="fas fa-comments mr-2 text-gray-700"></i>Moderación
+                    <i class="fas fa-shield-alt mr-2 text-gray-700"></i>Moderación
                 </a>
                 <a href="/admin/reportes.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition" style="color: #374151 !important;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#374151'">
                     <i class="fas fa-chart-bar mr-2 text-gray-700"></i>Reportes
@@ -491,7 +491,7 @@ function configureRoleSpecificMenus() {
                     <i class="fas fa-calendar-alt mr-2"></i>Reservaciones
                 </a>
                 <a href="/admin/moderacion-opiniones.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
-                    <i class="fas fa-comments mr-2"></i>Moderación
+                    <i class="fas fa-shield-alt mr-2"></i>Moderación
                 </a>
                 <a href="/admin/reportes.html" class="block bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition text-center">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes
@@ -584,6 +584,34 @@ function addNavbarEventListeners() {
                 value = value.slice(0, 8);
             }
             e.target.value = value;
+        });
+    }
+
+    const registerEmailInput = document.getElementById('registerEmail');
+    if (registerEmailInput) {
+        registerEmailInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerPasswordInput = document.getElementById('registerPassword');
+    if (registerPasswordInput) {
+        registerPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
+    if (registerConfirmPasswordInput) {
+        registerConfirmPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
+        });
+    }
+
+    const loginPasswordInput = document.getElementById('loginPassword');
+    if (loginPasswordInput) {
+        loginPasswordInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\s/g, '');
         });
     }
 }
@@ -695,7 +723,9 @@ function toggleRegisterLoading(show) {
 //Función para manejar el login
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const passwordInput = document.getElementById('loginPassword');
+    const password = passwordInput.value.replace(/\s/g, '');
+    passwordInput.value = password;
 
     if (!email || !password) {
         showLoginMessage('Por favor, completa todos los campos requeridos');
@@ -803,11 +833,11 @@ function validateRegisterPasswords() {
 //Función para manejar el registro
 async function handleRegister() {
     console.log('handleRegister called');
-    const nombre = document.getElementById('registerNombre').value;
-    const email = document.getElementById('registerEmail').value;
-    const telefono = document.getElementById('registerTelefono').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const nombre = document.getElementById('registerNombre').value.trim();
+    const email = document.getElementById('registerEmail').value.replace(/\s/g, '');
+    const telefono = document.getElementById('registerTelefono').value.replace(/\s/g, '');
+    const password = document.getElementById('registerPassword').value.replace(/\s/g, '');
+    const confirmPassword = document.getElementById('registerConfirmPassword').value.replace(/\s/g, '');
     const notificacionesActivas = document.getElementById('registerNotificacionesActivas').checked;
 
     if (!nombre || !email || !telefono || !password || !confirmPassword) {
@@ -823,6 +853,11 @@ async function handleRegister() {
     if (!validateRegisterPasswords()) {
         return;
     }
+
+    document.getElementById('registerEmail').value = email;
+    document.getElementById('registerTelefono').value = telefono;
+    document.getElementById('registerPassword').value = password;
+    document.getElementById('registerConfirmPassword').value = confirmPassword;
 
     toggleRegisterLoading(true);
 
@@ -1356,19 +1391,16 @@ async function processForgotPassword(email) {
             title: '¡Correo Enviado!',
             html: `
                 <div class="text-center py-4">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
                         <i class="fas fa-envelope text-white text-2xl"></i>
                     </div>
                     <p class="text-gray-700 text-lg">Si el correo existe, recibirás un enlace para recuperar tu contraseña</p>
                     <p class="text-gray-600 text-sm mt-2">Revisa tu bandeja de entrada y sigue las instrucciones</p>
                 </div>
             `,
-            confirmButtonText: '<i class="fas fa-check mr-2"></i>Entendido',
-            confirmButtonColor: '#10b981',
-            buttonsStyling: false,
-            customClass: {
-                confirmButton: 'bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition'
-            }
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true
         });
         
     } catch (error) {
@@ -1454,9 +1486,19 @@ function initializeForgotPasswordModal() {
 
 // Función para validar que las contraseñas coincidan en tiempo real
 function validatePasswordMatch() {
-    const newPassword = document.getElementById('newPassword')?.value || '';
-    const confirmPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmPassword = (confirmPasswordInput?.value || '').replace(/\s+/g, '');
     const matchError = document.getElementById('passwordMatchError');
+
+    // No permitir espacios en ningún campo de contraseña del modal temporal
+    if (newPasswordInput && newPasswordInput.value !== newPassword) {
+        newPasswordInput.value = newPassword;
+    }
+    if (confirmPasswordInput && confirmPasswordInput.value !== confirmPassword) {
+        confirmPasswordInput.value = confirmPassword;
+    }
     
     if (confirmPassword.length > 0) {
         if (newPassword !== confirmPassword) {
@@ -1526,13 +1568,21 @@ function showChangePasswordModal() {
             // Remover listeners anteriores
             const newInput = newPasswordInput.cloneNode(true);
             newPasswordInput.parentNode.replaceChild(newInput, newPasswordInput);
-            document.getElementById('newPassword').addEventListener('input', validatePasswordMatch);
+            const sanitizedNewPasswordInput = document.getElementById('newPassword');
+            sanitizedNewPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
         }
         if (confirmPasswordInput) {
             // Remover listeners anteriores
             const newInput = confirmPasswordInput.cloneNode(true);
             confirmPasswordInput.parentNode.replaceChild(newInput, confirmPasswordInput);
-            document.getElementById('confirmNewPassword').addEventListener('input', validatePasswordMatch);
+            const sanitizedConfirmPasswordInput = document.getElementById('confirmNewPassword');
+            sanitizedConfirmPasswordInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                validatePasswordMatch();
+            });
         }
         
         // Configurar el formulario y botón después de un pequeño delay para asegurar que el DOM esté listo
@@ -1594,8 +1644,12 @@ function toggleConfirmNewPassword() {
 async function handleChangePassword() {
     console.log('handleChangePassword llamado');
     
-    const newPassword = document.getElementById('newPassword')?.value || '';
-    const confirmNewPassword = document.getElementById('confirmNewPassword')?.value || '';
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+    const newPassword = (newPasswordInput?.value || '').replace(/\s+/g, '');
+    const confirmNewPassword = (confirmNewPasswordInput?.value || '').replace(/\s+/g, '');
+    if (newPasswordInput) newPasswordInput.value = newPassword;
+    if (confirmNewPasswordInput) confirmNewPasswordInput.value = confirmNewPassword;
     const errorMessage = document.getElementById('changePasswordErrorMessage');
     const errorText = document.getElementById('changePasswordErrorText');
     const btn = document.getElementById('changePasswordBtn');
@@ -1750,6 +1804,24 @@ function setupChangePasswordForm() {
         // Obtener el nuevo formulario
         const form = document.getElementById('changePasswordForm');
         if (form) {
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmNewPassword');
+
+            // Reaplicar sanitización después de reconstruir el formulario
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                    validatePasswordMatch();
+                });
+            }
+
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();

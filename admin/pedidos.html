@@ -49,6 +49,74 @@
         .status-en_camino { background-color: #c7d2fe; color: #3730a3; }
         .status-entregado { background-color: #dcfce7; color: #166534; }
         .status-cancelado { background-color: #fecaca; color: #dc2626; }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 760px;
+            max-height: 90vh;
+            background: white;
+            border-radius: 0.75rem;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalSlideIn 0.25s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .modal-close {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            border: none;
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -160,6 +228,27 @@
         </div>
     </div>
 
+    <!-- Modal para detalles del pedido -->
+    <div id="pedidoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold text-gray-800" id="modalOrderNumber">Pedido: #000000</h3>
+                <button type="button" class="modal-close" onclick="closePedidoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="modalLoadingState" class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                <p class="mt-2 text-gray-600">Cargando detalles del pedido...</p>
+            </div>
+
+            <div id="pedidoModalContent" class="hidden p-5">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
     <div id="footer-container"></div>
 
     <script>
@@ -180,6 +269,7 @@
             inicializarControlesPaginacion();
             loadPedidos();
             setupEventListeners();
+            setupModalEventListeners();
         });
 
         function inicializarControlesPaginacion() {
@@ -212,6 +302,26 @@
             if (statusFilter) {
                 statusFilter.addEventListener('change', aplicarFiltros);
             }
+        }
+
+        function setupModalEventListeners() {
+            const modal = document.getElementById('pedidoModal');
+            if (modal) {
+                modal.addEventListener('click', function(event) {
+                    if (event.target === this) {
+                        closePedidoModal();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    const pedidoModal = document.getElementById('pedidoModal');
+                    if (pedidoModal && pedidoModal.classList.contains('show')) {
+                        closePedidoModal();
+                    }
+                }
+            });
         }
 
         async function loadPedidos() {
@@ -537,8 +647,19 @@
 
         function mostrarDetallesPedido(pedido) {
             try {
+                const modal = document.getElementById('pedidoModal');
+                const content = document.getElementById('pedidoModalContent');
+                const loadingState = document.getElementById('modalLoadingState');
+                const orderNumber = document.getElementById('modalOrderNumber');
 
-                // Mostrar detalles en un modal o alerta
+                if (!modal || !content || !loadingState || !orderNumber) {
+                    throw new Error('No se pudo abrir el modal de detalles');
+                }
+
+                modal.classList.add('show');
+                loadingState.classList.remove('hidden');
+                content.classList.add('hidden');
+
                 const fechaPedido = new Date(pedido.fecha_pedido);
                 const fechaFormateada = fechaPedido.toLocaleString('es-CR', {
                     year: 'numeric',
@@ -548,60 +669,128 @@
                     minute: '2-digit'
                 });
 
-                let itemsHTML = '';
-                if (pedido.items && pedido.items.length > 0) {
-                    itemsHTML = pedido.items.map(item => {
-                        return `<div class="flex justify-between py-2 border-b">
-                            <span>${item.producto_nombre || 'Producto'} x${item.cantidad || 0}</span>
-                            <span>₡${parseFloat(item.subtotal_item || 0).toLocaleString()}</span>
-                        </div>`;
-                    }).join('');
-                } else if (pedido.productos && pedido.productos.length > 0) {
-                    itemsHTML = pedido.productos.map(item => {
-                        return `<div class="flex justify-between py-2 border-b">
-                            <span>${item.producto_nombre || 'Producto'} x${item.cantidad || 0}</span>
-                            <span>₡${parseFloat(item.subtotal_item || 0).toLocaleString()}</span>
-                        </div>`;
-                    }).join('');
-                } else {
-                    itemsHTML = '<div class="text-gray-500 py-2">No hay productos registrados para este pedido</div>';
-                }
+                orderNumber.textContent = `Pedido: #${pedido.id_pedido.toString().padStart(6, '0')}`;
 
-                Swal.fire({
-                    title: `Pedido #${pedido.id_pedido.toString().padStart(6, '0')}`,
-                    html: `
-                        <div class="text-left space-y-3">
-                            <div>
-                                <strong>Fecha:</strong> ${fechaFormateada}
+                const subtotal = Number(pedido.subtotal) || 0;
+                const impuestos = Number(pedido.impuestos) || 0;
+                const descuentos = Number(pedido.descuentos) || 0;
+                const total = Number(pedido.total) || 0;
+                const costoEntregaRaw = Number(pedido.costo_entrega);
+                const costoEntrega = Number.isFinite(costoEntregaRaw) && costoEntregaRaw >= 0 ? costoEntregaRaw : 1500;
+
+                const productos = Array.isArray(pedido.items) && pedido.items.length > 0
+                    ? pedido.items
+                    : (Array.isArray(pedido.productos) ? pedido.productos : []);
+
+                const responsable = pedido.empleado_asignado_nombre && pedido.empleado_asignado_nombre !== 'Sin asignar'
+                    ? `${pedido.empleado_asignado_nombre}${pedido.empleado_area && pedido.empleado_area !== 'Sin asignar' ? ` (${formatArea(pedido.empleado_area)})` : ''}`
+                    : 'Sin asignar';
+
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="status-badge ${getEstadoBadgeClass(pedido.estado_pedido)}">${formatEstado(pedido.estado_pedido)}</span>
+                                <span class="text-xl font-bold">#${pedido.id_pedido.toString().padStart(6, '0')}</span>
                             </div>
-                            <div>
-                                <strong>Cliente:</strong> ${pedido.cliente_nombre || 'Cliente invitado'}
-                            </div>
-                            ${pedido.cliente_telefono ? `<div><strong>Teléfono:</strong> ${pedido.cliente_telefono}</div>` : ''}
-                            ${pedido.cliente_email ? `<div><strong>Email:</strong> ${pedido.cliente_email}</div>` : ''}
-                            ${pedido.direccion_completa ? `<div><strong>Dirección:</strong> ${pedido.direccion_completa}</div>` : ''}
-                            <div>
-                                <strong>Estado:</strong> <span class="status-badge ${getEstadoBadgeClass(pedido.estado_pedido)}">${formatEstado(pedido.estado_pedido)}</span>
-                            </div>
-                            <div><strong>Responsable:</strong> ${pedido.empleado_asignado_nombre && pedido.empleado_asignado_nombre !== 'Sin asignar' ? `${pedido.empleado_asignado_nombre} ${pedido.empleado_area && pedido.empleado_area !== 'Sin asignar' ? `(${formatArea(pedido.empleado_area)})` : ''}` : '<span class="text-gray-400">Sin asignar</span>'}</div>
-                            ${pedido.area_asignacion && pedido.empleado_asignado_nombre === 'Sin asignar' ? `<div><strong>Área:</strong> ${formatArea(pedido.area_asignacion)}</div>` : ''}
-                            <div class="mt-4">
-                                <strong>Productos:</strong>
-                                <div class="mt-2">${itemsHTML}</div>
-                            </div>
-                            <div class="mt-4 pt-3 border-t">
-                                <div class="flex justify-between"><span>Subtotal:</span><span>₡${parseFloat(pedido.subtotal || 0).toLocaleString()}</span></div>
-                                <div class="flex justify-between"><span>Impuestos:</span><span>₡${parseFloat(pedido.impuestos || 0).toLocaleString()}</span></div>
-                                ${parseFloat(pedido.descuentos || 0) > 0 ? `<div class="flex justify-between text-green-600"><span>Descuentos:</span><span>-₡${parseFloat(pedido.descuentos || 0).toLocaleString()}</span></div>` : ''}
-                                <div class="flex justify-between font-bold text-lg mt-2"><span>Total:</span><span>₡${parseFloat(pedido.total || 0).toLocaleString()}</span></div>
-                            </div>
-                            ${pedido.notas_especiales ? `<div class="mt-4 pt-3 border-t"><strong>Notas:</strong> ${pedido.notas_especiales}</div>` : ''}
+                            <p class="text-gray-600">Pedido realizado el ${fechaFormateada}</p>
                         </div>
-                    `,
-                    width: '600px',
-                    confirmButtonText: 'Cerrar',
-                    confirmButtonColor: '#f97316'
-                });
+
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-3">Información del Cliente</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Nombre</p>
+                                    <p class="font-semibold">${pedido.cliente_nombre || 'Cliente invitado'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Teléfono</p>
+                                    <p class="font-semibold">${pedido.cliente_telefono || 'No disponible'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Email</p>
+                                    <p class="font-semibold">${pedido.cliente_email || 'No disponible'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Método de Pago</p>
+                                    <p class="font-semibold">${pedido.metodo_pago || 'No disponible'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-3">Información de Gestión</h4>
+                            <p><strong>Responsable:</strong> ${responsable}</p>
+                            ${pedido.area_asignacion && responsable === 'Sin asignar' ? `<p class="mt-1"><strong>Área:</strong> ${formatArea(pedido.area_asignacion)}</p>` : ''}
+                            ${pedido.direccion_completa ? `<p class="mt-2"><strong>Dirección:</strong> ${pedido.direccion_completa}</p>` : ''}
+                            ${pedido.notas_especiales ? `
+                                <div class="inline-block mt-2 p-2 bg-yellow-100 border border-yellow-200 rounded max-w-full">
+                                    <p class="text-sm text-yellow-800 whitespace-normal">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        <strong>Notas especiales:</strong> ${pedido.notas_especiales}
+                                    </p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold mb-3">Productos del Pedido</h4>
+                            <div class="space-y-3">
+                                ${productos.length > 0 ? productos.map(producto => {
+                                    const nombreProducto = producto.producto_nombre || 'Producto';
+                                    const cantidad = Number(producto.cantidad) || 0;
+                                    const precioUnitario = Number(producto.precio_unitario) || 0;
+                                    const subtotalItem = Number(producto.subtotal_item);
+                                    const totalItem = Number.isFinite(subtotalItem) ? subtotalItem : (precioUnitario * cantidad);
+
+                                    return `
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <div>
+                                                <p class="font-semibold">${nombreProducto}</p>
+                                                <p class="text-sm text-gray-600">Cantidad: ${cantidad}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-semibold">₡${totalItem.toLocaleString()}</p>
+                                                <p class="text-sm text-gray-600">₡${precioUnitario.toLocaleString()} c/u</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('') : '<p class="text-gray-500">No hay productos registrados para este pedido</p>'}
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-3">Resumen de Precios</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Subtotal:</span>
+                                    <span>₡${subtotal.toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Costo de Entrega:</span>
+                                    <span>₡${costoEntrega.toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Impuestos:</span>
+                                    <span>₡${impuestos.toLocaleString()}</span>
+                                </div>
+                                ${descuentos > 0 ? `
+                                    <div class="flex justify-between text-green-600">
+                                        <span>Descuentos:</span>
+                                        <span>-₡${descuentos.toLocaleString()}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="flex justify-between font-bold text-lg border-t border-gray-300 pt-2">
+                                    <span>Total:</span>
+                                    <span>₡${total.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                loadingState.classList.add('hidden');
+                content.classList.remove('hidden');
             } catch (error) {
                 console.error('Error al obtener detalles del pedido:', error);
                 Swal.fire({
@@ -612,9 +801,17 @@
             }
         }
 
+        function closePedidoModal() {
+            const modal = document.getElementById('pedidoModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
         window.aplicarFiltros = aplicarFiltros;
         window.limpiarFiltros = limpiarFiltros;
         window.verDetallesPedido = verDetallesPedido;
+        window.closePedidoModal = closePedidoModal;
     </script>
 </body>
 </html>

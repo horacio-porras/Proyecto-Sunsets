@@ -137,10 +137,10 @@
                 <div>
                     <h3 class="text-3xl font-bold mb-6">Nuestra Historia</h3>
                     <p class="text-gray-600 mb-4">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a dictum est. Nullam ac dignissim leo. Maecenas libero sem, tempus at purus at, mollis consequat enim. In hac habitasse platea dictumst. Praesent id feugiat urna. Sed eget dolor sed purus viverra cursus a nec elit. Phasellus ultrices commodo elementum.
+                        Sunset's Tarbaca nació como un proyecto familiar con una idea simple: ofrecer comida preparada con dedicación, ingredientes frescos y un ambiente donde todos se sientan bienvenidos. Comenzamos con un menú pequeño y fuimos creciendo gracias al apoyo de nuestros clientes.
                     </p>
                     <p class="text-gray-600 mb-6">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a dictum est. Nullam ac dignissim leo. Maecenas libero sem, tempus at purus at, mollis consequat enim. In hac habitasse platea dictumst. Praesent id feugiat urna. Sed eget dolor sed purus viverra cursus a nec elit. Phasellus ultrices commodo elementum.
+                        Hoy combinamos recetas tradicionales con opciones modernas para crear una experiencia completa, desde almuerzos del día hasta cenas especiales. Más que un restaurante, queremos ser un lugar al que siempre quieras volver.
                     </p>
                     <a href="about.html"
                         class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 font-semibold transition">Conoce
@@ -202,7 +202,7 @@
                               class="w-full p-4 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"></textarea>
 
                     <button type="button" onclick="enviarOpinionRestaurante()"
-                            class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold transition hover:scale-[1.02]">
+                            class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold transition hover:from-orange-600 hover:to-red-600">
                         Enviar Opinión
                     </button>
                 </form>
@@ -449,16 +449,6 @@
             });
         });
         
-        function toggleChatbot() {
-            const modal = document.getElementById('chatbotModal');
-            if (modal) {
-                modal.classList.toggle('hidden');
-                modal.classList.toggle('flex');
-                if (!modal.classList.contains('hidden')) {
-                    document.getElementById('chatbotInput')?.focus();
-                }
-            }
-        }
     </script>
     
     <script>
@@ -623,7 +613,9 @@
                         icon: 'success',
                         title: '¡Opinión enviada!',
                         text: 'Tu opinión será revisada antes de ser publicada',
-                        confirmButtonColor: '#f97316'
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
                     });
                     
                     // Limpiar formulario
@@ -670,29 +662,11 @@
                 }
                 
                 const productos = data.data;
-                
-                // Obtener calificaciones para cada producto
-                const productosConCalificaciones = await Promise.all(
-                    productos.map(async (producto) => {
-                        try {
-                            const ratingResponse = await fetch(`/api/opiniones/producto/${producto.id}/promedio`);
-                            const ratingData = await ratingResponse.json();
-                            
-                            return {
-                                ...producto,
-                                promedio: ratingData.success && ratingData.promedio > 0 ? ratingData.promedio : 0,
-                                totalOpiniones: ratingData.success ? (ratingData.total || 0) : 0
-                            };
-                        } catch (error) {
-                            console.error(`Error al cargar calificación para producto ${producto.id}:`, error);
-                            return {
-                                ...producto,
-                                promedio: 0,
-                                totalOpiniones: 0
-                            };
-                        }
-                    })
-                );
+                const productosConCalificaciones = productos.map(producto => ({
+                    ...producto,
+                    promedio: Number(producto.ratingAverage || 0),
+                    totalOpiniones: Number(producto.ratingTotal || 0)
+                }));
                 
                 // Filtrar solo productos con calificaciones (promedio > 0) y ordenar por calificación descendente
                 const productosCalificados = productosConCalificaciones
@@ -743,13 +717,16 @@
                             </div>
                         `;
                     
-                    const imagenUrl = producto.image || 'https://images.unsplash.com/photo-1600028068383-ea11a7a101f3?w=400';
+                    const imageHtml = producto.image && producto.image.trim() !== ''
+                        ? `<img src="${producto.image}" alt="${producto.name}" class="w-full h-48 object-cover">`
+                        : `<div class="w-full h-48 bg-gray-300 flex items-center justify-center">
+                             <i class="fas fa-image text-gray-500 text-3xl"></i>
+                           </div>`;
                     const descripcion = producto.description || 'Delicioso producto de nuestro menú';
                     
                     return `
                         <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="window.location.href='/menu.html'">
-                            <img src="${imagenUrl}" alt="${producto.name}"
-                                class="w-full h-48 object-cover">
+                            ${imageHtml}
                             <div class="p-4">
                                 <div class="flex justify-between items-start mb-2">
                                     <h4 class="font-semibold text-lg">${producto.name}</h4>

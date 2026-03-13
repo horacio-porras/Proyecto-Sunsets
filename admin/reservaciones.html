@@ -60,7 +60,7 @@
                         <h1 class="text-3xl font-bold mb-2">
                             <i class="fas fa-calendar-alt mr-3"></i>Gestión de Reservaciones
                         </h1>
-                        <p class="text-gray-300">Monitorea y gestiona todas las reservaciones del restaurante</p>
+                        <p class="text-gray-300">Las reservaciones se confirman automáticamente cuando hay mesas disponibles</p>
                     </div>
                 </div>
             </div>
@@ -336,9 +336,7 @@
                 const estadoClass = `status-${reserva.estado_reserva}`;
                 const estadoTexto = reserva.estado_reserva.charAt(0).toUpperCase() + reserva.estado_reserva.slice(1);
 
-                const puedeCancelar = reserva.estado_reserva !== 'cancelada' && 
-                                     reserva.estado_reserva !== 'rechazada' && 
-                                     reserva.estado_reserva !== 'completada';
+                const puedeCancelar = reserva.estado_reserva === 'confirmada';
 
                 return `
                     <tr class="hover:bg-gray-50">
@@ -383,20 +381,21 @@
 
         function actualizarPaginacion() {
             const total = reservacionesFiltradas.length;
-            const totalPaginas = Math.ceil(total / RESERVACIONES_POR_PAGINA);
+            const totalPaginas = Math.ceil(total / RESERVACIONES_POR_PAGINA) || 1;
 
             if (reservacionesPaginationControls) {
-                if (totalPaginas > 1) {
-                    reservacionesPaginationControls.classList.remove('hidden');
-                } else {
+                if (total === 0) {
                     reservacionesPaginationControls.classList.add('hidden');
+                    return;
                 }
+
+                reservacionesPaginationControls.classList.remove('hidden');
             }
 
             if (reservacionesPaginationSummary) {
                 const inicio = total === 0 ? 0 : (reservacionesPaginaActual - 1) * RESERVACIONES_POR_PAGINA + 1;
                 const fin = Math.min(reservacionesPaginaActual * RESERVACIONES_POR_PAGINA, total);
-                reservacionesPaginationSummary.textContent = `Mostrando ${inicio} a ${fin} de ${total} reservaciones`;
+                reservacionesPaginationSummary.textContent = `Mostrando ${inicio}-${fin} de ${total} reservaciones`;
             }
 
             if (reservacionesPaginationInfo) {
@@ -404,11 +403,15 @@
             }
 
             if (reservacionesPrevPageBtn) {
-                reservacionesPrevPageBtn.disabled = reservacionesPaginaActual === 1;
+                reservacionesPrevPageBtn.disabled = reservacionesPaginaActual <= 1;
             }
 
             if (reservacionesNextPageBtn) {
                 reservacionesNextPageBtn.disabled = reservacionesPaginaActual >= totalPaginas;
+            }
+
+            if (reservacionesPorPaginaSelect) {
+                reservacionesPorPaginaSelect.value = RESERVACIONES_POR_PAGINA;
             }
         }
 
@@ -426,7 +429,7 @@
         async function cancelarReservacion(idReservacion) {
             const result = await Swal.fire({
                 title: '¿Cancelar reservación?',
-                text: 'Esta acción no se puede deshacer',
+                text: 'Úsalo solo en casos extraordinarios. Esta acción no se puede deshacer.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',

@@ -1,5 +1,66 @@
 const { pool } = require('../config/database');
 const { registrarCambio } = require('../utils/auditoria');
+const fs = require('fs/promises');
+const path = require('path');
+const crypto = require('crypto');
+
+const PRODUCT_IMAGE_UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'productos');
+const MAX_PRODUCT_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+const MIME_TYPE_TO_EXTENSION = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif'
+};
+
+const persistProductImage = async (imageValue) => {
+    if (typeof imageValue !== 'string') {
+        return imageValue ?? null;
+    }
+
+    const trimmedImage = imageValue.trim();
+    if (!trimmedImage) {
+        return null;
+    }
+
+    // Si ya es URL/ruta, se mantiene tal cual
+    if (!trimmedImage.startsWith('data:image/')) {
+        return trimmedImage;
+    }
+
+    const imageMatch = trimmedImage.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!imageMatch) {
+        throw new Error('El formato de la imagen no es válido');
+    }
+
+    const mimeType = imageMatch[1].toLowerCase();
+    const base64Payload = imageMatch[2];
+    const fileExtension = MIME_TYPE_TO_EXTENSION[mimeType];
+
+    if (!fileExtension) {
+        throw new Error('Tipo de imagen no permitido. Usa JPG, PNG, WEBP o GIF');
+    }
+
+    const imageBuffer = Buffer.from(base64Payload, 'base64');
+    if (!imageBuffer.length) {
+        throw new Error('La imagen está vacía o no es válida');
+    }
+
+    if (imageBuffer.length > MAX_PRODUCT_IMAGE_SIZE_BYTES) {
+        throw new Error('La imagen supera el tamaño máximo permitido de 5MB');
+    }
+
+    await fs.mkdir(PRODUCT_IMAGE_UPLOAD_DIR, { recursive: true });
+
+    const fileName = `producto-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${fileExtension}`;
+    const filePath = path.join(PRODUCT_IMAGE_UPLOAD_DIR, fileName);
+
+    await fs.writeFile(filePath, imageBuffer);
+
+    return `/uploads/productos/${fileName}`;
+};
 
 const parseDiscountPayload = (payload = {}) => {
     const descuentoActivoRaw = payload.descuentoActivo;
@@ -704,6 +765,16 @@ const crearProducto = async (req, res) => {
     try {
         const userId = req.user.id;
         const { nombre, categoria, precio, disponible, descripcion, imagen } = req.body;
+        let imagenNormalizada;
+
+        try {
+            imagenNormalizada = await persistProductImage(imagen);
+        } catch (imageError) {
+            return res.status(400).json({
+                success: false,
+                message: imageError.message
+            });
+        }
 
         let discountData;
         try {
@@ -763,7 +834,7 @@ const crearProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
@@ -786,7 +857,7 @@ const crearProducto = async (req, res) => {
                 precio,
                 disponible,
                 descripcion,
-                imagen_url: imagen,
+                imagen_url: imagenNormalizada,
                 descuento_activo: discountData.descuentoActivo,
                 porcentaje_descuento: discountData.porcentajeDescuento,
                 fecha_inicio_descuento: discountData.fechaInicioDescuento,
@@ -823,6 +894,16 @@ const actualizarProducto = async (req, res) => {
         const userId = req.user.id;
         const productoId = req.params.productoId;
         const { nombre, categoria, precio, disponible, descripcion, imagen } = req.body;
+        let imagenNormalizada;
+
+        try {
+            imagenNormalizada = await persistProductImage(imagen);
+        } catch (imageError) {
+            return res.status(400).json({
+                success: false,
+                message: imageError.message
+            });
+        }
 
         console.log('Datos extraídos:', { nombre, categoria, precio, disponible, descripcion, imagen });
 
@@ -911,7 +992,7 @@ const actualizarProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
@@ -925,7 +1006,7 @@ const actualizarProducto = async (req, res) => {
             precio,
             disponible ? 1 : 0,
             descripcion || null,
-            imagen || null,
+            imagenNormalizada,
             discountData.descuentoActivo ? 1 : 0,
             discountData.porcentajeDescuento,
             discountData.fechaInicioDescuento,
@@ -948,7 +1029,7 @@ const actualizarProducto = async (req, res) => {
                 precio,
                 disponible,
                 descripcion,
-                imagen_url: imagen,
+                imagen_url: imagenNormalizada,
                 descuento_activo: discountData.descuentoActivo,
                 porcentaje_descuento: discountData.porcentajeDescuento,
                 fecha_inicio_descuento: discountData.fechaInicioDescuento,
